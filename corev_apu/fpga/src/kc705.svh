@@ -16,6 +16,8 @@
 `define KINTEX7
 
 `define ARIANE_DATA_WIDTH 64
+`define HAS4LEDS
+`define RAMB16
 
 // Instantiate protocl checker
 // `define PROTOCOL_CHECKER

@@ -39,7 +39,9 @@ torture-logs   :=
 # custom elf bin to run with sim or sim-verilator
 elf_file       ?= tmp/riscv-tests/build/benchmarks/dhrystone.riscv
 # board name for bitstream generation. Currently supported: vcu118, vc707, kc705, genesys2, nexys_video
-BOARD          ?= nexys_video
+BOARD          ?= zcu104
+
+add_fpga_src   ?= corev_apu/fpga/scripts/add_sources.tcl
 
 # root path
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -86,6 +88,10 @@ else ifeq ($(BOARD), nexys_video)
 else ifeq ($(BOARD), vcu118)
 	XILINX_PART              := xcvu9p-flga2104-2L-e
 	XILINX_BOARD             := xilinx.com:vcu118:part0:2.4
+	CLK_PERIOD_NS            := 20
+else ifeq ($(BOARD), zcu104)
+	XILINX_PART              := xczu7ev-ffvc1156-2-e
+	XILINX_BOARD             := xilinx.com:zcu104:part0:1.1
 	CLK_PERIOD_NS            := 20
 else
 $(error Unknown board - please specify a supported FPGA board)
@@ -744,15 +750,17 @@ fpga_filter += $(addprefix $(root-dir), core/cache_subsystem/hpdcache/rtl/src/co
 src/bootrom/bootrom_$(XLEN).sv:
 	$(MAKE) -C corev_apu/fpga/src/bootrom BOARD=$(BOARD) XLEN=$(XLEN) bootrom_$(XLEN).sv
 
-fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist)
+$(add_fpga_src): $(uart_src) $(ariane_pkg) $(filter-out $(fpga_filter), $(src_flist)) $(filter-out $(fpga_filter), $(src)) $(fpga_src)
 	@echo "[FPGA] Generate sources"
-	@echo read_vhdl        {$(uart_src)}    > corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(ariane_pkg)} >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src_flist))}		>> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(fpga_src)}   >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_vhdl        {$(uart_src)}    > $(add_fpga_src)
+	@echo read_verilog -sv {$(ariane_pkg)} >> $(add_fpga_src)
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src_flist))}		>> $(add_fpga_src)
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> $(add_fpga_src)
+	@echo read_verilog -sv {$(fpga_src)}   >> $(add_fpga_src)
+
+fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
 	@echo "[FPGA] Generate Bitstream"
-	$(MAKE) -C corev_apu/fpga BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS)
+	$(MAKE) -C corev_apu/fpga BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) ADD_SRC=$(add_fpga_src)
 
 .PHONY: fpga
 

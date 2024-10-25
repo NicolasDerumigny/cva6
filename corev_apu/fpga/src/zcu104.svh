@@ -1,4 +1,4 @@
-// Copyright 2018 ETH Zurich and University of Bologna.
+// Copyright 2024 Telecom SudParis and Inria
 // Copyright and related rights are licensed under the Solderpad Hardware
 // License, Version 0.51 (the "License"); you may not use this file except in
 // compliance with the License.  You may obtain a copy of the License at
@@ -8,16 +8,13 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-// Description: Set global FPGA degines
-// Author: Florian Zaruba <zarubaf@iis.ee.ethz.ch>
+// Description: Set global FPGA defines
+// Author: Nicolas Derumigny <nicolas.derumigny@inria.fr>
 
-`define KC705
-// include KINTEX7 specific code (relevant for KC705, GENESYSII,...)
-`define KINTEX7
+`define ZCU104
+// Include Zync7000 Ultrascale specific code
+`define ZYNC7U
 
 `define ARIANE_DATA_WIDTH 64
 `define HAS4LEDS
 `define RAMB16
-
-// Instantiate protocl checker
-// `define PROTOCOL_CHECKER

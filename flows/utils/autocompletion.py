@@ -63,6 +63,12 @@ class FpgaBoard(str, Enum):
     kc705 = "kc705"
     vc707 = "vc707"
     nexys_video = "nexys_video"
+    # The three Zynq boards of the fork: their peripherals and their memory
+    # live in a Vivado block design rather than in the nine IP cores of the
+    # seven-series boards (see BoardParams.bd).
+    zcu104 = "zcu104"
+    pynq_z2 = "pynq_z2"
+    kr260 = "kr260"
 
 
 class AlteraBoard(str, Enum):

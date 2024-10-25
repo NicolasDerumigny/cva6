@@ -1,5 +1,9 @@
 xlnx*/*
+zynq*/*
+axi*/*
 !xlnx*/tcl
+!zynq*/tcl
+!axi*/tcl
 !Makefile
 !common.mk
 !*.prj

@@ -66,6 +66,14 @@ class BoardParams:
             is dropped from the device tree when it does not
         bootrom_platform: platform macro the bootloader is compiled with
         hw_device: JTAG device programmed by Vivado, None when unknown
+        ips: IP cores of the design, in the order they are generated; the
+            nine of the seven-series boards by default, the empty list when
+            a block design carries them (see `bd`)
+        bd: block design of the board, relative to `corev_apu/fpga/scripts/`,
+            None for the boards whose design is the RTL top level itself. The
+            Zynq boards declare their peripherals, their interconnect and
+            their memory controller in a generated TCL of that name, which
+            Vivado sources to build the design and wrap it into `FPGA_TOP`.
     """
 
     def __init__(
@@ -83,6 +91,8 @@ class BoardParams:
         console_kind="serial",
         bootrom_platform="PLAT_XILINX",
         hw_device=None,
+        ips=None,
+        bd=None,
     ):
         self.part = part
         self.board_part = board_part
@@ -97,6 +107,24 @@ class BoardParams:
         self.console_kind = console_kind
         self.bootrom_platform = bootrom_platform
         self.hw_device = hw_device
+        self.ips = FPGA_IPS if ips is None else ips
+        self.bd = bd
+
+
+# Vivado IP cores instantiated by the FPGA top level of the seven-series
+# boards. Each name is both the IP directory under
+# `corev_apu/fpga/xilinx/` and the `.xci` basename.
+FPGA_IPS = [
+    "xlnx_axi_clock_converter",
+    "xlnx_axi_dwidth_converter",
+    "xlnx_axi_dwidth_converter_dm_master",
+    "xlnx_axi_dwidth_converter_dm_slave",
+    "xlnx_axi_quad_spi",
+    "xlnx_axi_gpio",
+    "xlnx_clk_gen",
+    "xlnx_dpti_clk",
+    "xlnx_mig_7_ddr3",
+]
 
 
 _BOARD_PARAMS = {
@@ -149,6 +177,65 @@ _BOARD_PARAMS = {
         clock_hz=25000000,
         dram_size={32: "0x08000000", 64: "0x20000000"},
         has_ethernet=False,
+    ),
+    FpgaBoard.zcu104: BoardParams(
+        part="xczu7ev-ffvc1156-2-e",
+        board_part="xilinx.com:zcu104:part0:1.1",
+        xdc="constraints/zcu104.xdc",
+        svh="src/zcu104.svh",
+        cfgmem_interface="SPIx1",
+        cfgmem_size=256,
+        uart_baudrate=115200,
+        # The clock of the block design: the clk_wiz of zcu104.tcl feeds the
+        # SoC with its 75 MHz output, and the bootloader derives its timers
+        # and its UART dividers from the same number.
+        clock_hz=75000000,
+        # 8 GB of DDR on the QSPI-programmable board: the device tree asks
+        # for it through the two cells of its 64-bit memory node.
+        dram_size={32: "0x08000000", 64: "0x200000000"},
+        has_ethernet=False,
+        bootrom_platform="PLAT_XILINX",
+        hw_device="xczu7ev_0",
+        # The peripherals and the memory controller of this board are not
+        # the nine IP cores of the seven-series boards: they are wired once
+        # and for all in a saved block design (see `bd`).
+        ips=[],
+        bd="scripts/block_designs/zcu104.tcl",
+    ),
+    FpgaBoard.pynq_z2: BoardParams(
+        part="xc7z020clg400-1",
+        board_part="tul.com.tw:pynq-z2:part0:1.0",
+        xdc="constraints/pynq_z2.xdc",
+        svh="src/pynq_z2.svh",
+        cfgmem_interface="SPIx1",
+        cfgmem_size=256,
+        uart_baudrate=115200,
+        clock_hz=25000000,
+        dram_size={32: "0x08000000", 64: "0x10000000"},
+        has_ethernet=False,
+        bootrom_platform="PLAT_XILINX",
+        hw_device="xc7z020_0",
+        ips=[],
+        bd="scripts/block_designs/pynq_z2.tcl",
+    ),
+    FpgaBoard.kr260: BoardParams(
+        part="xck26-sfvc784-2LV-c",
+        board_part="xilinx.com:kr260_som:part0:1.1",
+        xdc="constraints/kr260.xdc",
+        svh="src/kr260.svh",
+        cfgmem_interface="SPIx1",
+        cfgmem_size=256,
+        uart_baudrate=115200,
+        # The clk_wiz of kr260.tcl: 60 MHz out of the 33.333 MHz SOM clock.
+        clock_hz=60000000,
+        dram_size={32: "0x08000000", 64: "0x40000000"},
+        has_ethernet=False,
+        bootrom_platform="PLAT_XILINX",
+        # The JTAG device of the carrier card is not referenced by the
+        # programming recipe: it is read from the server at run time.
+        hw_device=None,
+        ips=[],
+        bd="scripts/block_designs/kr260.tcl",
     ),
 }
 
@@ -282,9 +369,14 @@ def bootrom_defines(board):
     `DRAM_SIZE_32`), so the unused one simply never matches.
     """
     params = any_board_params(board)
+    # The 64-bit memory node of the device tree is two cells wide: boards
+    # with more than 4 GB (the 8 GB of the ZCU104) need its high word, the
+    # `DRAM_SIZE_64_UP` placeholder, which the Makefile flow sets by hand.
+    dram64 = int(params.dram_size[64], 16)
     return {
         "DRAM_SIZE_32": params.dram_size[32],
         "DRAM_SIZE_64": params.dram_size[64],
+        "DRAM_SIZE_64_UP": hex(dram64 >> 32),
         "HALF_CLOCK_FREQUENCY": params.clock_hz // 2,
         "CLOCK_FREQUENCY": params.clock_hz,
         "UART_BITRATE": params.uart_baudrate,
@@ -300,21 +392,6 @@ def board_params(board):
     a recipe obtains one.
     """
     return _BOARD_PARAMS[FpgaBoard(board)]
-
-
-# Vivado IP cores instantiated by the FPGA top level. Each name is both the IP
-# directory under `corev_apu/fpga/xilinx/` and the `.xci` basename.
-FPGA_IPS = [
-    "xlnx_axi_clock_converter",
-    "xlnx_axi_dwidth_converter",
-    "xlnx_axi_dwidth_converter_dm_master",
-    "xlnx_axi_dwidth_converter_dm_slave",
-    "xlnx_axi_quad_spi",
-    "xlnx_axi_gpio",
-    "xlnx_clk_gen",
-    "xlnx_dpti_clk",
-    "xlnx_mig_7_ddr3",
-]
 
 
 def ip_dir(repo_dir, ip_name):

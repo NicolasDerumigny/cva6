@@ -95,7 +95,7 @@
       interrupt-parent = <&PLIC0>;
       interrupts = < 2 2 >;
       reg = < 0x0 0x20000000 0x0 0x1000 >;
-      xlnx,family = "kintex7";
+      xlnx,family = "zynq7";
       xlnx,fifo-exist = <0x1>;
       xlnx,num-ss-bits = <0x1>;
       xlnx,num-transfer-bits = <0x8>;
@@ -118,14 +118,14 @@
       //   //interrupt-parent = <&PLIC0>;
       // };
     };
-    eth: lowrisc-eth@30000000 {
-      compatible = "lowrisc-eth";
-      device_type = "network";
-      interrupt-parent = <&PLIC0>;
-      interrupts = <3 0>;
-      local-mac-address = [00 18 3e 02 e3 7f]; // This needs to change if more than one GenesysII on a VLAN
-      reg = <0x0 0x30000000 0x0 0x8000>;
-    };
+    //eth: lowrisc-eth@30000000 {
+    //  compatible = "lowrisc-eth";
+    //  device_type = "network";
+    //  interrupt-parent = <&PLIC0>;
+    //  interrupts = <3 0>;
+    //  local-mac-address = [00 18 3e 02 e3 7f]; // This needs to change if more than one GenesysII on a VLAN
+    //  reg = <0x0 0x30000000 0x0 0x8000>;
+    //};
     xlnx_gpio: gpio@40000000 {
       #gpio-cells = <2>;
       compatible = "xlnx,xps-gpio-1.00.a";

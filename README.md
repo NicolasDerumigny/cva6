@@ -18,7 +18,7 @@ Throughout all build and simulations scripts executions, you can use the environ
 - if left undefined, `NUM_JOBS` will default to 1, resulting in a sequential execution
 of `make` jobs;
 - when setting `NUM_JOBS` to an explicit value, it is recommended not to exceed 2/3 of
-the total number of virtual cores available on your system.    
+the total number of virtual cores available on your system.
 
 1. Checkout the repository and initialize all submodules.
 ```sh
@@ -69,7 +69,7 @@ Four simulation types are supported:
 - **veri-testharness**: verilator with corev_apu/testharness testbench
 - **vcs-testharness**: vcs with corev_apu/testharness testbench
 - **vcs-uvm**: vcs with UVM testbench
-- **Spike** ISS 
+- **Spike** ISS
 
 You can set several simulators, such as :
 
@@ -79,10 +79,10 @@ export DV_SIMULATORS=veri-testharness,vcs-testharness,vcs_uvm
 
 If exactly 2 simulators are given, their trace is compared ([see the Regression tests section](#running-regression-tests-simulations)).
 
-Here is how you can run the hello world C program with the Verilator model: 
+Here is how you can run the hello world C program with the Verilator model:
 
 ```sh
-# Make sure to source this script from the root directory 
+# Make sure to source this script from the root directory
 # to correctly set the environment variables related to the tools
 source verif/sim/setup-env.sh
 
@@ -144,7 +144,7 @@ Assuming you ran the smoke-tests scripts in the previous step, here is the log d
 - **directed_c_tests/**: The compiled (to .o then .bin) c tests
 - **spike_sim/**: Spike simulation log and trace files
 - **veri_testharness_sim**: Verilator simulation log and trace files
-- **iss_regr.log**: The regression test log 
+- **iss_regr.log**: The regression test log
 
 The regression test log summarizes the comparison between the simulator trace and the Spike trace. Beware that a if a test fails before the comparison step, it will not appear in this log, check the output of cva6.py and the logs of the simulation instead.
 
@@ -216,7 +216,7 @@ python3 cva6.py --testlist=../tests/testlist_riscv-tests-cv64a6_imafdc_sv39-p.ya
 We currently provide support for the [Genesys 2 board](https://reference.digilentinc.com/reference/programmable-logic/genesys-2/reference-manual) and the [Agilex 7 Development Kit](https://www.intel.la/content/www/xl/es/products/details/fpga/development-kits/agilex/agf014.html).
 
 - **Genesys 2**
-    
+
     We provide pre-build bitstream and memory configuration files for the Genesys 2 [here](https://github.com/openhwgroup/cva6/releases).
 
     Tested on Vivado 2018.2. The FPGA currently contains the following peripherals:
@@ -232,16 +232,16 @@ We currently provide support for the [Genesys 2 board](https://reference.digilen
 > The ethernet controller and the corresponding network connection is still work in progress and not functional at the moment. Expect some updates soon-ish.
 
 - **Agilex 7**
-  
+
    Tested on Quartus Prime Version 24.1.0 Pro Edition. The FPGA currently contains the following peripherals:
-  
+
    - DDR4 memory controller
    - JTAG port (see debugging section below)
    - Bootrom containing zero stage bootloader
    - UART
    - GPIOs connected to LEDs
 
-> The ethernet controller and the corresponding network connection, as well as the SD Card connection and the capability to boot linux are still work in progress and not functional at the moment. Expect some updates soon-ish. 
+> The ethernet controller and the corresponding network connection, as well as the SD Card connection and the capability to boot linux are still work in progress and not functional at the moment. Expect some updates soon-ish.
 
 
 ## Programming the Memory Configuration File or bitstream
@@ -267,7 +267,7 @@ We currently provide support for the [Genesys 2 board](https://reference.digilen
    - For this you need to use the JTAG UART provided with Quartus installation
 
 ```
-.$quartus_installation_path/qprogrammer/quartus/bin/juart-terminal 
+.$quartus_installation_path/qprogrammer/quartus/bin/juart-terminal
 juart-terminal: connected to hardware target using JTAG UART on cable
 juart-terminal: "AGF FPGA Development Kit [1-3]", device 1, instance 0
 juart-terminal: (Use the IDE stop button or Ctrl-C to terminate)
@@ -313,7 +313,7 @@ We recommend to set the parameter FpgaAlteraEn (and also FpgaEn) to benefit from
 
 This will produce a bitstream file (in `altera/output_files`) which you can program following the previous instructions. **Note: Bear in mind that you need a Quartus Pro Licence to be able to generate this bitstream**
 
-To clean the project after generating the bitstream, use 
+To clean the project after generating the bitstream, use
 
 ```
 make clean-altera
@@ -361,14 +361,14 @@ Info : accepting 'gdb' connection on tcp/3333
 ```
 - **Agilex 7**
 
-You can debug (and program) the FPGA using a modified version of OpenOCD included with Quartus installation ($quartus_installation_path/qprogrammer/quartus/bin/openocd). 
+You can debug (and program) the FPGA using a modified version of OpenOCD included with Quartus installation ($quartus_installation_path/qprogrammer/quartus/bin/openocd).
 
 To get started, connect the micro USB port that is labeled with J13 to your machine. It is the same port that is used for the UART. Both use the JTAG interface and connect to the System Level Debugging (SLD) Hub instantiated inside the FPGA. Then the debugger connection goes to the virtual JTAG IP (vJTAG) which can be accessed with the modified version of OpenOCD.
 
 You can start openocd with the `altera/cva6.cfg` configuration file:
 
 ```
-./$quartus_installation_path/qprogrammer/quartus/bin/openocd -f altera/cva6.cfg 
+./$quartus_installation_path/qprogrammer/quartus/bin/openocd -f altera/cva6.cfg
 Open On-Chip Debugger 0.11.0-R22.4
 Licensed under GNU GPL v2
 For bug reports, read

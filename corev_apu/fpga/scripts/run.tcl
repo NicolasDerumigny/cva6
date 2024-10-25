@@ -19,34 +19,48 @@
 if {$::env(BOARD) eq "genesys2"} {
     add_files -fileset constrs_1 -norecurse constraints/genesys-2.xdc
 } elseif {$::env(BOARD) eq "kc705"} {
-      add_files -fileset constrs_1 -norecurse constraints/kc705.xdc
+    add_files -fileset constrs_1 -norecurse constraints/kc705.xdc
 } elseif {$::env(BOARD) eq "vc707"} {
-      add_files -fileset constrs_1 -norecurse constraints/vc707.xdc
+    add_files -fileset constrs_1 -norecurse constraints/vc707.xdc
 } elseif {$::env(BOARD) eq "nexys_video"} {
-      add_files -fileset constrs_1 -norecurse constraints/nexys_video.xdc
+    add_files -fileset constrs_1 -norecurse constraints/nexys_video.xdc
+} elseif {$::env(BOARD) eq "zcu104"} {
+    add_files -fileset constrs_1 -norecurse constraints/zcu104.xdc
 } else {
-      exit 1
+    exit 1
+}
+
+if {$::env(BOARD) eq "zcu104"} {
+    read_ip {
+        "xilinx/zynq_ultra_ps_e/zynq_ultra_ps_e.srcs/sources_1/ip/zynq_ultra_ps_e/zynq_ultra_ps_e.xci" \
+        "xilinx/axi_protocol_converter/axi_protocol_converter.srcs/sources_1/ip/axi_protocol_converter/axi_protocol_converter.xci" \
+        "xilinx/axi_jtag/axi_jtag.srcs/sources_1/ip/axi_jtag/axi_jtag.xci" \
+    }
+#        "xilinx/xlnx_mig_ddr4/xlnx_mig_ddr4.srcs/sources_1/ip/xlnx_mig_ddr4/xlnx_mig_ddr4.xci"
+} else {
+    read_ip {
+        "xilinx/xlnx_mig_7_ddr3/xlnx_mig_7_ddr3.srcs/sources_1/ip/xlnx_mig_7_ddr3/xlnx_mig_7_ddr3.xci" \
+        "xilinx/xlnx_axi_clock_converter/xlnx_axi_clock_converter.srcs/sources_1/ip/xlnx_axi_clock_converter/xlnx_axi_clock_converter.xci" \
+        "xilinx/xlnx_axi_dwidth_converter_dm_slave/xlnx_axi_dwidth_converter_dm_slave.srcs/sources_1/ip/xlnx_axi_dwidth_converter_dm_slave/xlnx_axi_dwidth_converter_dm_slave.xci" \
+        "xilinx/xlnx_axi_dwidth_converter_dm_master/xlnx_axi_dwidth_converter_dm_master.srcs/sources_1/ip/xlnx_axi_dwidth_converter_dm_master/xlnx_axi_dwidth_converter_dm_master.xci" \
+    }
 }
 
 read_ip { \
-      "xilinx/xlnx_mig_7_ddr3/xlnx_mig_7_ddr3.srcs/sources_1/ip/xlnx_mig_7_ddr3/xlnx_mig_7_ddr3.xci" \
-      "xilinx/xlnx_axi_clock_converter/xlnx_axi_clock_converter.srcs/sources_1/ip/xlnx_axi_clock_converter/xlnx_axi_clock_converter.xci" \
-      "xilinx/xlnx_axi_dwidth_converter/xlnx_axi_dwidth_converter.srcs/sources_1/ip/xlnx_axi_dwidth_converter/xlnx_axi_dwidth_converter.xci" \
-      "xilinx/xlnx_axi_dwidth_converter_dm_slave/xlnx_axi_dwidth_converter_dm_slave.srcs/sources_1/ip/xlnx_axi_dwidth_converter_dm_slave/xlnx_axi_dwidth_converter_dm_slave.xci" \
-      "xilinx/xlnx_axi_dwidth_converter_dm_master/xlnx_axi_dwidth_converter_dm_master.srcs/sources_1/ip/xlnx_axi_dwidth_converter_dm_master/xlnx_axi_dwidth_converter_dm_master.xci" \
-      "xilinx/xlnx_axi_gpio/xlnx_axi_gpio.srcs/sources_1/ip/xlnx_axi_gpio/xlnx_axi_gpio.xci" \
-      "xilinx/xlnx_axi_quad_spi/xlnx_axi_quad_spi.srcs/sources_1/ip/xlnx_axi_quad_spi/xlnx_axi_quad_spi.xci" \
-      "xilinx/xlnx_clk_gen/xlnx_clk_gen.srcs/sources_1/ip/xlnx_clk_gen/xlnx_clk_gen.xci" \
+    "xilinx/xlnx_axi_gpio/xlnx_axi_gpio.srcs/sources_1/ip/xlnx_axi_gpio/xlnx_axi_gpio.xci" \
+    "xilinx/xlnx_axi_quad_spi/xlnx_axi_quad_spi.srcs/sources_1/ip/xlnx_axi_quad_spi/xlnx_axi_quad_spi.xci" \
+    "xilinx/xlnx_clk_gen/xlnx_clk_gen.srcs/sources_1/ip/xlnx_clk_gen/xlnx_clk_gen.xci" \
+    "xilinx/xlnx_axi_dwidth_converter/xlnx_axi_dwidth_converter.srcs/sources_1/ip/xlnx_axi_dwidth_converter/xlnx_axi_dwidth_converter.xci" \
 }
 # read_ip xilinx/xlnx_protocol_checker/ip/xlnx_protocol_checker.xci
 
 set_property include_dirs { \
-	"src/axi_sd_bridge/include" \
-	"../../vendor/pulp-platform/common_cells/include" \
-	"../../vendor/pulp-platform/axi/include" \
-	"../../core/cache_subsystem/hpdcache/rtl/include" \
-	"../register_interface/include" \
-	"../../core/include" \
+    "src/axi_sd_bridge/include" \
+    "../../vendor/pulp-platform/common_cells/include" \
+    "../../vendor/pulp-platform/axi/include" \
+    "../../core/cache_subsystem/hpdcache/rtl/include" \
+    "../register_interface/include" \
+    "../../core/include" \
 } [current_fileset]
 
 source scripts/add_sources.tcl
@@ -68,6 +82,10 @@ if {$::env(BOARD) eq "genesys2"} {
 } elseif {$::env(BOARD) eq "nexys_video"} {
       read_verilog -sv {src/nexys_video.svh ../../vendor/pulp-platform/common_cells/include/common_cells/registers.svh}
       set file "src/nexys_video.svh"
+      set registers "../../vendor/pulp-platform/common_cells/include/common_cells/registers.svh"
+} elseif {$::env(BOARD) eq "zcu104"} {
+      read_verilog -sv {src/zcu104.svh ../../vendor/pulp-platform/common_cells/include/common_cells/registers.svh}
+      set file "src/zcu104.svh"
       set registers "../../vendor/pulp-platform/common_cells/include/common_cells/registers.svh"
 } else {
     exit 1

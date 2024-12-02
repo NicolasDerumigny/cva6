@@ -9,7 +9,10 @@ module ariane_peripherals_wrapper
 (
     input logic aclk,
     input logic aresetn,
-    input wire [2:0] irqs_in,
+    input wire uart_irq_i,
+    input wire spi_irq_i,
+    input wire eth_irq_i,
+    input wire[ariane_soc::NumSources-1:7] irq_i,
     `AXI_INTERFACE_MODULE_INPUT(s_axi_plic),
     `AXI_INTERFACE_MODULE_INPUT(s_axi_timer),
     output logic [1:0] irq_out
@@ -47,7 +50,10 @@ ariane_peripherals #(
     .eth_clk_i    ( 0                            ),
     .ethernet     ( master[ariane_soc::Ethernet] ),
     .timer        ( master[ariane_soc::Timer]    ),
-    .irq_i        ( irqs_in                      ),
+    .uart_irq_i   ( uart_irq_i                   ),
+    .spi_irq_i    ( spi_irq_i                    ),
+    .eth_irq_i    ( eth_irq_i                    ),
+    .irq_i        ( irq_i                        ),
     .irq_o        ( irq_out                      ),
     .rx_i         ( 0                            ),
     .tx_o         ( /* not used*/                ),

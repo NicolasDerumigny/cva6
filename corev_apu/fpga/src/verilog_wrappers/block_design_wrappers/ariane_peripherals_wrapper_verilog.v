@@ -9,7 +9,10 @@ module ariane_peripherals_wrapper_verilog
 (
     input wire aclk,
     input wire aresetn,
-    input wire [2:0] irqs_in,
+    input wire uart_irq_i,
+    input wire spi_irq_i,
+    input wire eth_irq_i,
+    input wire[29:7] irq_i,
     `AXI_INTERFACE_MODULE_INPUT(s_axi_plic),
     `AXI_INTERFACE_MODULE_INPUT(s_axi_timer),
     output wire [1:0] irq_out
@@ -28,9 +31,12 @@ i_peripherals_mapper
 (
     .aclk(aclk),
     .aresetn(aresetn),
-    .irqs_in(irqs_in),
     `AXI_INTERFACE_FORWARD(s_axi_plic),
     `AXI_INTERFACE_FORWARD(s_axi_timer),
+    .uart_irq_i(uart_irq_i),
+    .spi_irq_i(spi_irq_i),
+    .eth_irq_i(eth_irq_i),
+    .irq_i(irq_i),
     .irq_out(irq_out)
 );
 

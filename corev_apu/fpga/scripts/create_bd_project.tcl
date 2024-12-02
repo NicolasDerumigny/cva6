@@ -97,7 +97,6 @@ add_files -fileset $obj -verbose [list \
 add_files -fileset $obj -scan_for_includes -verbose [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/ariane"]
 add_files -fileset $obj -scan_for_includes -verbose [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/block_design_wrappers"]
 add_files -fileset $obj -scan_for_includes -verbose [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/utils"]
-
 set_property file_type SystemVerilog [get_files *.svh]
 
 # Actually create the block design

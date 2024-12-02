@@ -8,7 +8,7 @@ module cva6_wrapper_verilog
     parameter AXI_CUT_BYPASS=1
 )
 (
-    (*X_INTERFACE_PARAMETER = "FREQ_HZ 50000000"*)
+    (*X_INTERFACE_PARAMETER = "FREQ_HZ 100000000"*)
     input wire aclk,
     input wire aresetn,
     (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 irqs_in INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
@@ -19,7 +19,7 @@ module cva6_wrapper_verilog
     input wire timer_irq_i,
     (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 debug_req_irq INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
     input wire debug_req_irq,
-    
+
 
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu)
 );

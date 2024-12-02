@@ -33,7 +33,11 @@ module ariane_peripherals #(
     AXI_BUS.Slave      gpio            ,
     AXI_BUS.Slave      ethernet        ,
     AXI_BUS.Slave      timer           ,
-    input  wire  [2:0] irq_i           ,
+    
+    input  wire        uart_irq_i      ,
+    input  wire        spi_irq_i       ,
+    input  wire        eth_irq_i       ,
+    input  wire[ariane_soc::NumSources-1:7] irq_i,
     output logic [1:0] irq_o           ,
     // UART
     input  logic       rx_i            ,
@@ -67,8 +71,8 @@ module ariane_peripherals #(
     // ---------------
     logic [ariane_soc::NumSources-1:0] irq_sources;
 
-    // Unused interrupt sources
-    assign irq_sources[ariane_soc::NumSources-1:7] = '0;
+    // External interrupt sources
+    assign irq_sources[ariane_soc::NumSources-1:7] = irq_i[ariane_soc::NumSources-1:7];
 
     REG_BUS #(
         .ADDR_WIDTH ( 32 ),
@@ -292,7 +296,7 @@ module ariane_peripherals #(
             .SOUT    ( tx_o            )
         );
     end else begin
-        assign irq_sources[0] = irq_i[0];
+        assign irq_sources[0] = uart_irq_i;
         /* pragma translate_off */
         `ifndef VERILATOR
         mock_uart i_mock_uart (
@@ -489,7 +493,7 @@ module ariane_peripherals #(
         assign spi_mosi = 1'b0;
         assign spi_ss = 1'b0;
 
-        assign irq_sources[1] = irq_i[1];
+        assign irq_sources[1] = spi_irq_i;
         assign spi.aw_ready = 1'b1;
         assign spi.ar_ready = 1'b1;
         assign spi.w_ready = 1'b1;
@@ -580,7 +584,7 @@ module ariane_peripherals #(
        );
 
     end else begin
-        assign irq_sources[2] = irq_i[2];
+        assign irq_sources[2] = eth_irq_i;
         assign ethernet.aw_ready = 1'b1;
         assign ethernet.ar_ready = 1'b1;
         assign ethernet.w_ready = 1'b1;

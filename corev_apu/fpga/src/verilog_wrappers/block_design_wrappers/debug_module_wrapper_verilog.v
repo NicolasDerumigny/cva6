@@ -7,7 +7,7 @@ module debug_module_wrapper_verilog
     parameter AXI_USER_WIDTH=1
 )
 (
-    (*X_INTERFACE_PARAMETER = "FREQ_HZ 50000000"*)
+    (*X_INTERFACE_PARAMETER = "FREQ_HZ 100000000"*)
     input wire aclk,
     input wire aresetn,
 
@@ -21,7 +21,7 @@ module debug_module_wrapper_verilog
     input  wire        jtag_tms,
     input  wire        jtag_tdi,
     output wire        jtag_tdo,
-    
+
     // to CPU/other peripherals
     (*X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 ndmreset RST", X_INTERFACE_PARAMETER="POLARITY ACTIVE_HIGH"*)
     output wire ndmreset,

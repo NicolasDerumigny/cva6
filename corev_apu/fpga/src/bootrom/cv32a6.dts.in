@@ -118,13 +118,76 @@
       //   //interrupt-parent = <&PLIC0>;
       // };
     };
-    eth: lowrisc-eth@30000000 {
+    eth_lowrisc: lowrisc-eth@30000000 {
       compatible = "lowrisc-eth";
       device_type = "network";
       interrupt-parent = <&PLIC0>;
       interrupts = <3 0>;
       local-mac-address = [00 18 3e 02 e3 7f]; // This needs to change if more than one GenesysII on a VLAN
       reg = <0x30000000 0x8000>;
+    };
+    eth_xlnx_dma: dma@41e00000 {
+        #dma-cells = <1>;
+        axistream-connected = <&eth_xlnx_mac>;
+        axistream-control-connected = <&eth_xlnx_mac>;
+        clock-frequency = <CLOCK_FREQUENCY>;
+        compatible = "xlnx,eth-dma";
+        reg = <0x0 0x41e00000 0x0 0x10000>;
+        xlnx,addrwidth = <0x40>;
+        xlnx,include-dre;
+        xlnx,num-queues = <0x1>;
+        interrupt-parent = <&PLIC0>;
+        // TX - RX
+        interrupts = <8 9>;
+    };
+    eth_xlnx_mac: ethernet@40c00000 {
+        axistream-connected = <&eth_xlnx_dma>;
+        axistream-control-connected = <&eth_xlnx_dma>;
+        clock-frequency = <CLOCK_FREQUENCY>;
+        compatible = "xlnx,axi-ethernet-7.2", "xlnx,axi-ethernet-1.00.a";
+        device_type = "network";
+        local-mac-address = [00 18 3e 02 e3 7f]; // This needs to change if more than one GenesysII on a VLAN
+        phy-mode = "rgmii";
+        reg = <0x0 0x40c00000 0x0 0x40000>;
+        xlnx = <0x0>;
+        xlnx,axiliteclkrate = <0x0>;
+        xlnx,axisclkrate = <0x0>;
+        xlnx,channel-ids = "1";
+        xlnx,clockselection = <0x0>;
+        xlnx,enableasyncsgmii = <0x0>;
+        xlnx,gt-type = <0x0>;
+        xlnx,gtinex = <0x0>;
+        xlnx,gtlocation = <0x0>;
+        xlnx,gtrefclksrc = <0x0>;
+        xlnx,include-dre;
+        xlnx,instantiatebitslice0 = <0x0>;
+        xlnx,num-queues =  <0x1>;
+        xlnx,phyaddr = <0x1>;
+        xlnx,phyrst-board-interface-dummy-port = <0x0>;
+        xlnx,rable = <0x0>;
+        xlnx,rxcsum = <0x2>;
+        xlnx,rxlane0-placement = <0x0>;
+        xlnx,rxlane1-placement = <0x0>;
+        xlnx,rxmem = <0x1000>;
+        xlnx,rxnibblebitslice0used = <0x0>;
+        xlnx,tx-in-upper-nibble = <0x1>;
+        xlnx,txcsum = <0x2>;
+        xlnx,txlane0-placement = <0x0>;
+        xlnx,txlane1-placement = <0x0>;
+        xlnx,versal-gt-board-flow = <0x0>;
+        phy-handle=<&eth_xlnx_phy0>;
+        interrupt-parent = <&PLIC0>;
+        interrupts = <3>;
+        eth_xlnx_mdio: mdio {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            eth_xlnx_phy0: phy@1 {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                device-type="ethernet-phy";
+                reg = <1>;
+            };
+        };
     };
     xlnx_gpio: gpio@40000000 {
       #gpio-cells = <2>;
@@ -144,5 +207,7 @@
     };
   };
 };
-// delete ethernet device if disabled
-/delete-node/ &eth; // DELETE_ETH
+// delete ethernet devices if disabled
+/delete-node/ &eth_lowrisc;  // DELETE_ETH_LOWRISC
+/delete-node/ &eth_xlnx_dma; // DELETE_ETH_XLNX
+/delete-node/ &eth_xlnx_mac; // DELETE_ETH_XLNX

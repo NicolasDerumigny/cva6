@@ -7,6 +7,14 @@
 ## UART (on PL-side UART2)
 # Set by the block design
 
+## UART2 (on PMOD1, lower connector)
+# Not needed
+#set_property -dict {PACKAGE_PIN L10  IOSTANDARD LVCMOS33} [get_ports uart_sbi_ctsn  ] # ~CTS -> ~RTS PMOD1_4
+set_property -dict {PACKAGE_PIN M10  IOSTANDARD LVCMOS33} [get_ports uart_sbi_txd   ]; # module RXD -> FPGA TXD  PMOD1_5
+set_property -dict {PACKAGE_PIN M8   IOSTANDARD LVCMOS33} [get_ports uart_sbi_rxd   ]; # module TXD -> FPGA RXD  PMOD1_6
+# Also not needed
+#set_property -dict {PACKAGE_PIN M9   IOSTANDARD LVCMOS33} [get_ports uart_sbi_rtsn  ] # ~RTS -> ~CTS PMOD1_7
+
 ## LEDs
 # Set by the block design
 

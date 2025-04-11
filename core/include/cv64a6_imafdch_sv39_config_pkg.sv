@@ -66,7 +66,7 @@ package cva6_config_pkg;
 
   localparam CVA6ConfigNrPMPEntries = 8;
 
-  localparam CVA6ConfigPerfCounterEn = 1;
+  localparam CVA6ConfigPerfCounterEn = 0;
 
   localparam config_pkg::cache_type_t CVA6ConfigDcacheType = config_pkg::WT;
 

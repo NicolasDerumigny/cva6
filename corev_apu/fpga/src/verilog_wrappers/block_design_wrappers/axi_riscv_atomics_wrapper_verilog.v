@@ -12,8 +12,6 @@ module axi_riscv_atomics_wrapper_verilog
     // supported if `aw_strb` is set correctly.
     parameter RISCV_WORD_WIDTH = 64
 )(
-     // TODO if this port is not named CLK, device tree generation in Vitis fails...
-    (*X_INTERFACE_PARAMETER = "FREQ_HZ 100000000"*)
     input wire CLK,
     input wire aresetn,
     // TODO dummy interrupt for device tree generation in Vitis

@@ -7,7 +7,6 @@ module debug_module_wrapper_verilog
     parameter AXI_USER_WIDTH=1
 )
 (
-    (*X_INTERFACE_PARAMETER = "FREQ_HZ 100000000"*)
     input wire aclk,
     input wire aresetn,
 

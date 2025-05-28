@@ -40,7 +40,7 @@ torture-logs   :=
 elf_file        ?= tmp/riscv-tests/build/benchmarks/dhrystone.riscv
 # board name for bitstream generation. Currently supported: zcu104, kc705, genesys2, nexys_video
 # pynq_z2
-BOARD          ?= genesys2
+BOARD          ?= pynq_z2
 ALTERA_BOARD		 ?= DK-DEV-AGF014E3ES
 ALTERA_FAMILY	 ?= "AGILEX"
 ALTERA_PART		 ?= AGFB014R24B2E2V

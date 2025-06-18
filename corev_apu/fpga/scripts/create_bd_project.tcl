@@ -104,13 +104,10 @@ set_property file_type SystemVerilog [get_files *.svh]
 source $origin_dir/corev_apu/fpga/scripts/block_designs/$board.tcl
 
 # Wrapper needs to be SystemVerilog not to conflict with global (SV) includes
-# and be called "ariane_xilinx"
 make_wrapper -files [get_files SoC.bd] -top
-exec mv "$origin_dir/corev_apu/fpga/ariane.gen/sources_1/bd/SoC/hdl/SoC_wrapper.v" "$origin_dir/corev_apu/fpga/ariane.gen/sources_1/bd/SoC/hdl/ariane_xilinx.v"
-exec sed -i "s/SoC_wrapper/ariane_xilinx/g" "$origin_dir/corev_apu/fpga/ariane.gen/sources_1/bd/SoC/hdl/ariane_xilinx.v"
-add_files -norecurse "$origin_dir/corev_apu/fpga/ariane.gen/sources_1/bd/SoC/hdl/ariane_xilinx.v"
-set_property FILE_TYPE SystemVerilog [get_files -all ariane_xilinx.v]
-set_property top ariane_xilinx [current_fileset]
+add_files -norecurse "$origin_dir/corev_apu/fpga/ariane.gen/sources_1/bd/SoC/hdl/SoC_wrapper.v"
+set_property FILE_TYPE SystemVerilog [get_files -all SoC_wrapper.v]
+set_property top SoC_wrapper [current_fileset]
 
 set_property include_dirs { \
     "src/axi_sd_bridge/include" \

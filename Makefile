@@ -114,7 +114,7 @@ endif
 # cv64a6_imafdc_sv39, cv32a6_imac_sv0, cv32a6_imac_sv32, cv32a6_imafc_sv32, cv32a6_ima_sv32_fpga, cv64a6_imafdch_sv39
 # Changing the default target to cv32a60x for Step1 verification
 target     ?= cv64a6_imafdch_sv39
-ifeq ($(target), $(filter $(target),cv64a6_imafdc_sv39 cv64a6_imafdch_sv39))
+ifeq ($(target), cv64a6_imafdch_sv39)
 	XLEN ?= 64
 else
 	XLEN ?= 32

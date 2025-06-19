@@ -812,6 +812,11 @@ fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
 	@echo "[FPGA] Generate Bitstream"
 	$(MAKE) -C corev_apu/fpga BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) ADD_SRC=$(add_fpga_src)
 
+.PHONY: bootrom-fpga
+bootrom-fpga:
+	$(MAKE) -C corev_apu/fpga/src/bootrom clean
+	$(MAKE) -C corev_apu/fpga/src/bootrom BOARD=$(BOARD) XLEN=$(XLEN) PLATFORM=$(PLATFORM) bootrom_$(XLEN).sv
+
 altera: PLATFORM := "PLAT_AGILEX"
 
 altera: $(ariane_pkg) $(src) $(fpga_src) $(src_flist)

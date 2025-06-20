@@ -7,8 +7,8 @@
 ## Clock
 set_property -dict {PACKAGE_PIN H16  IOSTANDARD LVCMOS33} [get_ports sys_clock ];
 
-## Reset -> btn0
-set_property -dict {PACKAGE_PIN D19  IOSTANDARD LVCMOS33} [get_ports ext_reset ];
+## Reset -> Switch 0
+set_property -dict {PACKAGE_PIN M20  IOSTANDARD LVCMOS33} [get_ports ext_reset ];
 
 ## UART (on PMOD A, lower connector)
 # Not needed

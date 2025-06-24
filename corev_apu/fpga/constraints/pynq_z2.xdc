@@ -10,23 +10,6 @@ set_property -dict {PACKAGE_PIN H16  IOSTANDARD LVCMOS33} [get_ports sys_clock ]
 ## Reset -> Switch 0
 set_property -dict {PACKAGE_PIN M20  IOSTANDARD LVCMOS33} [get_ports ext_reset ];
 
-## UART (on PMOD A, lower connector)
-# Not needed
-#set_property -dict {PACKAGE_PIN U18  IOSTANDARD LVCMOS33} [get_ports uart_ctsn  ] # ~CTS -> ~RTS JA3_P
-set_property -dict {PACKAGE_PIN U19  IOSTANDARD LVCMOS33} [get_ports uart_txd   ]; # module RXD -> FPGA TXD  JA3_N
-set_property -dict {PACKAGE_PIN W18  IOSTANDARD LVCMOS33} [get_ports uart_rxd   ]; # module TXD -> FPGA RXD  JA4_P
-# Also not needed
-#set_property -dict {PACKAGE_PIN W19   IOSTANDARD LVCMOS33} [get_ports uart_rtsn  ] # ~RTS -> ~CTS JA4_N
-
-## SD card
-# SPI mode,
-# Wired on PMODB
-# Requires an adapter https://digilent.com/shop/pmod-microsd-microsd-card-slot/
-set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports spi_clk_o ]; # Adapter Pin 4 -> JB2_N
-set_property -dict {PACKAGE_PIN T11 IOSTANDARD LVCMOS33} [get_ports spi_miso ] ; # Adapter Pin 3 -> JB2_P
-set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS33} [get_ports spi_mosi ] ; # Adapter Pin 2 -> JB1_N
-set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss ]   ; # Adapter Pin 1 -> JB1_P
-
 ### Switches
 #set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports {sws_2bits_tri_i[0]}]
 #set_property -dict {PACKAGE_PIN M19 IOSTANDARD LVCMOS33} [get_ports {sws_2bits_tri_i[1]}]

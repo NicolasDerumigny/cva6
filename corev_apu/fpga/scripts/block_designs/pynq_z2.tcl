@@ -138,10 +138,8 @@ set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:axi_bram_ctrl:4.1\
-xilinx.com:ip:axi_quad_spi:3.2\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:proc_sys_reset:5.0\
-xilinx.com:ip:axi_uart16550:2.0\
 xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:processing_system7:5.5\
 xilinx.com:ip:clk_wiz:6.0\
@@ -244,15 +242,11 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 DDR_AXI
 
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 UART_AXI
-
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 CLINT_AXI
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 TIMER_AXI
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 BOOTROM_AXI
-
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 SDCARD_AXI
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 PLIC_AXI
 
@@ -270,7 +264,7 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   set_property -dict [list \
     CONFIG.ENABLE_ADVANCED_OPTIONS {1} \
     CONFIG.ENABLE_PROTOCOL_CHECKERS {0} \
-    CONFIG.NUM_MI {7} \
+    CONFIG.NUM_MI {5} \
     CONFIG.NUM_SI {1} \
     CONFIG.S00_HAS_DATA_FIFO {2} \
     CONFIG.S01_HAS_DATA_FIFO {2} \
@@ -297,21 +291,19 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   # Create interface connections
   connect_bd_intf_net -intf_net CPU_AXI_1 [get_bd_intf_pins CPU_AXI] [get_bd_intf_pins axi_riscv_atomics_wrapper_0/s_axi_in]
   connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins axi_interconnect_0/M04_AXI] [get_bd_intf_pins BOOTROM_AXI]
-  connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins axi_interconnect_0/M06_AXI] [get_bd_intf_pins SDCARD_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins DDR_AXI] [get_bd_intf_pins axi_interconnect_0/M00_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_0_M01_AXI [get_bd_intf_pins UART_AXI] [get_bd_intf_pins axi_interconnect_0/M01_AXI]
+  connect_bd_intf_net -intf_net axi_interconnect_0_M01_AXI [get_bd_intf_pins CLINT_AXI] [get_bd_intf_pins axi_interconnect_0/M01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M02_AXI [get_bd_intf_pins TIMER_AXI] [get_bd_intf_pins axi_interconnect_0/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M03_AXI [get_bd_intf_pins PLIC_AXI] [get_bd_intf_pins axi_interconnect_0/M03_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_0_M05_AXI [get_bd_intf_pins CLINT_AXI] [get_bd_intf_pins axi_interconnect_0/M05_AXI]
   connect_bd_intf_net -intf_net axi_riscv_atomics_wrapper_0_m_axi_out [get_bd_intf_pins axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
 
   # Create port connections
   connect_bd_net -net M00_ACLK_1 [get_bd_pins ddr_clk] [get_bd_pins axi_interconnect_0/M00_ACLK]
   connect_bd_net -net M00_ARESETN_1 [get_bd_pins ddr_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN]
-  connect_bd_net -net S02_ARESETN_2 [get_bd_pins aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/M04_ARESETN] [get_bd_pins axi_interconnect_0/M05_ARESETN] [get_bd_pins axi_interconnect_0/M06_ARESETN] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn]
+  connect_bd_net -net S02_ARESETN_2 [get_bd_pins aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/M04_ARESETN] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn]
   connect_bd_net -net aclk1_1 [get_bd_pins clk_cpu] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK]
   connect_bd_net -net axi_riscv_atomics_wrapper_0_m_axi_out_awatop [get_bd_pins cpu_atop_in] [get_bd_pins axi_riscv_atomics_wrapper_0/s_axi_in_awatop]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK] [get_bd_pins axi_interconnect_0/M05_ACLK] [get_bd_pins axi_interconnect_0/M06_ACLK]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -357,12 +349,6 @@ proc create_root_design { parentCell } {
 
 
   # Create ports
-  set spi_clk_o [ create_bd_port -dir O -type clk spi_clk_o ]
-  set spi_ss [ create_bd_port -dir O -from 0 -to 0 -type data spi_ss ]
-  set spi_mosi [ create_bd_port -dir O -type data spi_mosi ]
-  set spi_miso [ create_bd_port -dir I -type data spi_miso ]
-  set uart_txd [ create_bd_port -dir O uart_txd ]
-  set uart_rxd [ create_bd_port -dir I uart_rxd ]
   set sys_clock [ create_bd_port -dir I -type clk -freq_hz 125000000 sys_clock ]
   set ext_reset [ create_bd_port -dir I ext_reset ]
 
@@ -372,23 +358,6 @@ proc create_root_design { parentCell } {
     CONFIG.DATA_WIDTH {64} \
     CONFIG.SINGLE_PORT_BRAM {1} \
   ] $axi_bootrom_control
-
-
-  # Create instance: sdcard_quad_spi_axi, and set properties
-  set sdcard_quad_spi_axi [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi:3.2 sdcard_quad_spi_axi ]
-  set_property -dict [list \
-    CONFIG.Async_Clk {0} \
-    CONFIG.C_FAMILY {kintex7} \
-    CONFIG.C_FIFO_DEPTH {256} \
-    CONFIG.C_SCK_RATIO {2} \
-    CONFIG.C_SPI_MODE {0} \
-    CONFIG.C_SUB_FAMILY {kintex7} \
-    CONFIG.C_TYPE_OF_AXI4_INTERFACE {1} \
-    CONFIG.C_USE_STARTUP {0} \
-    CONFIG.QSPI_BOARD_INTERFACE {Custom} \
-    CONFIG.UC_FAMILY {0} \
-    CONFIG.USE_BOARD_FLOW {true} \
-  ] $sdcard_quad_spi_axi
 
 
   # Create instance: bootrom_wrapper_0, and set properties
@@ -457,14 +426,6 @@ proc create_root_design { parentCell } {
 
   # Create instance: cpu_reset_gen25, and set properties
   set cpu_reset_gen25 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 cpu_reset_gen25 ]
-
-  # Create instance: axi_uart16550_0, and set properties
-  set axi_uart16550_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550:2.0 axi_uart16550_0 ]
-  set_property -dict [list \
-    CONFIG.UART_BOARD_INTERFACE {Custom} \
-    CONFIG.USE_BOARD_FLOW {false} \
-  ] $axi_uart16550_0
-
 
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
@@ -1107,8 +1068,6 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net axi_mem_intercon_M00_AXI [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
   connect_bd_intf_net -intf_net cpu_0_m_axi_cpu [get_bd_intf_pins cpu_0/m_axi_cpu] [get_bd_intf_pins northbridge/CPU_AXI]
   connect_bd_intf_net -intf_net northbridge_DDR_AXI [get_bd_intf_pins northbridge/DDR_AXI] [get_bd_intf_pins ram_offset_to_zero_0/s_axi_ram]
-  connect_bd_intf_net -intf_net northbridge_M06_AXI [get_bd_intf_pins sdcard_quad_spi_axi/AXI_FULL] [get_bd_intf_pins northbridge/SDCARD_AXI]
-  connect_bd_intf_net -intf_net northbridge_UART_AXI [get_bd_intf_pins axi_uart16550_0/S_AXI] [get_bd_intf_pins northbridge/UART_AXI]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
   connect_bd_intf_net -intf_net ram_offset_to_zero_0_m_axi_ram [get_bd_intf_pins ram_offset_to_zero_0/m_axi_ram] [get_bd_intf_pins axi_mem_intercon/S00_AXI]
@@ -1119,28 +1078,20 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_bootrom_control_bram_addr_a [get_bd_pins axi_bootrom_control/bram_addr_a] [get_bd_pins xlconcat_0/In0]
   connect_bd_net -net axi_bram_ctrl_0_bram_clk_a [get_bd_pins axi_bootrom_control/bram_clk_a] [get_bd_pins bootrom_wrapper_0/clk_i]
   connect_bd_net -net axi_bram_ctrl_0_bram_en_a [get_bd_pins axi_bootrom_control/bram_en_a] [get_bd_pins bootrom_wrapper_0/req_i]
-  connect_bd_net -net axi_quad_spi_0_io0_o [get_bd_pins sdcard_quad_spi_axi/io0_o] [get_bd_ports spi_mosi]
-  connect_bd_net -net axi_quad_spi_0_sck_o [get_bd_pins sdcard_quad_spi_axi/sck_o] [get_bd_ports spi_clk_o]
-  connect_bd_net -net axi_quad_spi_0_ss_o [get_bd_pins sdcard_quad_spi_axi/ss_o] [get_bd_ports spi_ss]
-  connect_bd_net -net axi_uart16550_0_ip2intc_irpt [get_bd_pins axi_uart16550_0/ip2intc_irpt] [get_bd_pins ariane_peripherals_0/uart_irq_i]
-  connect_bd_net -net axi_uart16550_0_sout [get_bd_pins axi_uart16550_0/sout] [get_bd_ports uart_txd]
   connect_bd_net -net bootrom_wrapper_0_rdata_o [get_bd_pins bootrom_wrapper_0/rdata_o] [get_bd_pins axi_bootrom_control/bram_rddata_a]
   connect_bd_net -net clint_0_ipi_o [get_bd_pins clint_0/ipi_o] [get_bd_pins cpu_0/ipi_in]
   connect_bd_net -net clint_0_timer_irq_o [get_bd_pins clint_0/timer_irq_o] [get_bd_pins cpu_0/timer_irq_i]
-  connect_bd_net -net clk_wiz_0_clk_50 [get_bd_pins clk_wiz_0/clk_50] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk] [get_bd_pins ram_offset_to_zero_0/aclk] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins northbridge/ddr_clk] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins axi_mem_intercon/ACLK]
+  connect_bd_net -net clk_wiz_0_clk_50 [get_bd_pins clk_wiz_0/clk_50] [get_bd_pins ram_offset_to_zero_0/aclk] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins northbridge/ddr_clk] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins axi_mem_intercon/ACLK]
   connect_bd_net -net cpu_0_m_axi_cpu_awatop [get_bd_pins cpu_0/m_axi_cpu_awatop] [get_bd_pins northbridge/cpu_atop_in]
   connect_bd_net -net cpu_interconnect_aresetn_1 [get_bd_pins cpu_reset_gen25/interconnect_aresetn] [get_bd_pins northbridge/aresetn]
-  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen25/peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins ariane_peripherals_0/aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins cpu_0/aresetn] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins northbridge/ddr_aresetn]
-  connect_bd_net -net mig_aclk_1 [get_bd_pins clk_wiz_0/clk_25] [get_bd_pins northbridge/aclk] [get_bd_pins northbridge/clk_cpu] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins cpu_reset_gen25/slowest_sync_clk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk]
+  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen25/peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins ariane_peripherals_0/aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins cpu_0/aresetn] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins northbridge/ddr_aresetn]
+  connect_bd_net -net mig_aclk_1 [get_bd_pins clk_wiz_0/clk_25] [get_bd_pins northbridge/aclk] [get_bd_pins northbridge/clk_cpu] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins cpu_reset_gen25/slowest_sync_clk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins cpu_reset_gen25/ext_reset_in]
   connect_bd_net -net reset_ext_1 [get_bd_ports ext_reset] [get_bd_pins util_vector_logic_2/Op1]
-  connect_bd_net -net sdcard_quad_spi_axi_ip2intc_irpt [get_bd_pins sdcard_quad_spi_axi/ip2intc_irpt] [get_bd_pins ariane_peripherals_0/spi_irq_i]
-  connect_bd_net -net sin_0_1 [get_bd_ports uart_rxd] [get_bd_pins axi_uart16550_0/sin]
-  connect_bd_net -net spi_miso_1 [get_bd_ports spi_miso] [get_bd_pins sdcard_quad_spi_axi/io1_i]
   connect_bd_net -net sys_clock_1 [get_bd_ports sys_clock] [get_bd_pins clk_wiz_0/clk_in1]
   connect_bd_net -net util_vector_logic_2_Res [get_bd_pins util_vector_logic_2/Res] [get_bd_pins cpu_reset_gen25/aux_reset_in]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins xlconcat_0/dout] [get_bd_pins bootrom_wrapper_0/addr_i]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_uart16550_0/freeze] [get_bd_pins ariane_peripherals_0/eth_irq_i] [get_bd_pins cpu_0/debug_req_irq]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins ariane_peripherals_0/eth_irq_i] [get_bd_pins cpu_0/debug_req_irq]
   connect_bd_net -net xlconstant_3_dout [get_bd_pins xlconstant_3/dout] [get_bd_pins ariane_peripherals_0/irq_i]
 
   # Create address segments
@@ -1149,10 +1100,8 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x0C000000 -range 0x04000000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs ariane_peripherals_0/s_axi_plic/reg0] -force
   assign_bd_address -offset 0x18000000 -range 0x00010000 -with_name SEG_ariane_peripherals_0_reg0_1 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs ariane_peripherals_0/s_axi_timer/reg0] -force
   assign_bd_address -offset 0x00010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs axi_bootrom_control/S_AXI/Mem0] -force
-  assign_bd_address -offset 0x10000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x02000000 -range 0x00040000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs clint_0/s_axi_clint/reg0] -force
   assign_bd_address -offset 0x80000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs ram_offset_to_zero_0/s_axi_ram/reg0] -force
-  assign_bd_address -offset 0x20000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs sdcard_quad_spi_axi/aximm/MEM0] -force
 
 
   # Restore current instance

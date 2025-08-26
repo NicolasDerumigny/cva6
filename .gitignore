@@ -55,3 +55,7 @@ Bender.lock
 hwconfig_gen_*
 verdiRestore.tcl
 .venv/
+/verif/sim/encaps.traces
+/verif/sim/iti.traces
+/verif/sim/verilator.fst.hier
+*.ip_user_files

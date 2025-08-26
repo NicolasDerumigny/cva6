@@ -7,9 +7,9 @@
 import cva6_config_pkg::*;
 
 module cva6_wrapper #(
-    parameter AXI_ID_WIDTH   = 10,
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
+    parameter AXI_ID_WIDTH   = 4,
     parameter AXI_USER_WIDTH = 1,
     parameter AXI_CUT_BYPASS = 1
 ) (
@@ -20,7 +20,7 @@ module cva6_wrapper #(
     input logic timer_irq_i,
     input logic debug_req_irq,
 
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu)
+    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu, AXI_ID_WIDTH)
 );
 
 

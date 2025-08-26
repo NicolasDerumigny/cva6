@@ -1,9 +1,9 @@
 `ifndef ARIANE_XLNX_MAPPER_SVH
 `define ARIANE_XLNX_MAPPER_SVH
 
-`define AXI_INTERFACE_MODULE_INPUT(name)    \
+`define AXI_INTERFACE_MODULE_INPUT(name, id_width)    \
     /* AW Channel  */ \
-    input wire [AXI_ID_WIDTH - 1 : 0] ``name``_awid, \
+    input wire [id_width - 1 : 0] ``name``_awid, \
     input wire [AXI_ADDR_WIDTH - 1 : 0] ``name``_awaddr, \
     input wire [7:0] ``name``_awlen, \
     input wire [2:0] ``name``_awsize, \
@@ -25,13 +25,13 @@
     input wire ``name``_wvalid, \
     output wire ``name``_wready, \
     /* B Channel */\
-    output wire [AXI_ID_WIDTH - 1 : 0] ``name``_bid, \
+    output wire [id_width - 1 : 0] ``name``_bid, \
     output wire [1 : 0] ``name``_bresp, \
     output wire [AXI_USER_WIDTH-1:0] ``name``_buser, \
     output wire ``name``_bvalid, \
     input wire ``name``_bready, \
     /* AR Channel*/ \
-    input wire [AXI_ID_WIDTH - 1 : 0] ``name``_arid, \
+    input wire [id_width - 1 : 0] ``name``_arid, \
     input wire [AXI_ADDR_WIDTH - 1 : 0] ``name``_araddr, \
     input wire [7:0] ``name``_arlen, \
     input wire [2:0] ``name``_arsize, \
@@ -48,14 +48,14 @@
     output wire [AXI_DATA_WIDTH - 1 : 0] ``name``_rdata, \
     output wire [1 : 0] ``name``_rresp, \
     output wire ``name``_rlast, \
-    output wire [AXI_ID_WIDTH - 1 : 0] ``name``_rid, \
+    output wire [id_width - 1 : 0] ``name``_rid, \
     output wire [AXI_USER_WIDTH-1:0] ``name``_ruser, \
     output wire ``name``_rvalid, \
     input wire ``name``_rready
 
-`define AXI_INTERFACE_MODULE_OUTPUT(name)    \
+`define AXI_INTERFACE_MODULE_OUTPUT(name, id_width)    \
     /* AW Channel  */ \
-    output wire [AXI_ID_WIDTH - 1 : 0] ``name``_awid, \
+    output wire [id_width - 1 : 0] ``name``_awid, \
     output wire [AXI_ADDR_WIDTH - 1 : 0] ``name``_awaddr, \
     output wire [7:0] ``name``_awlen, \
     output wire [2:0] ``name``_awsize, \
@@ -77,13 +77,13 @@
     output wire ``name``_wvalid, \
     input wire ``name``_wready, \
     /* B Channel */\
-    input wire [AXI_ID_WIDTH - 1 : 0] ``name``_bid, \
+    input wire [id_width - 1 : 0] ``name``_bid, \
     input wire [1 : 0] ``name``_bresp, \
     input wire [AXI_USER_WIDTH-1:0] ``name``_buser, \
     input wire ``name``_bvalid, \
     output wire ``name``_bready, \
     /* AR Channel*/ \
-    output wire [AXI_ID_WIDTH - 1 : 0] ``name``_arid, \
+    output wire [id_width - 1 : 0] ``name``_arid, \
     output wire [AXI_ADDR_WIDTH - 1 : 0] ``name``_araddr, \
     output wire [7:0] ``name``_arlen, \
     output wire [2:0] ``name``_arsize, \
@@ -100,7 +100,7 @@
     input wire [AXI_DATA_WIDTH - 1 : 0] ``name``_rdata, \
     input wire [1 : 0] ``name``_rresp, \
     input wire ``name``_rlast, \
-    input wire [AXI_ID_WIDTH - 1 : 0] ``name``_rid, \
+    input wire [id_width - 1 : 0] ``name``_rid, \
     input wire [AXI_USER_WIDTH-1:0] ``name``_ruser, \
     input wire ``name``_rvalid, \
     output wire ``name``_rready

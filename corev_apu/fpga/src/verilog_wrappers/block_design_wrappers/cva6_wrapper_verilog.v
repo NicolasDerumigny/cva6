@@ -1,8 +1,8 @@
 `include "ariane_xlnx_mapper.svh"
 module cva6_wrapper_verilog #(
-    parameter AXI_ID_WIDTH   = 10,
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
+    parameter AXI_ID_WIDTH   = 4,
     parameter AXI_USER_WIDTH = 1,
     parameter AXI_CUT_BYPASS = 1
 ) (
@@ -18,13 +18,13 @@ module cva6_wrapper_verilog #(
     input wire debug_req_irq,
 
 
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu)
+    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu, AXI_ID_WIDTH)
 );
 
   cva6_wrapper #(
-      .AXI_ID_WIDTH  (AXI_ID_WIDTH),
       .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
       .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+      .AXI_ID_WIDTH  (AXI_ID_WIDTH),
       .AXI_USER_WIDTH(AXI_USER_WIDTH),
       .AXI_CUT_BYPASS(AXI_CUT_BYPASS)
   ) i_cva6_wrapper (

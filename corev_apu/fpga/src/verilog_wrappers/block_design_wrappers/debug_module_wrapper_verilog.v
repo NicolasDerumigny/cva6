@@ -1,18 +1,18 @@
 `include "ariane_xlnx_mapper.svh"
 module debug_module_wrapper_verilog
 #(
-    parameter AXI_ID_WIDTH=10,
-    parameter AXI_ADDR_WIDTH=64,
-    parameter AXI_DATA_WIDTH=64,
-    parameter AXI_USER_WIDTH=1
+    parameter AXI_ADDR_WIDTH   = 64,
+    parameter AXI_DATA_WIDTH   = 64,
+    parameter AXI_MST_ID_WIDTH = 4,
+    parameter AXI_SLV_ID_WIDTH = 6,
+    parameter AXI_USER_WIDTH   = 1
 )
 (
     input wire aclk,
     input wire aresetn,
 
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_dmi_jtag),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_dmi_jtag),
-
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_dmi_jtag, AXI_SLV_ID_WIDTH),
+    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_dmi_jtag, AXI_MST_ID_WIDTH),
 
     // jtag ports
     input  wire        jtag_trst_n,
@@ -30,9 +30,10 @@ module debug_module_wrapper_verilog
 
 debug_module_wrapper
 #(
-    .AXI_ID_WIDTH(AXI_ID_WIDTH),
     .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
     .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+    .AXI_MST_ID_WIDTH(AXI_MST_ID_WIDTH),
+    .AXI_SLV_ID_WIDTH(AXI_SLV_ID_WIDTH),
     .AXI_USER_WIDTH(AXI_USER_WIDTH)
 )
 i_debug_module_wrapper

@@ -7,17 +7,18 @@
 import cva6_config_pkg::*;
 
 module debug_module_wrapper#(
-    parameter AXI_ID_WIDTH   = 10,
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
+    parameter AXI_MST_ID_WIDTH   = 4,
+    parameter AXI_SLV_ID_WIDTH   = 6,
     parameter AXI_USER_WIDTH = 1
 )
 (
     input logic aclk,
     input logic aresetn,
 
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_dmi_jtag),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_dmi_jtag),
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_dmi_jtag, AXI_SLV_ID_WIDTH),
+    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_dmi_jtag, AXI_MST_ID_WIDTH),
 
     // jtag ports
     input  logic        trst_n,
@@ -52,9 +53,16 @@ logic dmactive;
 AXI_BUS #(
     .AXI_ADDR_WIDTH ( AXI_ADDR_WIDTH          ),
     .AXI_DATA_WIDTH ( AXI_DATA_WIDTH          ),
-    .AXI_ID_WIDTH   ( AXI_ID_WIDTH            ),
+    .AXI_ID_WIDTH   ( AXI_SLV_ID_WIDTH        ),
     .AXI_USER_WIDTH ( AXI_DATA_WIDTH          )
-) slave_bus (), master_bus();
+) slave_bus ();
+
+AXI_BUS #(
+    .AXI_ADDR_WIDTH ( AXI_ADDR_WIDTH          ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH          ),
+    .AXI_ID_WIDTH   ( AXI_MST_ID_WIDTH        ),
+    .AXI_USER_WIDTH ( AXI_DATA_WIDTH          )
+) master_bus();
 
 // ---------------
 // Debug Module
@@ -133,7 +141,7 @@ dm_top #(
 );
 
 axi2mem #(
-    .AXI_ID_WIDTH   ( AXI_ID_WIDTH        ),
+    .AXI_ID_WIDTH   ( AXI_SLV_ID_WIDTH    ),
     .AXI_ADDR_WIDTH ( CVA6Cfg.XLEN        ),
     .AXI_DATA_WIDTH ( CVA6Cfg.XLEN        ),
     .AXI_USER_WIDTH ( AXI_USER_WIDTH      )

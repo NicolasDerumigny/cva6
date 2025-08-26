@@ -13,8 +13,8 @@ module ariane_peripherals_wrapper#(
     input wire spi_irq_i,
     input wire eth_irq_i,
     input wire[ariane_soc::NumSources-1:7] irq_i,
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_plic),
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_timer),
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_plic, AXI_ID_WIDTH),
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_timer, AXI_ID_WIDTH),
     output logic [1:0] irq_out
 );
 

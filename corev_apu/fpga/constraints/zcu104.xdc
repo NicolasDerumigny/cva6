@@ -1,10 +1,14 @@
 ##################################################################################
 ## ZCU104 Rev1.0 Master XDC                                                     ##
 ##################################################################################
+## HPDCache
+set_property ALLOW_COMBINATORIAL_LOOPS true [get_nets SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_cache_hpd.i_cva6_hpdcache_subsystem/i_dcache/i_hpdcache/hpdcache_mem_req_write_arbiter_i/hpdcache_fxarb_mem_req_write_i/*]
+
 ## JTAG
 # Controlled by PS (AXI-mapped)
 
 ## UART (on PL-side UART2)
+
 #set_property -dict { PACKAGE_PIN A20  IOSTANDARD LVCMOS18 } [get_ports UART_txd        ];
 #set_property -dict { PACKAGE_PIN C19  IOSTANDARD LVCMOS18 } [get_ports UART_rxd        ];
 
@@ -20,22 +24,52 @@
 #set_property -dict { PACKAGE_PIN F5   IOSTANDARD LVCMOS33 } [get_ports { sw[2]  }];
 #set_property -dict { PACKAGE_PIN F4   IOSTANDARD LVCMOS33 } [get_ports { sw[3]  }];
 
+## Reset on dip switch
+set_property -dict {PACKAGE_PIN E4 IOSTANDARD LVCMOS33} [get_ports sys_rst]
+
 ## Fan Control
 # Controlled by PS
 
 ## Ethernet
-# Controlled by PS
+# Requires an FMC mezzanine card https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html
+# Right/a adapter only
+
+# 125 MHz reference clock (from FMC)
+# Done by the clocking wizard
+#create_clock -period 8.000 -name ref_clk_125 [get_ports ref_clk_125_clk_p]
+# 125 MHz reference clock (from the board)
+set_property -dict {PACKAGE_PIN F23 IOSTANDARD LVDS} [get_ports clk_125_clk_p]
+set_property -dict {PACKAGE_PIN E23 IOSTANDARD LVDS} [get_ports clk_125_clk_n]
+
+# Port a - MDIO
+
+# Port a - Other
+set_property -dict {PACKAGE_PIN E17 IOSTANDARD LVCMOS18} [get_ports int_n]
+set_property -dict {PACKAGE_PIN D16 IOSTANDARD LVCMOS18} [get_ports eth_rst]
+# Port a - RGMII
+
+# Port a - board led (input)
+set_property -dict {PACKAGE_PIN E18 IOSTANDARD LVCMOS18} [get_ports led_0_a]
+# Port a - right led (activity/status)
+set_property -dict {PACKAGE_PIN G18 IOSTANDARD LVCMOS18} [get_ports led_ar_c_c2m]
+set_property -dict {PACKAGE_PIN F18 IOSTANDARD LVCMOS18} [get_ports led_ar_a_c2m]
+# Port a - left led (activity/status)
+set_property -dict {PACKAGE_PIN G15 IOSTANDARD LVCMOS18} [get_ports led_al_c_c2m]
+set_property -dict {PACKAGE_PIN F15 IOSTANDARD LVCMOS18} [get_ports led_al_a_c2m]
 
 ## SD card
 # SPI mode,
 # Wired on PMOD0
 # Requires an adapter https://digilent.com/shop/pmod-microsd-microsd-card-slot/
-set_property -dict {PACKAGE_PIN H7 IOSTANDARD LVCMOS33} [get_ports spi_clk_o ]; # Adapter Pin 4 -> Pin J55.1 -> PMOD0_3
-set_property -dict {PACKAGE_PIN G7 IOSTANDARD LVCMOS33} [get_ports spi_miso ]; # Adapter Pin 3 -> Pin J55.5 -> PMOD0_2
-set_property -dict {PACKAGE_PIN H8 IOSTANDARD LVCMOS33} [get_ports spi_mosi ]; # Adapter Pin 2 -> Pin J55.3 -> PMOD0_1
-set_property -dict {PACKAGE_PIN G8 IOSTANDARD LVCMOS33} [get_ports spi_ss ]; # Adapter Pin 1 -> Pin J55.1 -> PMOD0_0
+set_property -dict {PACKAGE_PIN H7 IOSTANDARD LVCMOS33} [get_ports spi_clk_o]
+set_property -dict {PACKAGE_PIN G7 IOSTANDARD LVCMOS33} [get_ports spi_miso]
+set_property -dict {PACKAGE_PIN H8 IOSTANDARD LVCMOS33} [get_ports spi_mosi]
+set_property -dict {PACKAGE_PIN G8 IOSTANDARD LVCMOS33} [get_ports spi_ss]
+
+## Other async signals
 
 ### DDR4
+# Reset
 ## Clock
 # Set in BD
 #set_property PACKAGE_PIN AH17     [get_ports clk_300mhz_clk_n] ; # Bank  64 VCCO - VCC1V2   - IO_L13N_T2L_N1_GC_QBC_64
@@ -44,242 +78,10 @@ set_property -dict {PACKAGE_PIN G8 IOSTANDARD LVCMOS33} [get_ports spi_ss ]; # A
 #set_property IOSTANDARD  DIFF_SSTL12_DCI [get_ports clk_300mhz_clk_p] ; # Bank  64 VCCO - VCC1V2   - IO_L13P_T2L_N0_GC_QBC_64
 ## Pinout
 # Not set in BD (custom RAM)
-set_property PACKAGE_PIN AC13     [get_ports { c0_ddr4_dq[32] }] ; # Bank  66 VCCO - VCC1V2   - IO_L24N_T3U_N11_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[32] }] ; # Bank  66 VCCO - VCC1V2   - IO_L24N_T3U_N11_66
-set_property PACKAGE_PIN AB13     [get_ports { c0_ddr4_dq[33] }] ; # Bank  66 VCCO - VCC1V2   - IO_L24P_T3U_N10_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[33] }] ; # Bank  66 VCCO - VCC1V2   - IO_L24P_T3U_N10_66
-set_property PACKAGE_PIN AF12     [get_ports { c0_ddr4_dq[34] }] ; # Bank  66 VCCO - VCC1V2   - IO_L23N_T3U_N9_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[34] }] ; # Bank  66 VCCO - VCC1V2   - IO_L23N_T3U_N9_66
-set_property PACKAGE_PIN AE12     [get_ports { c0_ddr4_dq[35] }] ; # Bank  66 VCCO - VCC1V2   - IO_L23P_T3U_N8_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[35] }] ; # Bank  66 VCCO - VCC1V2   - IO_L23P_T3U_N8_66
-set_property PACKAGE_PIN AD12     [get_ports { c0_ddr4_dqs_c[4] }] ; # Bank  66 VCCO - VCC1V2   - IO_L22N_T3U_N7_DBC_AD0N_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[4] }] ; # Bank  66 VCCO - VCC1V2   - IO_L22N_T3U_N7_DBC_AD0N_66
-set_property PACKAGE_PIN AC12     [get_ports { c0_ddr4_dqs_t[4] }] ; # Bank  66 VCCO - VCC1V2   - IO_L22P_T3U_N6_DBC_AD0P_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[4] }] ; # Bank  66 VCCO - VCC1V2   - IO_L22P_T3U_N6_DBC_AD0P_66
-set_property PACKAGE_PIN AF13     [get_ports { c0_ddr4_dq[36] }] ; # Bank  66 VCCO - VCC1V2   - IO_L21N_T3L_N5_AD8N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[36] }] ; # Bank  66 VCCO - VCC1V2   - IO_L21N_T3L_N5_AD8N_66
-set_property PACKAGE_PIN AE13     [get_ports { c0_ddr4_dq[37] }] ; # Bank  66 VCCO - VCC1V2   - IO_L21P_T3L_N4_AD8P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[37] }] ; # Bank  66 VCCO - VCC1V2   - IO_L21P_T3L_N4_AD8P_66
-set_property PACKAGE_PIN AE14     [get_ports { c0_ddr4_dq[38] }] ; # Bank  66 VCCO - VCC1V2   - IO_L20N_T3L_N3_AD1N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[38] }] ; # Bank  66 VCCO - VCC1V2   - IO_L20N_T3L_N3_AD1N_66
-set_property PACKAGE_PIN AD14     [get_ports { c0_ddr4_dq[39] }] ; # Bank  66 VCCO - VCC1V2   - IO_L20P_T3L_N2_AD1P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[39] }] ; # Bank  66 VCCO - VCC1V2   - IO_L20P_T3L_N2_AD1P_66
-set_property PACKAGE_PIN AF11     [get_ports { c0_ddr4_dm_n[4] }] ; # Bank  66 VCCO - VCC1V2   - IO_L19P_T3L_N0_DBC_AD9P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[4] }] ; # Bank  66 VCCO - VCC1V2   - IO_L19P_T3L_N0_DBC_AD9P_66
-set_property PACKAGE_PIN AG8      [get_ports { c0_ddr4_dq[40] }] ; # Bank  66 VCCO - VCC1V2   - IO_L18N_T2U_N11_AD2N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[40] }] ; # Bank  66 VCCO - VCC1V2   - IO_L18N_T2U_N11_AD2N_66
-set_property PACKAGE_PIN AF8      [get_ports { c0_ddr4_dq[41] }] ; # Bank  66 VCCO - VCC1V2   - IO_L18P_T2U_N10_AD2P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[41] }] ; # Bank  66 VCCO - VCC1V2   - IO_L18P_T2U_N10_AD2P_66
-set_property PACKAGE_PIN AG10     [get_ports { c0_ddr4_dq[42] }] ; # Bank  66 VCCO - VCC1V2   - IO_L17N_T2U_N9_AD10N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[42] }] ; # Bank  66 VCCO - VCC1V2   - IO_L17N_T2U_N9_AD10N_66
-set_property PACKAGE_PIN AG11     [get_ports { c0_ddr4_dq[43] }] ; # Bank  66 VCCO - VCC1V2   - IO_L17P_T2U_N8_AD10P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[43] }] ; # Bank  66 VCCO - VCC1V2   - IO_L17P_T2U_N8_AD10P_66
-set_property PACKAGE_PIN AH9      [get_ports { c0_ddr4_dqs_c[5] }] ; # Bank  66 VCCO - VCC1V2   - IO_L16N_T2U_N7_QBC_AD3N_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[5] }] ; # Bank  66 VCCO - VCC1V2   - IO_L16N_T2U_N7_QBC_AD3N_66
-set_property PACKAGE_PIN AG9      [get_ports { c0_ddr4_dqs_t[5] }] ; # Bank  66 VCCO - VCC1V2   - IO_L16P_T2U_N6_QBC_AD3P_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[5] }] ; # Bank  66 VCCO - VCC1V2   - IO_L16P_T2U_N6_QBC_AD3P_66
-set_property PACKAGE_PIN AH13     [get_ports { c0_ddr4_dq[44] }] ; # Bank  66 VCCO - VCC1V2   - IO_L15N_T2L_N5_AD11N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[44] }] ; # Bank  66 VCCO - VCC1V2   - IO_L15N_T2L_N5_AD11N_66
-set_property PACKAGE_PIN AG13     [get_ports { c0_ddr4_dq[45] }] ; # Bank  66 VCCO - VCC1V2   - IO_L15P_T2L_N4_AD11P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[45] }] ; # Bank  66 VCCO - VCC1V2   - IO_L15P_T2L_N4_AD11P_66
-set_property PACKAGE_PIN AJ11     [get_ports { c0_ddr4_dq[46] }] ; # Bank  66 VCCO - VCC1V2   - IO_L14N_T2L_N3_GC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[46] }] ; # Bank  66 VCCO - VCC1V2   - IO_L14N_T2L_N3_GC_66
-set_property PACKAGE_PIN AH11     [get_ports { c0_ddr4_dq[47] }] ; # Bank  66 VCCO - VCC1V2   - IO_L14P_T2L_N2_GC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[47] }] ; # Bank  66 VCCO - VCC1V2   - IO_L14P_T2L_N2_GC_66
-set_property PACKAGE_PIN AH12     [get_ports { c0_ddr4_dm_n[5] }] ; # Bank  66 VCCO - VCC1V2   - IO_L13P_T2L_N0_GC_QBC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[5] }] ; # Bank  66 VCCO - VCC1V2   - IO_L13P_T2L_N0_GC_QBC_66
-set_property PACKAGE_PIN AK9      [get_ports { c0_ddr4_dq[48] }] ; # Bank  66 VCCO - VCC1V2   - IO_L12N_T1U_N11_GC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[48] }] ; # Bank  66 VCCO - VCC1V2   - IO_L12N_T1U_N11_GC_66
-set_property PACKAGE_PIN AJ9      [get_ports { c0_ddr4_dq[49] }] ; # Bank  66 VCCO - VCC1V2   - IO_L12P_T1U_N10_GC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[49] }] ; # Bank  66 VCCO - VCC1V2   - IO_L12P_T1U_N10_GC_66
-set_property PACKAGE_PIN AK10     [get_ports { c0_ddr4_dq[50] }] ; # Bank  66 VCCO - VCC1V2   - IO_L11N_T1U_N9_GC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[50] }] ; # Bank  66 VCCO - VCC1V2   - IO_L11N_T1U_N9_GC_66
-set_property PACKAGE_PIN AJ10     [get_ports { c0_ddr4_dq[51] }] ; # Bank  66 VCCO - VCC1V2   - IO_L11P_T1U_N8_GC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[51] }] ; # Bank  66 VCCO - VCC1V2   - IO_L11P_T1U_N8_GC_66
-set_property PACKAGE_PIN AL8      [get_ports { c0_ddr4_dqs_c[6] }] ; # Bank  66 VCCO - VCC1V2   - IO_L10N_T1U_N7_QBC_AD4N_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[6] }] ; # Bank  66 VCCO - VCC1V2   - IO_L10N_T1U_N7_QBC_AD4N_66
-set_property PACKAGE_PIN AK8      [get_ports { c0_ddr4_dqs_t[6] }] ; # Bank  66 VCCO - VCC1V2   - IO_L10P_T1U_N6_QBC_AD4P_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[6] }] ; # Bank  66 VCCO - VCC1V2   - IO_L10P_T1U_N6_QBC_AD4P_66
-set_property PACKAGE_PIN AL12     [get_ports { c0_ddr4_dq[52] }] ; # Bank  66 VCCO - VCC1V2   - IO_L9N_T1L_N5_AD12N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[52] }] ; # Bank  66 VCCO - VCC1V2   - IO_L9N_T1L_N5_AD12N_66
-set_property PACKAGE_PIN AK12     [get_ports { c0_ddr4_dq[53] }] ; # Bank  66 VCCO - VCC1V2   - IO_L9P_T1L_N4_AD12P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[53] }] ; # Bank  66 VCCO - VCC1V2   - IO_L9P_T1L_N4_AD12P_66
-set_property PACKAGE_PIN AL10     [get_ports { c0_ddr4_dq[54] }] ; # Bank  66 VCCO - VCC1V2   - IO_L8N_T1L_N3_AD5N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[54] }] ; # Bank  66 VCCO - VCC1V2   - IO_L8N_T1L_N3_AD5N_66
-set_property PACKAGE_PIN AL11     [get_ports { c0_ddr4_dq[55] }] ; # Bank  66 VCCO - VCC1V2   - IO_L8P_T1L_N2_AD5P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[55] }] ; # Bank  66 VCCO - VCC1V2   - IO_L8P_T1L_N2_AD5P_66
-set_property PACKAGE_PIN AK13     [get_ports { c0_ddr4_dm_n[6] }] ; # Bank  66 VCCO - VCC1V2   - IO_L7P_T1L_N0_QBC_AD13P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[6] }] ; # Bank  66 VCCO - VCC1V2   - IO_L7P_T1L_N0_QBC_AD13P_66
-set_property PACKAGE_PIN AM8      [get_ports { c0_ddr4_dq[56] }] ; # Bank  66 VCCO - VCC1V2   - IO_L6N_T0U_N11_AD6N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[56] }] ; # Bank  66 VCCO - VCC1V2   - IO_L6N_T0U_N11_AD6N_66
-set_property PACKAGE_PIN AM9      [get_ports { c0_ddr4_dq[57] }] ; # Bank  66 VCCO - VCC1V2   - IO_L6P_T0U_N10_AD6P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[57] }] ; # Bank  66 VCCO - VCC1V2   - IO_L6P_T0U_N10_AD6P_66
-set_property PACKAGE_PIN AM10     [get_ports { c0_ddr4_dq[58] }] ; # Bank  66 VCCO - VCC1V2   - IO_L5N_T0U_N9_AD14N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[58] }] ; # Bank  66 VCCO - VCC1V2   - IO_L5N_T0U_N9_AD14N_66
-set_property PACKAGE_PIN AM11     [get_ports { c0_ddr4_dq[59] }] ; # Bank  66 VCCO - VCC1V2   - IO_L5P_T0U_N8_AD14P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[59] }] ; # Bank  66 VCCO - VCC1V2   - IO_L5P_T0U_N8_AD14P_66
-set_property PACKAGE_PIN AN8      [get_ports { c0_ddr4_dqs_c[7] }] ; # Bank  66 VCCO - VCC1V2   - IO_L4N_T0U_N7_DBC_AD7N_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[7] }] ; # Bank  66 VCCO - VCC1V2   - IO_L4N_T0U_N7_DBC_AD7N_66
-set_property PACKAGE_PIN AN9      [get_ports { c0_ddr4_dqs_t[7] }] ; # Bank  66 VCCO - VCC1V2   - IO_L4P_T0U_N6_DBC_AD7P_66
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[7] }] ; # Bank  66 VCCO - VCC1V2   - IO_L4P_T0U_N6_DBC_AD7P_66
-set_property PACKAGE_PIN AP11     [get_ports { c0_ddr4_dq[60] }] ; # Bank  66 VCCO - VCC1V2   - IO_L3N_T0L_N5_AD15N_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[60] }] ; # Bank  66 VCCO - VCC1V2   - IO_L3N_T0L_N5_AD15N_66
-set_property PACKAGE_PIN AN11     [get_ports { c0_ddr4_dq[61] }] ; # Bank  66 VCCO - VCC1V2   - IO_L3P_T0L_N4_AD15P_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[61] }] ; # Bank  66 VCCO - VCC1V2   - IO_L3P_T0L_N4_AD15P_66
-set_property PACKAGE_PIN AP9      [get_ports { c0_ddr4_dq[62] }] ; # Bank  66 VCCO - VCC1V2   - IO_L2N_T0L_N3_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[62] }] ; # Bank  66 VCCO - VCC1V2   - IO_L2N_T0L_N3_66
-set_property PACKAGE_PIN AP10     [get_ports { c0_ddr4_dq[63] }] ; # Bank  66 VCCO - VCC1V2   - IO_L2P_T0L_N2_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[63] }] ; # Bank  66 VCCO - VCC1V2   - IO_L2P_T0L_N2_66
-set_property PACKAGE_PIN AN12     [get_ports { c0_ddr4_dm_n[7] }] ; # Bank  66 VCCO - VCC1V2   - IO_L1P_T0L_N0_DBC_66
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[7] }] ; # Bank  66 VCCO - VCC1V2   - IO_L1P_T0L_N0_DBC_66
-set_property PACKAGE_PIN AA20     [get_ports { c0_ddr4_dq[8] }] ; # Bank  65 VCCO - VCC1V2   - IO_L24N_T3U_N11_PERSTN0_65
-set_property IOSTANDARD  POD12_DCI   [get_ports { c0_ddr4_dq[8] }] ; # Bank  65 VCCO - VCC1V2   - IO_L24N_T3U_N11_PERSTN0_65
-set_property PACKAGE_PIN AA19     [get_ports { c0_ddr4_dq[9] }] ; # Bank  65 VCCO - VCC1V2   - IO_L24P_T3U_N10_PERSTN1_I2C_SDA_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[9] }] ; # Bank  65 VCCO - VCC1V2   - IO_L24P_T3U_N10_PERSTN1_I2C_SDA_65
-set_property PACKAGE_PIN AD19     [get_ports { c0_ddr4_dq[10] }] ; # Bank  65 VCCO - VCC1V2   - IO_L23N_T3U_N9_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[10] }] ; # Bank  65 VCCO - VCC1V2   - IO_L23N_T3U_N9_65
-set_property PACKAGE_PIN AC18     [get_ports { c0_ddr4_dq[11] }] ; # Bank  65 VCCO - VCC1V2   - IO_L23P_T3U_N8_I2C_SCLK_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[11] }] ; # Bank  65 VCCO - VCC1V2   - IO_L23P_T3U_N8_I2C_SCLK_65
-set_property PACKAGE_PIN AB18     [get_ports { c0_ddr4_dqs_c[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L22N_T3U_N7_DBC_AD0N_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L22N_T3U_N7_DBC_AD0N_65
-set_property PACKAGE_PIN AA18     [get_ports { c0_ddr4_dqs_t[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L22P_T3U_N6_DBC_AD0P_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L22P_T3U_N6_DBC_AD0P_65
-set_property PACKAGE_PIN AE20     [get_ports { c0_ddr4_dq[12] }] ; # Bank  65 VCCO - VCC1V2   - IO_L21N_T3L_N5_AD8N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[12] }] ; # Bank  65 VCCO - VCC1V2   - IO_L21N_T3L_N5_AD8N_65
-set_property PACKAGE_PIN AD20     [get_ports { c0_ddr4_dq[13] }] ; # Bank  65 VCCO - VCC1V2   - IO_L21P_T3L_N4_AD8P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[13] }] ; # Bank  65 VCCO - VCC1V2   - IO_L21P_T3L_N4_AD8P_65
-set_property PACKAGE_PIN AC19     [get_ports { c0_ddr4_dq[14] }] ; # Bank  65 VCCO - VCC1V2   - IO_L20N_T3L_N3_AD1N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[14] }] ; # Bank  65 VCCO - VCC1V2   - IO_L20N_T3L_N3_AD1N_65
-set_property PACKAGE_PIN AB19     [get_ports { c0_ddr4_dq[15] }] ; # Bank  65 VCCO - VCC1V2   - IO_L20P_T3L_N2_AD1P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[15] }] ; # Bank  65 VCCO - VCC1V2   - IO_L20P_T3L_N2_AD1P_65
-set_property PACKAGE_PIN AE18     [get_ports { c0_ddr4_dm_n[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L19P_T3L_N0_DBC_AD9P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L19P_T3L_N0_DBC_AD9P_65
-set_property PACKAGE_PIN AE24     [get_ports { c0_ddr4_dq[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L18N_T2U_N11_AD2N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L18N_T2U_N11_AD2N_65
-set_property PACKAGE_PIN AE23     [get_ports { c0_ddr4_dq[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L18P_T2U_N10_AD2P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[1] }] ; # Bank  65 VCCO - VCC1V2   - IO_L18P_T2U_N10_AD2P_65
-set_property PACKAGE_PIN AF22     [get_ports { c0_ddr4_dq[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L17N_T2U_N9_AD10N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L17N_T2U_N9_AD10N_65
-set_property PACKAGE_PIN AF21     [get_ports { c0_ddr4_dq[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L17P_T2U_N8_AD10P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L17P_T2U_N8_AD10P_65
-set_property PACKAGE_PIN AG23     [get_ports { c0_ddr4_dqs_c[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L16N_T2U_N7_QBC_AD3N_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L16N_T2U_N7_QBC_AD3N_65
-set_property PACKAGE_PIN AF23     [get_ports { c0_ddr4_dqs_t[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L16P_T2U_N6_QBC_AD3P_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L16P_T2U_N6_QBC_AD3P_65
-set_property PACKAGE_PIN AG20     [get_ports { c0_ddr4_dq[4] }] ; # Bank  65 VCCO - VCC1V2   - IO_L15N_T2L_N5_AD11N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[4] }] ; # Bank  65 VCCO - VCC1V2   - IO_L15N_T2L_N5_AD11N_65
-set_property PACKAGE_PIN AG19     [get_ports { c0_ddr4_dq[5] }] ; # Bank  65 VCCO - VCC1V2   - IO_L15P_T2L_N4_AD11P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[5] }] ; # Bank  65 VCCO - VCC1V2   - IO_L15P_T2L_N4_AD11P_65
-set_property PACKAGE_PIN AH21     [get_ports { c0_ddr4_dq[6] }] ; # Bank  65 VCCO - VCC1V2   - IO_L14N_T2L_N3_GC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[6] }] ; # Bank  65 VCCO - VCC1V2   - IO_L14N_T2L_N3_GC_65
-set_property PACKAGE_PIN AG21     [get_ports { c0_ddr4_dq[7] }] ; # Bank  65 VCCO - VCC1V2   - IO_L14P_T2L_N2_GC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[7] }] ; # Bank  65 VCCO - VCC1V2   - IO_L14P_T2L_N2_GC_65
-set_property PACKAGE_PIN AH22     [get_ports { c0_ddr4_dm_n[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L13P_T2L_N0_GC_QBC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[0] }] ; # Bank  65 VCCO - VCC1V2   - IO_L13P_T2L_N0_GC_QBC_65
-set_property PACKAGE_PIN AJ22     [get_ports { c0_ddr4_dq[16] }] ; # Bank  65 VCCO - VCC1V2   - IO_L12N_T1U_N11_GC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[16] }] ; # Bank  65 VCCO - VCC1V2   - IO_L12N_T1U_N11_GC_65
-set_property PACKAGE_PIN AJ21     [get_ports { c0_ddr4_dq[17] }] ; # Bank  65 VCCO - VCC1V2   - IO_L12P_T1U_N10_GC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[17] }] ; # Bank  65 VCCO - VCC1V2   - IO_L12P_T1U_N10_GC_65
-set_property PACKAGE_PIN AK20     [get_ports { c0_ddr4_dq[18] }] ; # Bank  65 VCCO - VCC1V2   - IO_L11N_T1U_N9_GC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[18] }] ; # Bank  65 VCCO - VCC1V2   - IO_L11N_T1U_N9_GC_65
-set_property PACKAGE_PIN AJ20     [get_ports { c0_ddr4_dq[19] }] ; # Bank  65 VCCO - VCC1V2   - IO_L11P_T1U_N8_GC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[19] }] ; # Bank  65 VCCO - VCC1V2   - IO_L11P_T1U_N8_GC_65
-set_property PACKAGE_PIN AK23     [get_ports { c0_ddr4_dqs_c[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L10N_T1U_N7_QBC_AD4N_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L10N_T1U_N7_QBC_AD4N_65
-set_property PACKAGE_PIN AK22     [get_ports { c0_ddr4_dqs_t[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L10P_T1U_N6_QBC_AD4P_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L10P_T1U_N6_QBC_AD4P_65
-set_property PACKAGE_PIN AK19     [get_ports { c0_ddr4_dq[20] }] ; # Bank  65 VCCO - VCC1V2   - IO_L9N_T1L_N5_AD12N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[20] }] ; # Bank  65 VCCO - VCC1V2   - IO_L9N_T1L_N5_AD12N_65
-set_property PACKAGE_PIN AJ19     [get_ports { c0_ddr4_dq[21] }] ; # Bank  65 VCCO - VCC1V2   - IO_L9P_T1L_N4_AD12P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[21] }] ; # Bank  65 VCCO - VCC1V2   - IO_L9P_T1L_N4_AD12P_65
-set_property PACKAGE_PIN AL23     [get_ports { c0_ddr4_dq[22] }] ; # Bank  65 VCCO - VCC1V2   - IO_L8N_T1L_N3_AD5N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[22] }] ; # Bank  65 VCCO - VCC1V2   - IO_L8N_T1L_N3_AD5N_65
-set_property PACKAGE_PIN AL22     [get_ports { c0_ddr4_dq[23] }] ; # Bank  65 VCCO - VCC1V2   - IO_L8P_T1L_N2_AD5P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[23] }] ; # Bank  65 VCCO - VCC1V2   - IO_L8P_T1L_N2_AD5P_65
-set_property PACKAGE_PIN AL20     [get_ports { c0_ddr4_dm_n[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L7P_T1L_N0_QBC_AD13P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[2] }] ; # Bank  65 VCCO - VCC1V2   - IO_L7P_T1L_N0_QBC_AD13P_65
-set_property PACKAGE_PIN AN23     [get_ports { c0_ddr4_dq[24] }] ; # Bank  65 VCCO - VCC1V2   - IO_L6N_T0U_N11_AD6N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[24] }] ; # Bank  65 VCCO - VCC1V2   - IO_L6N_T0U_N11_AD6N_65
-set_property PACKAGE_PIN AM23     [get_ports { c0_ddr4_dq[25] }] ; # Bank  65 VCCO - VCC1V2   - IO_L6P_T0U_N10_AD6P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[25] }] ; # Bank  65 VCCO - VCC1V2   - IO_L6P_T0U_N10_AD6P_65
-set_property PACKAGE_PIN AP23     [get_ports { c0_ddr4_dq[26] }] ; # Bank  65 VCCO - VCC1V2   - IO_L5N_T0U_N9_AD14N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[26] }] ; # Bank  65 VCCO - VCC1V2   - IO_L5N_T0U_N9_AD14N_65
-set_property PACKAGE_PIN AN22     [get_ports { c0_ddr4_dq[27] }] ; # Bank  65 VCCO - VCC1V2   - IO_L5P_T0U_N8_AD14P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[27] }] ; # Bank  65 VCCO - VCC1V2   - IO_L5P_T0U_N8_AD14P_65
-set_property PACKAGE_PIN AN21     [get_ports { c0_ddr4_dqs_c[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L4N_T0U_N7_DBC_AD7N_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_c[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L4N_T0U_N7_DBC_AD7N_65
-set_property PACKAGE_PIN AM21     [get_ports { c0_ddr4_dqs_t[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L4P_T0U_N6_DBC_AD7P_SMBALERT_65
-set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_dqs_t[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L4P_T0U_N6_DBC_AD7P_SMBALERT_65
-set_property PACKAGE_PIN AP22     [get_ports { c0_ddr4_dq[28] }] ; # Bank  65 VCCO - VCC1V2   - IO_L3N_T0L_N5_AD15N_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[28] }] ; # Bank  65 VCCO - VCC1V2   - IO_L3N_T0L_N5_AD15N_65
-set_property PACKAGE_PIN AP21     [get_ports { c0_ddr4_dq[29] }] ; # Bank  65 VCCO - VCC1V2   - IO_L3P_T0L_N4_AD15P_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[29] }] ; # Bank  65 VCCO - VCC1V2   - IO_L3P_T0L_N4_AD15P_65
-set_property PACKAGE_PIN AN19     [get_ports { c0_ddr4_dq[30] }] ; # Bank  65 VCCO - VCC1V2   - IO_L2N_T0L_N3_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[30] }] ; # Bank  65 VCCO - VCC1V2   - IO_L2N_T0L_N3_65
-set_property PACKAGE_PIN AM19     [get_ports { c0_ddr4_dq[31] }] ; # Bank  65 VCCO - VCC1V2   - IO_L2P_T0L_N2_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dq[31] }] ; # Bank  65 VCCO - VCC1V2   - IO_L2P_T0L_N2_65
-set_property PACKAGE_PIN AP19     [get_ports { c0_ddr4_dm_n[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L1P_T0L_N0_DBC_65
-set_property IOSTANDARD  POD12_DCI    [get_ports { c0_ddr4_dm_n[3] }] ; # Bank  65 VCCO - VCC1V2   - IO_L1P_T0L_N0_DBC_65
-set_property PACKAGE_PIN AD17     [get_ports { c0_ddr4_cke }] ; # Bank  64 VCCO - VCC1V2   - IO_L24P_T3U_N10_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_cke }] ; # Bank  64 VCCO - VCC1V2   - IO_L24P_T3U_N10_64
-set_property PACKAGE_PIN AB14     [get_ports { c0_ddr4_reset_n }] ; # Bank  64 VCCO - VCC1V2   - IO_L23N_T3U_N9_64
-set_property IOSTANDARD  LVCMOS12 [get_ports { c0_ddr4_reset_n }] ; # Bank  64 VCCO - VCC1V2   - IO_L23N_T3U_N9_64
-set_property PACKAGE_PIN AA14     [get_ports { c0_ddr4_adr[15] }] ; # Bank  64 VCCO - VCC1V2   - IO_L23P_T3U_N8_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[15] }] ; # Bank  64 VCCO - VCC1V2   - IO_L23P_T3U_N8_64
-set_property PACKAGE_PIN AA15     [get_ports { c0_ddr4_cs_n }] ; # Bank  64 VCCO - VCC1V2   - IO_L22N_T3U_N7_DBC_AD0N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_cs_n }] ; # Bank  64 VCCO - VCC1V2   - IO_L22N_T3U_N7_DBC_AD0N_64
-set_property PACKAGE_PIN AA16     [get_ports { c0_ddr4_adr[14] }] ; # Bank  64 VCCO - VCC1V2   - IO_L22P_T3U_N6_DBC_AD0P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[14] }] ; # Bank  64 VCCO - VCC1V2   - IO_L22P_T3U_N6_DBC_AD0P_64
-set_property PACKAGE_PIN AB16     [get_ports { c0_ddr4_bg[1] }] ; # Bank  64 VCCO - VCC1V2   - IO_L21P_T3L_N4_AD8P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_bg[1] }] ; # Bank  64 VCCO - VCC1V2   - IO_L21P_T3L_N4_AD8P_64
-set_property PACKAGE_PIN AC16     [get_ports { c0_ddr4_bg[0] }] ; # Bank  64 VCCO - VCC1V2   - IO_L20N_T3L_N3_AD1N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_bg[0] }] ; # Bank  64 VCCO - VCC1V2   - IO_L20N_T3L_N3_AD1N_64
-set_property PACKAGE_PIN AC17     [get_ports { c0_ddr4_act_n }] ; # Bank  64 VCCO - VCC1V2   - IO_L20P_T3L_N2_AD1P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_act_n }] ; # Bank  64 VCCO - VCC1V2   - IO_L20P_T3L_N2_AD1P_64
-set_property PACKAGE_PIN AE15     [get_ports { c0_ddr4_odt }] ; # Bank  64 VCCO - VCC1V2   - IO_L19N_T3L_N1_DBC_AD9N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_odt }] ; # Bank  64 VCCO - VCC1V2   - IO_L19N_T3L_N1_DBC_AD9N_64
-set_property PACKAGE_PIN AD15     [get_ports { c0_ddr4_adr[16] }] ; # Bank  64 VCCO - VCC1V2   - IO_L19P_T3L_N0_DBC_AD9P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[16] }] ; # Bank  64 VCCO - VCC1V2   - IO_L19P_T3L_N0_DBC_AD9P_64
-set_property PACKAGE_PIN AH16     [get_ports { c0_ddr4_adr[0] }] ; # Bank  64 VCCO - VCC1V2   - IO_T2U_N12_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[0] }] ; # Bank  64 VCCO - VCC1V2   - IO_T2U_N12_64
-set_property PACKAGE_PIN AG14     [get_ports { c0_ddr4_adr[1] }] ; # Bank  64 VCCO - VCC1V2   - IO_L18N_T2U_N11_AD2N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[1] }] ; # Bank  64 VCCO - VCC1V2   - IO_L18N_T2U_N11_AD2N_64
-set_property PACKAGE_PIN AG15     [get_ports { c0_ddr4_adr[2] }] ; # Bank  64 VCCO - VCC1V2   - IO_L18P_T2U_N10_AD2P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[2] }] ; # Bank  64 VCCO - VCC1V2   - IO_L18P_T2U_N10_AD2P_64
-set_property PACKAGE_PIN AF15     [get_ports { c0_ddr4_adr[3] }] ; # Bank  64 VCCO - VCC1V2   - IO_L17N_T2U_N9_AD10N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[3] }] ; # Bank  64 VCCO - VCC1V2   - IO_L17N_T2U_N9_AD10N_64
-set_property PACKAGE_PIN AF16     [get_ports { c0_ddr4_adr[4] }] ; # Bank  64 VCCO - VCC1V2   - IO_L17P_T2U_N8_AD10P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[4] }] ; # Bank  64 VCCO - VCC1V2   - IO_L17P_T2U_N8_AD10P_64
-set_property PACKAGE_PIN AJ14     [get_ports { c0_ddr4_adr[5] }] ; # Bank  64 VCCO - VCC1V2   - IO_L16N_T2U_N7_QBC_AD3N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[5] }] ; # Bank  64 VCCO - VCC1V2   - IO_L16N_T2U_N7_QBC_AD3N_64
-set_property PACKAGE_PIN AH14     [get_ports { c0_ddr4_adr[6] }] ; # Bank  64 VCCO - VCC1V2   - IO_L16P_T2U_N6_QBC_AD3P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[6] }] ; # Bank  64 VCCO - VCC1V2   - IO_L16P_T2U_N6_QBC_AD3P_64
-set_property PACKAGE_PIN AF17     [get_ports { c0_ddr4_adr[7] }] ; # Bank  64 VCCO - VCC1V2   - IO_L15N_T2L_N5_AD11N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[7] }] ; # Bank  64 VCCO - VCC1V2   - IO_L15N_T2L_N5_AD11N_64
-set_property PACKAGE_PIN AG18     [get_ports { c0_ddr4_ck_c }] ; # Bank  64 VCCO - VCC1V2   - IO_L14N_T2L_N3_GC_64
-set_property IOSTANDARD  DIFF_SSTL12_DCI [get_ports { c0_ddr4_ck_c }] ; # Bank  64 VCCO - VCC1V2   - IO_L14N_T2L_N3_GC_64
-set_property PACKAGE_PIN AF18     [get_ports { c0_ddr4_ck_t }] ; # Bank  64 VCCO - VCC1V2   - IO_L14P_T2L_N2_GC_64
-set_property IOSTANDARD  DIFF_SSTL12_DCI [get_ports { c0_ddr4_ck_t }] ; # Bank  64 VCCO - VCC1V2   - IO_L14P_T2L_N2_GC_64
 #set_property PACKAGE_PIN AJ15     [get_ports { c0_ddr4_CK1_C }] ; # Bank  64 VCCO - VCC1V2   - IO_L12N_T1U_N11_GC_64
 #set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_CK1_C }] ; # Bank  64 VCCO - VCC1V2   - IO_L12N_T1U_N11_GC_64
 #set_property PACKAGE_PIN AJ16     [get_ports { c0_ddr4_CK1_T }] ; # Bank  64 VCCO - VCC1V2   - IO_L12P_T1U_N10_GC_64
 #set_property IOSTANDARD  DIFF_POD12_DCI [get_ports { c0_ddr4_CK1_T }] ; # Bank  64 VCCO - VCC1V2   - IO_L12P_T1U_N10_GC_64
-set_property PACKAGE_PIN AK17     [get_ports { c0_ddr4_adr[8] }] ; # Bank  64 VCCO - VCC1V2   - IO_L11N_T1U_N9_GC_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[8] }] ; # Bank  64 VCCO - VCC1V2   - IO_L11N_T1U_N9_GC_64
-set_property PACKAGE_PIN AJ17     [get_ports { c0_ddr4_adr[9] }] ; # Bank  64 VCCO - VCC1V2   - IO_L11P_T1U_N8_GC_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[9] }] ; # Bank  64 VCCO - VCC1V2   - IO_L11P_T1U_N8_GC_64
-set_property PACKAGE_PIN AK14     [get_ports { c0_ddr4_adr[10] }] ; # Bank  64 VCCO - VCC1V2   - IO_L10N_T1U_N7_QBC_AD4N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[10] }] ; # Bank  64 VCCO - VCC1V2   - IO_L10N_T1U_N7_QBC_AD4N_64
-set_property PACKAGE_PIN AK15     [get_ports { c0_ddr4_adr[11] }] ; # Bank  64 VCCO - VCC1V2   - IO_L10P_T1U_N6_QBC_AD4P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[11] }] ; # Bank  64 VCCO - VCC1V2   - IO_L10P_T1U_N6_QBC_AD4P_64
-set_property PACKAGE_PIN AL18     [get_ports { c0_ddr4_adr[12] }] ; # Bank  64 VCCO - VCC1V2   - IO_L9N_T1L_N5_AD12N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[12] }] ; # Bank  64 VCCO - VCC1V2   - IO_L9N_T1L_N5_AD12N_64
-set_property PACKAGE_PIN AK18     [get_ports { c0_ddr4_adr[13] }] ; # Bank  64 VCCO - VCC1V2   - IO_L9P_T1L_N4_AD12P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_adr[13] }] ; # Bank  64 VCCO - VCC1V2   - IO_L9P_T1L_N4_AD12P_64
-set_property PACKAGE_PIN AL15     [get_ports { c0_ddr4_ba[0] }] ; # Bank  64 VCCO - VCC1V2   - IO_L8N_T1L_N3_AD5N_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_ba[0] }] ; # Bank  64 VCCO - VCC1V2   - IO_L8N_T1L_N3_AD5N_64
-set_property PACKAGE_PIN AL16     [get_ports { c0_ddr4_ba[1] }] ; # Bank  64 VCCO - VCC1V2   - IO_L8P_T1L_N2_AD5P_64
-set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_ba[1] }] ; # Bank  64 VCCO - VCC1V2   - IO_L8P_T1L_N2_AD5P_64
 #set_property PACKAGE_PIN AM15     [get_ports { c0_ddr4_CKE1 }] ; # Bank  64 VCCO - VCC1V2   - IO_L7N_T1L_N1_QBC_AD13N_64
 #set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_CKE1 }] ; # Bank  64 VCCO - VCC1V2   - IO_L7N_T1L_N1_QBC_AD13N_64
 #set_property PACKAGE_PIN AM16     [get_ports { c0_ddr4_ODT1 }] ; # Bank  64 VCCO - VCC1V2   - IO_L7P_T1L_N0_QBC_AD13P_64
@@ -1804,3 +1606,407 @@ set_property IOSTANDARD  SSTL12_DCI   [get_ports { c0_ddr4_ba[1] }] ; # Bank  64
 #Other net   PACKAGE_PIN AD22     - VCCINT_VCU                Bank 999 - VCCINT_VCU
 #Other net   PACKAGE_PIN AD23     - VCCINT_VCU                Bank 999 - VCCINT_VCU
 #Other net   PACKAGE_PIN AD24     - VCCINT_VCU                Bank 999 - VCCINT_VCU
+
+
+####################################################################################
+# Constraints from file : 'SoC_ddr4_0_0_board.xdc'
+####################################################################################
+
+# mdio_clk is not synchronous to the core clock
+## MDIO output (FPGA → ADIN1300)
+# tSU = 10 ns, tH = 10 ns
+## MDIO input (ADIN1300 → FPGA)
+# tDV_min = 0 ns, tDV_max = 60 ns
+
+####################################################################################
+# Constraints from file : 'bd_ed3c_eth_buf_0.xdc'
+####################################################################################
+
+create_pblock Core_1
+add_cells_to_pblock [get_pblocks Core_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/csr_regfile_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/gen_perf_counter.perf_counters_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/i_frontend} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/id_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/issue_stage_i/i_issue_read_operands} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6_icache}]]
+resize_pblock [get_pblocks Core_1] -add {SLICE_X65Y0:SLICE_X111Y149}
+resize_pblock [get_pblocks Core_1] -add {BUFG_GT_X0Y0:BUFG_GT_X0Y47}
+resize_pblock [get_pblocks Core_1] -add {BUFG_GT_SYNC_X0Y0:BUFG_GT_SYNC_X0Y29}
+resize_pblock [get_pblocks Core_1] -add {DSP48E2_X7Y0:DSP48E2_X13Y59}
+resize_pblock [get_pblocks Core_1] -add {RAMB18_X2Y0:RAMB18_X4Y59}
+resize_pblock [get_pblocks Core_1] -add {RAMB36_X2Y0:RAMB36_X4Y29}
+create_pblock Core_0
+add_cells_to_pblock [get_pblocks Core_0] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/csr_regfile_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/gen_perf_counter.perf_counters_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/i_frontend} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/id_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/issue_stage_i/i_issue_read_operands} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6_icache}]]
+resize_pblock [get_pblocks Core_0] -add {SLICE_X65Y210:SLICE_X111Y359}
+resize_pblock [get_pblocks Core_0] -add {BUFG_GT_X0Y96:BUFG_GT_X0Y143}
+resize_pblock [get_pblocks Core_0] -add {BUFG_GT_SYNC_X0Y60:BUFG_GT_SYNC_X0Y89}
+resize_pblock [get_pblocks Core_0] -add {DSP48E2_X7Y84:DSP48E2_X13Y143}
+resize_pblock [get_pblocks Core_0] -add {RAMB18_X2Y84:RAMB18_X4Y143}
+resize_pblock [get_pblocks Core_0] -add {RAMB36_X2Y42:RAMB36_X4Y71}
+
+create_pblock Cache_and_mem
+add_cells_to_pblock [get_pblocks Cache_and_mem] [get_cells -quiet [list SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_cache_hpd.i_cva6_hpdcache_subsystem]]
+resize_pblock [get_pblocks Cache_and_mem] -add {SLICE_X47Y299:SLICE_X111Y60}
+resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_GT_X0Y24:BUFG_GT_X0Y119}
+resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_GT_SYNC_X0Y15:BUFG_GT_SYNC_X0Y74}
+resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_PS_X0Y24:BUFG_PS_X0Y95}
+resize_pblock [get_pblocks Cache_and_mem] -add {DSP48E2_X3Y24:DSP48E2_X13Y119}
+resize_pblock [get_pblocks Cache_and_mem] -add {RAMB18_X1Y24:RAMB18_X4Y119}
+resize_pblock [get_pblocks Cache_and_mem] -add {RAMB36_X1Y12:RAMB36_X4Y59}
+resize_pblock [get_pblocks Cache_and_mem] -add {URAM288_X0Y16:URAM288_X0Y79}
+
+
+create_pblock DDR
+add_cells_to_pblock [get_pblocks DDR] [get_cells -quiet [list SoC_i/ddr4_0 SoC_i/northbridge/axi_clock_converter_0 SoC_i/northbridge/axi_riscv_amos_wrapp_0 {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[0].i_axi_mux}]]
+resize_pblock [get_pblocks DDR] -add {SLICE_X66Y60:SLICE_X88Y258}
+resize_pblock [get_pblocks DDR] -add {DSP48E2_X7Y24:DSP48E2_X11Y101}
+resize_pblock [get_pblocks DDR] -add {RAMB18_X2Y24:RAMB18_X2Y101}
+resize_pblock [get_pblocks DDR] -add {RAMB36_X2Y12:RAMB36_X2Y50}
+
+
+create_pblock Interconnect_low_speed
+add_cells_to_pblock [get_pblocks Interconnect_low_speed] [get_cells -quiet [list \
+          SoC_i/ariane_peripherals_0 \
+          SoC_i/axi_bootrom_control \
+          SoC_i/axi_gpio_0 \
+          SoC_i/axi_jtag_0 \
+          SoC_i/axi_uart16550_0 \
+          SoC_i/bootrom_wrapper_0 \
+          SoC_i/clint_0 \
+          SoC_i/cpu_debug \
+          SoC_i/cpu_reset_gen \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[1].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[2].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[3].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[4].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[5].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[6].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[7].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[8].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_ar_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_aw_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_demux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_err_slv} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_ar_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_aw_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_demux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_err_slv} \
+          SoC_i/northbridge/gpio_axi_dwidth_converter \
+          SoC_i/northbridge/gpio_axi_protocol_convert \
+          SoC_i/northbridge/sdcard_axi_dwidth_converter \
+          SoC_i/northbridge/uart_axi_dwidth_converter \
+          SoC_i/northbridge/uart_axi_protocol_convert \
+          SoC_i/proc_sys_reset_0 \
+          SoC_i/ps8_0_axi_periph \
+          SoC_i/sdcard_quad_spi_axi \
+          SoC_i/util_vector_logic_0 \
+          SoC_i/xlconcat_0 \
+          SoC_i/zynq_ultra_ps_e_0]]
+resize_pblock [get_pblocks Interconnect_low_speed] -add {SLICE_X0Y240:SLICE_X88Y359}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {DSP48E2_X0Y96:DSP48E2_X11Y143}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {RAMB18_X0Y96:RAMB18_X2Y143}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {RAMB36_X0Y48:RAMB36_X2Y71}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {URAM288_X0Y64:URAM288_X0Y95}
+create_pblock lsu_1
+add_cells_to_pblock [get_pblocks lsu_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/i_load_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/i_store_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/lsu_bypass_i}]]
+resize_pblock [get_pblocks lsu_1] -add {SLICE_X66Y33:SLICE_X111Y119}
+resize_pblock [get_pblocks lsu_1] -add {DSP48E2_X7Y14:DSP48E2_X13Y47}
+resize_pblock [get_pblocks lsu_1] -add {RAMB18_X2Y14:RAMB18_X4Y47}
+resize_pblock [get_pblocks lsu_1] -add {RAMB36_X2Y7:RAMB36_X4Y23}
+set_property PARENT Core_1 [get_pblocks lsu_1]
+create_pblock lsu_0
+add_cells_to_pblock [get_pblocks lsu_0] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/i_load_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/i_store_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/lsu_bypass_i}]]
+resize_pblock [get_pblocks lsu_0] -add {SLICE_X67Y180:SLICE_X111Y299}
+resize_pblock [get_pblocks lsu_0] -add {DSP48E2_X7Y72:DSP48E2_X13Y119}
+resize_pblock [get_pblocks lsu_0] -add {RAMB18_X2Y72:RAMB18_X4Y119}
+resize_pblock [get_pblocks lsu_0] -add {RAMB36_X2Y36:RAMB36_X4Y59}
+set_property PARENT Core_0 [get_pblocks lsu_0]
+
+
+
+
+
+
+
+
+set_property PACKAGE_PIN AC13 [get_ports {c0_ddr4_dq[32]}]
+set_property PACKAGE_PIN AB13 [get_ports {c0_ddr4_dq[33]}]
+set_property PACKAGE_PIN AF12 [get_ports {c0_ddr4_dq[34]}]
+set_property PACKAGE_PIN AE12 [get_ports {c0_ddr4_dq[35]}]
+set_property PACKAGE_PIN AC12 [get_ports {c0_ddr4_dqs_t[4]}]
+set_property PACKAGE_PIN AD12 [get_ports {c0_ddr4_dqs_c[4]}]
+set_property PACKAGE_PIN AF13 [get_ports {c0_ddr4_dq[36]}]
+set_property PACKAGE_PIN AE13 [get_ports {c0_ddr4_dq[37]}]
+set_property PACKAGE_PIN AE14 [get_ports {c0_ddr4_dq[38]}]
+set_property PACKAGE_PIN AD14 [get_ports {c0_ddr4_dq[39]}]
+set_property PACKAGE_PIN AF11 [get_ports {c0_ddr4_dm_n[4]}]
+set_property PACKAGE_PIN AG8 [get_ports {c0_ddr4_dq[40]}]
+set_property PACKAGE_PIN AF8 [get_ports {c0_ddr4_dq[41]}]
+set_property PACKAGE_PIN AG10 [get_ports {c0_ddr4_dq[42]}]
+set_property PACKAGE_PIN AG11 [get_ports {c0_ddr4_dq[43]}]
+set_property PACKAGE_PIN AG9 [get_ports {c0_ddr4_dqs_t[5]}]
+set_property PACKAGE_PIN AH9 [get_ports {c0_ddr4_dqs_c[5]}]
+set_property PACKAGE_PIN AH13 [get_ports {c0_ddr4_dq[44]}]
+set_property PACKAGE_PIN AG13 [get_ports {c0_ddr4_dq[45]}]
+set_property PACKAGE_PIN AJ11 [get_ports {c0_ddr4_dq[46]}]
+set_property PACKAGE_PIN AH11 [get_ports {c0_ddr4_dq[47]}]
+set_property PACKAGE_PIN AH12 [get_ports {c0_ddr4_dm_n[5]}]
+set_property PACKAGE_PIN AK9 [get_ports {c0_ddr4_dq[48]}]
+set_property PACKAGE_PIN AJ9 [get_ports {c0_ddr4_dq[49]}]
+set_property PACKAGE_PIN AK10 [get_ports {c0_ddr4_dq[50]}]
+set_property PACKAGE_PIN AJ10 [get_ports {c0_ddr4_dq[51]}]
+set_property PACKAGE_PIN AK8 [get_ports {c0_ddr4_dqs_t[6]}]
+set_property PACKAGE_PIN AL8 [get_ports {c0_ddr4_dqs_c[6]}]
+set_property PACKAGE_PIN AL12 [get_ports {c0_ddr4_dq[52]}]
+set_property PACKAGE_PIN AK12 [get_ports {c0_ddr4_dq[53]}]
+set_property PACKAGE_PIN AL10 [get_ports {c0_ddr4_dq[54]}]
+set_property PACKAGE_PIN AL11 [get_ports {c0_ddr4_dq[55]}]
+set_property PACKAGE_PIN AK13 [get_ports {c0_ddr4_dm_n[6]}]
+set_property PACKAGE_PIN AM8 [get_ports {c0_ddr4_dq[56]}]
+set_property PACKAGE_PIN AM9 [get_ports {c0_ddr4_dq[57]}]
+set_property PACKAGE_PIN AM10 [get_ports {c0_ddr4_dq[58]}]
+set_property PACKAGE_PIN AM11 [get_ports {c0_ddr4_dq[59]}]
+set_property PACKAGE_PIN AN9 [get_ports {c0_ddr4_dqs_t[7]}]
+set_property PACKAGE_PIN AN8 [get_ports {c0_ddr4_dqs_c[7]}]
+set_property PACKAGE_PIN AP11 [get_ports {c0_ddr4_dq[60]}]
+set_property PACKAGE_PIN AN11 [get_ports {c0_ddr4_dq[61]}]
+set_property PACKAGE_PIN AP9 [get_ports {c0_ddr4_dq[62]}]
+set_property PACKAGE_PIN AP10 [get_ports {c0_ddr4_dq[63]}]
+set_property PACKAGE_PIN AN12 [get_ports {c0_ddr4_dm_n[7]}]
+set_property PACKAGE_PIN AA20 [get_ports {c0_ddr4_dq[8]}]
+set_property PACKAGE_PIN AA19 [get_ports {c0_ddr4_dq[9]}]
+set_property PACKAGE_PIN AD19 [get_ports {c0_ddr4_dq[10]}]
+set_property PACKAGE_PIN AC18 [get_ports {c0_ddr4_dq[11]}]
+set_property PACKAGE_PIN AA18 [get_ports {c0_ddr4_dqs_t[1]}]
+set_property PACKAGE_PIN AB18 [get_ports {c0_ddr4_dqs_c[1]}]
+set_property PACKAGE_PIN AE20 [get_ports {c0_ddr4_dq[12]}]
+set_property PACKAGE_PIN AD20 [get_ports {c0_ddr4_dq[13]}]
+set_property PACKAGE_PIN AC19 [get_ports {c0_ddr4_dq[14]}]
+set_property PACKAGE_PIN AB19 [get_ports {c0_ddr4_dq[15]}]
+set_property PACKAGE_PIN AE18 [get_ports {c0_ddr4_dm_n[1]}]
+set_property PACKAGE_PIN AE24 [get_ports {c0_ddr4_dq[0]}]
+set_property PACKAGE_PIN AE23 [get_ports {c0_ddr4_dq[1]}]
+set_property PACKAGE_PIN AF22 [get_ports {c0_ddr4_dq[2]}]
+set_property PACKAGE_PIN AF21 [get_ports {c0_ddr4_dq[3]}]
+set_property PACKAGE_PIN AF23 [get_ports {c0_ddr4_dqs_t[0]}]
+set_property PACKAGE_PIN AG23 [get_ports {c0_ddr4_dqs_c[0]}]
+set_property PACKAGE_PIN AG20 [get_ports {c0_ddr4_dq[4]}]
+set_property PACKAGE_PIN AG19 [get_ports {c0_ddr4_dq[5]}]
+set_property PACKAGE_PIN AH21 [get_ports {c0_ddr4_dq[6]}]
+set_property PACKAGE_PIN AG21 [get_ports {c0_ddr4_dq[7]}]
+set_property PACKAGE_PIN AH22 [get_ports {c0_ddr4_dm_n[0]}]
+set_property PACKAGE_PIN AJ22 [get_ports {c0_ddr4_dq[16]}]
+set_property PACKAGE_PIN AJ21 [get_ports {c0_ddr4_dq[17]}]
+set_property PACKAGE_PIN AK20 [get_ports {c0_ddr4_dq[18]}]
+set_property PACKAGE_PIN AJ20 [get_ports {c0_ddr4_dq[19]}]
+set_property PACKAGE_PIN AK22 [get_ports {c0_ddr4_dqs_t[2]}]
+set_property PACKAGE_PIN AK23 [get_ports {c0_ddr4_dqs_c[2]}]
+set_property PACKAGE_PIN AK19 [get_ports {c0_ddr4_dq[20]}]
+set_property PACKAGE_PIN AJ19 [get_ports {c0_ddr4_dq[21]}]
+set_property PACKAGE_PIN AL23 [get_ports {c0_ddr4_dq[22]}]
+set_property PACKAGE_PIN AL22 [get_ports {c0_ddr4_dq[23]}]
+set_property PACKAGE_PIN AL20 [get_ports {c0_ddr4_dm_n[2]}]
+set_property PACKAGE_PIN AN23 [get_ports {c0_ddr4_dq[24]}]
+set_property PACKAGE_PIN AM23 [get_ports {c0_ddr4_dq[25]}]
+set_property PACKAGE_PIN AP23 [get_ports {c0_ddr4_dq[26]}]
+set_property PACKAGE_PIN AN22 [get_ports {c0_ddr4_dq[27]}]
+set_property PACKAGE_PIN AM21 [get_ports {c0_ddr4_dqs_t[3]}]
+set_property PACKAGE_PIN AN21 [get_ports {c0_ddr4_dqs_c[3]}]
+set_property PACKAGE_PIN AP22 [get_ports {c0_ddr4_dq[28]}]
+set_property PACKAGE_PIN AP21 [get_ports {c0_ddr4_dq[29]}]
+set_property PACKAGE_PIN AN19 [get_ports {c0_ddr4_dq[30]}]
+set_property PACKAGE_PIN AM19 [get_ports {c0_ddr4_dq[31]}]
+set_property PACKAGE_PIN AP19 [get_ports {c0_ddr4_dm_n[3]}]
+set_property PACKAGE_PIN AD17 [get_ports {c0_ddr4_cke[0]}]
+set_property PACKAGE_PIN AB14 [get_ports c0_ddr4_reset_n]
+set_property PACKAGE_PIN AA14 [get_ports {c0_ddr4_adr[15]}]
+set_property PACKAGE_PIN AA15 [get_ports {c0_ddr4_cs_n[0]}]
+set_property PACKAGE_PIN AA16 [get_ports {c0_ddr4_adr[14]}]
+set_property PACKAGE_PIN AB16 [get_ports {c0_ddr4_bg[1]}]
+set_property PACKAGE_PIN AC16 [get_ports {c0_ddr4_bg[0]}]
+set_property PACKAGE_PIN AC17 [get_ports c0_ddr4_act_n]
+set_property PACKAGE_PIN AE15 [get_ports {c0_ddr4_odt[0]}]
+set_property PACKAGE_PIN AD15 [get_ports {c0_ddr4_adr[16]}]
+set_property PACKAGE_PIN AH16 [get_ports {c0_ddr4_adr[0]}]
+set_property PACKAGE_PIN AG14 [get_ports {c0_ddr4_adr[1]}]
+set_property PACKAGE_PIN AG15 [get_ports {c0_ddr4_adr[2]}]
+set_property PACKAGE_PIN AF15 [get_ports {c0_ddr4_adr[3]}]
+set_property PACKAGE_PIN AF16 [get_ports {c0_ddr4_adr[4]}]
+set_property PACKAGE_PIN AJ14 [get_ports {c0_ddr4_adr[5]}]
+set_property PACKAGE_PIN AH14 [get_ports {c0_ddr4_adr[6]}]
+set_property PACKAGE_PIN AF17 [get_ports {c0_ddr4_adr[7]}]
+set_property PACKAGE_PIN AF18 [get_ports {c0_ddr4_ck_t[0]}]
+set_property PACKAGE_PIN AG18 [get_ports {c0_ddr4_ck_c[0]}]
+set_property PACKAGE_PIN AK17 [get_ports {c0_ddr4_adr[8]}]
+set_property PACKAGE_PIN AJ17 [get_ports {c0_ddr4_adr[9]}]
+set_property PACKAGE_PIN AK14 [get_ports {c0_ddr4_adr[10]}]
+set_property PACKAGE_PIN AK15 [get_ports {c0_ddr4_adr[11]}]
+set_property PACKAGE_PIN AL18 [get_ports {c0_ddr4_adr[12]}]
+set_property PACKAGE_PIN AK18 [get_ports {c0_ddr4_adr[13]}]
+set_property PACKAGE_PIN AL15 [get_ports {c0_ddr4_ba[0]}]
+set_property PACKAGE_PIN AL16 [get_ports {c0_ddr4_ba[1]}]
+
+####################################################################################
+# Constraints from file : 'SoC_ddr4_0_0_board.xdc'
+####################################################################################
+
+set_false_path -from [get_ports uart2_pl_rxd]
+set_false_path -to [get_ports uart2_pl_txd]
+set_false_path -from [get_ports sys_rst]
+set_false_path -to [get_ports eth_rst]
+set_false_path -to [get_ports led_al_c_c2m]
+set_false_path -to [get_ports led_al_a_c2m]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -max 5.000 [get_ports spi_mosi]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -min -1.000 [get_ports spi_mosi]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -max 5.000 [get_ports spi_clk_o]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -min -1.000 [get_ports spi_clk_o]
+set_input_delay -clock clk_spi_SoC_clk_wiz_2_0 -max 7.000 [get_ports spi_miso]
+set_input_delay -clock clk_spi_SoC_clk_wiz_2_0 -min 3.000 [get_ports spi_miso]
+set_false_path -to [get_ports spi_ss]
+set_false_path -from [get_ports int_n]
+set_false_path -to [get_ports led_4bits_tri_o]
+set_false_path -to [get_ports c0_ddr4_reset_n]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[32]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[33]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[34]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[35]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[4]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[4]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[36]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[37]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[38]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[39]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[4]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[40]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[41]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[42]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[43]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[5]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[5]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[44]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[45]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[46]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[47]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[5]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[48]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[49]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[50]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[51]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[6]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[6]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[52]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[53]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[54]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[55]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[6]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[56]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[57]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[58]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[59]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[7]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[7]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[60]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[61]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[62]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[63]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[7]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[8]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[9]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[10]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[11]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[1]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[1]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[12]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[13]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[14]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[15]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[1]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[0]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[1]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[2]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[3]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[0]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[0]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[4]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[5]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[6]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[7]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[0]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[16]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[17]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[18]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[19]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[2]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[2]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[20]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[21]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[22]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[23]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[2]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[24]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[25]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[26]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[27]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_c[3]}]
+set_property IOSTANDARD DIFF_POD12_DCI [get_ports {c0_ddr4_dqs_t[3]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[28]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[29]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[30]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dq[31]}]
+set_property IOSTANDARD POD12_DCI [get_ports {c0_ddr4_dm_n[3]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_cke[0]}]
+set_property IOSTANDARD LVCMOS12 [get_ports c0_ddr4_reset_n]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[15]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_cs_n[0]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[14]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_bg[1]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_bg[0]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports c0_ddr4_act_n]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_odt[0]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[16]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[0]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[1]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[2]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[3]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[4]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[5]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[6]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[7]}]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports {c0_ddr4_ck_c[0]}]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports {c0_ddr4_ck_t[0]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[8]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[9]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[10]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[11]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[12]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_adr[13]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_ba[0]}]
+set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_ba[1]}]
+
+####################################################################################
+# Constraints from file : 'SoC_axi_clock_converter_0_0_clocks.xdc'
+####################################################################################
+
+create_pblock Shared_FPU
+add_cells_to_pblock [get_pblocks Shared_FPU] [get_cells -quiet [list SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_shared_fpu.shared_i]]
+resize_pblock [get_pblocks Shared_FPU] -add {SLICE_X47Y240:SLICE_X65Y359}
+resize_pblock [get_pblocks Shared_FPU] -add {DSP48E2_X3Y96:DSP48E2_X6Y143}
+resize_pblock [get_pblocks Shared_FPU] -add {RAMB18_X1Y96:RAMB18_X1Y143}
+resize_pblock [get_pblocks Shared_FPU] -add {RAMB36_X1Y48:RAMB36_X1Y71}
+resize_pblock [get_pblocks Shared_FPU] -add {URAM288_X0Y64:URAM288_X0Y95}
+resize_pblock [get_pblocks Shared_FPU] -add {CLOCKREGION_X1Y0:CLOCKREGION_X1Y3}
+
+
+
+create_pblock pblock_i_scoreboard
+add_cells_to_pblock [get_pblocks pblock_i_scoreboard] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/issue_stage_i/i_scoreboard}]]
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {SLICE_X66Y180:SLICE_X111Y210}
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {DSP48E2_X7Y72:DSP48E2_X13Y83}
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {RAMB18_X2Y72:RAMB18_X4Y83}
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {RAMB36_X2Y36:RAMB36_X4Y41}
+set_property PARENT Cache_and_mem [get_pblocks pblock_i_scoreboard_1]
+create_pblock pblock_i_scoreboard_1
+add_cells_to_pblock [get_pblocks pblock_i_scoreboard_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/issue_stage_i/i_scoreboard}]]
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {SLICE_X66Y119:SLICE_X111Y149}
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {DSP48E2_X7Y48:DSP48E2_X13Y59}
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {RAMB18_X2Y48:RAMB18_X4Y59}
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {RAMB36_X2Y24:RAMB36_X4Y29}
+set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
+set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
+set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
+connect_debug_port dbg_hub/clk [get_nets clk]

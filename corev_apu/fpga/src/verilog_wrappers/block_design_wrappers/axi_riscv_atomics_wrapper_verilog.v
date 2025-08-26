@@ -3,7 +3,7 @@ module axi_riscv_atomics_wrapper_verilog
 #(
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
-    parameter AXI_ID_WIDTH = 10,
+    parameter AXI_ID_WIDTH = 4,
     parameter AXI_USER_WIDTH = 1,
     // Maximum number of AXI write bursts outstanding at the same time
     parameter AXI_MAX_WRITE_TXNS = 1,
@@ -15,8 +15,8 @@ module axi_riscv_atomics_wrapper_verilog
     input wire CLK,
     input wire aresetn,
 
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_in),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_out)
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_in, AXI_ID_WIDTH),
+    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_out, AXI_ID_WIDTH)
 );
 
 axi_riscv_atomics #(

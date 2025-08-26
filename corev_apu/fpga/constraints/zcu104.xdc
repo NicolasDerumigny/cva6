@@ -24,7 +24,37 @@
 # Controlled by PS
 
 ## Ethernet
-# Controlled by PS
+# Requires an FMC mezzanine card https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html
+# Right/a adapter only
+# Port a - MDIO
+set_property -dict {PACKAGE_PIN A13  IOSTANDARD LVCMOS18 PULLUP true} [get_ports mdio_mdio_io]    ; # mdio_fmc_a, FMC_LPC_LA11_P
+set_property -dict {PACKAGE_PIN A12  IOSTANDARD LVCMOS18} [get_ports mdio_mdc]                    ; # mdc_fmc_a, FMC_LPC_LA11_N
+create_clock -name mdio_clk_a -period 400.0 [get_ports mdio_mdio_io]                              ;
+# Port a - Other
+set_property -dict {PACKAGE_PIN E17  IOSTANDARD LVCMOS18} [get_ports int_n]                       ; # int_n_a, FMC_LPC_LA08_N
+set_property -dict {PACKAGE_PIN D16  IOSTANDARD LVCMOS18} [get_ports eth_rst]                     ; # reset_a, FMC_LPC_LA15_P
+# Port a - RGMII
+set_property -dict {PACKAGE_PIN F17  IOSTANDARD LVCMOS18} [get_ports rgmii_rxc]                 ; # rgmii_rxc_a, FMC_LPC_LA00_CC_P
+set_property -dict {PACKAGE_PIN J15  IOSTANDARD LVCMOS18} [get_ports rgmii_rx_ctl]              ; # rgmii_rx_ctl_a, FMC_LPC_LA07_N
+set_property -dict {PACKAGE_PIN L20  IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[0]}]             ; # rgmii_rxd_a[0], FMC_LPC_LA02_P
+set_property -dict {PACKAGE_PIN K20  IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[1]}]             ; # rgmii_rxd_a[1], FMC_LPC_LA02_N
+set_property -dict {PACKAGE_PIN K19  IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[2]}]             ; # rgmii_rxd_a[2], FMC_LPC_LA03_P
+set_property -dict {PACKAGE_PIN K18  IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[3]}]             ; # rgmii_rxd_a[3], FMC_LPC_LA03_N
+set_property -dict {PACKAGE_PIN L16  IOSTANDARD LVCMOS18 SLEW FAST} [get_ports rgmii_txc]       ; # rgmii_txc_a, FMC_LPC_LA04_N
+set_property -dict {PACKAGE_PIN J16  IOSTANDARD LVCMOS18 SLEW FAST} [get_ports rgmii_tx_ctl]    ; # rgmii_tx_ctl_a, FMC_LPC_LA07_P
+set_property -dict {PACKAGE_PIN H16  IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[0]}]   ; # rgmii_txd_a[0], FMC_LPC_LA09_P
+set_property -dict {PACKAGE_PIN G16  IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[1]}]   ; # rgmii_txd_a[1], FMC_LPC_LA09_N
+set_property -dict {PACKAGE_PIN H19  IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[2]}]   ; # rgmii_txd_a[2], FMC_LPC_LA06_P
+set_property -dict {PACKAGE_PIN G19  IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[3]}]   ; # rgmii_txd_a[3], FMC_LPC_LA06_N
+
+# Port a - board led (input)
+set_property -dict {PACKAGE_PIN E18  IOSTANDARD LVCMOS18} [get_ports led_0_a]                     ; # led_0_a, FMC_LPC_LA08_P
+# Port a - right led (activity/status)
+set_property -dict {PACKAGE_PIN G18 IOSTANDARD LVCMOS18} [get_ports led_ar_c_c2m]                 ; # led_ar_c_c2m, FMC_LPC_LA12_P
+set_property -dict {PACKAGE_PIN F18 IOSTANDARD LVCMOS18} [get_ports led_ar_a_c2m]                 ; # led_ar_a_c2m, FMC_LPC_LA12_N
+# Port a - left led (activity/status)
+set_property -dict {PACKAGE_PIN G15  IOSTANDARD LVCMOS18} [get_ports led_al_c_c2m]                ; # led_al_c_c2m, FMC_LPC_LA13_P
+set_property -dict {PACKAGE_PIN F15  IOSTANDARD LVCMOS18} [get_ports led_al_a_c2m]                ; # led_al_a_c2m, FMC_LPC_LA13_N
 
 ## SD card
 # SPI mode,

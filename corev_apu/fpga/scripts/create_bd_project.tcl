@@ -68,7 +68,8 @@ add_files -fileset $obj -verbose [file normalize "$origin_dir/corev_apu/riscv-db
 add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/axi/include/axi/assign.svh"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/axi/include/axi/typedef.svh"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/axi/src/axi_burst_splitter.sv"]
-add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/axi/src/axi_pkg.sv"]
+add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/axi/src/axi_id_serialize.sv"]
+add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/axi/src/axi_serializer.sv"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/common_cells/include/common_cells/registers.svh"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/common_cells/src/fall_through_register.sv"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/vendor/pulp-platform/common_cells/src/id_queue.sv"]
@@ -88,11 +89,6 @@ set file_obj [get_files -of_objects $obj [list \
     "$origin_dir/corev_apu/fpga/src/verilog_wrappers/block_design_wrappers/ariane_xlnx_mapper.svh" \
 ]]
 set_property -dict { file_type {SystemVerilog} is_global_include 1} -objects $file_obj
-
-add_files -fileset $obj -verbose [list \
-  [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/analogdevices-hdl-lib/library/common/up_axi.v"]\
-  [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/analogdevices-hdl-lib/library/common/util_pulse_gen.v"]\
-]
 
 add_files -fileset $obj -scan_for_includes -verbose [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/ariane"]
 add_files -fileset $obj -scan_for_includes -verbose [file normalize "$origin_dir/corev_apu/fpga/src/verilog_wrappers/block_design_wrappers"]

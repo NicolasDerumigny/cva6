@@ -1,10 +1,10 @@
 `include "ariane_xlnx_mapper.svh"
 module ariane_peripherals_wrapper_verilog
 #(
-    parameter AXI_ID_WIDTH=10,
-    parameter AXI_ADDR_WIDTH=64,
-    parameter AXI_DATA_WIDTH=64,
-    parameter AXI_USER_WIDTH=1
+    parameter AXI_ADDR_WIDTH = 64,
+    parameter AXI_DATA_WIDTH = 64,
+    parameter AXI_ID_WIDTH   = 6,
+    parameter AXI_USER_WIDTH = 1
 )
 (
     input wire aclk,
@@ -13,8 +13,8 @@ module ariane_peripherals_wrapper_verilog
     input wire spi_irq_i,
     input wire eth_irq_i,
     input wire[29:7] irq_i,
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_plic),
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_timer),
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_plic, AXI_ID_WIDTH),
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_timer, AXI_ID_WIDTH),
     output wire [1:0] irq_out
 );
 

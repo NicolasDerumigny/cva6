@@ -17,8 +17,8 @@
 module ram_offset_to_zero #(
     parameter AXI_ADDR_WIDTH = 32,
     parameter AXI_DATA_WIDTH = 64,
-    parameter AXI_ID_WIDTH = 5,
-    parameter AXI_USER_WIDTH = 0,
+    parameter AXI_ID_WIDTH = 6,
+    parameter AXI_USER_WIDTH = 1,
     parameter OFFSET = 'h80000000
 ) (
     /** Input AXI **/

@@ -5,17 +5,17 @@
 `include "ariane_xlnx_mapper.svh"
 
 module clint_wrapper#(
-    parameter AXI_ID_WIDTH      = 10,
     parameter AXI_ADDR_WIDTH    = 64,
     parameter AXI_DATA_WIDTH    = 64,
+    parameter AXI_ID_WIDTH      = 6,
     parameter AXI_USER_WIDTH    = 1,
-    parameter NUMBER_INTERRUPTS = 4
+    parameter NR_CORES          = 1
 )
 (
     input logic aclk,
     input logic aresetn,
 
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_clint),
+    `AXI_INTERFACE_MODULE_INPUT(s_axi_clint, AXI_ID_WIDTH),
 
     output logic timer_irq_o,
     output logic ipi_o
@@ -50,7 +50,7 @@ clint #(
     .AXI_ADDR_WIDTH ( AXI_ADDR_WIDTH     ),
     .AXI_DATA_WIDTH ( AXI_DATA_WIDTH     ),
     .AXI_ID_WIDTH   ( AXI_ID_WIDTH       ),
-    .NR_CORES       ( 1                  ),
+    .NR_CORES       ( NR_CORES           ),
     .axi_req_t      ( req_t              ),
     .axi_resp_t     ( resp_t             )
 ) i_clint (

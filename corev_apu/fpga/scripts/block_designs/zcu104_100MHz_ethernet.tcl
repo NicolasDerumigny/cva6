@@ -46,7 +46,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# bootrom_wrapper, ariane_peripherals_wrapper_verilog, cva6_wrapper_verilog, clint_wrapper_verilog, debug_module_wrapper_verilog, axi_riscv_atomics_wrapper_verilog, axi_id_serialize_wrapper
+# bootrom_wrapper, ariane_peripherals_wrapper_verilog, cva6_wrapper_verilog, clint_wrapper_verilog, debug_module_wrapper_verilog, axi_riscv_atomics_wrapper_verilog
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -148,7 +148,6 @@ xilinx.com:ip:axi_jtag:1.0\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:axi_uart16550:2.0\
 xilinx.com:ip:xlslice:1.0\
-xilinx.com:ip:system_ila:1.1\
 xilinx.com:ip:axi_ethernet:7.2\
 xilinx.com:ip:axi_dma:7.1\
 xilinx.com:ip:util_vector_logic:2.0\
@@ -184,7 +183,6 @@ cva6_wrapper_verilog\
 clint_wrapper_verilog\
 debug_module_wrapper_verilog\
 axi_riscv_atomics_wrapper_verilog\
-axi_id_serialize_wrapper\
 "
 
    set list_mods_missing ""
@@ -331,14 +329,14 @@ proc create_hier_cell_Ethernet_Subsystem { parentCell nameHier } {
   set eth_clk [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 eth_clk ]
   set_property -dict [list \
     CONFIG.AUTO_PRIMITIVE {MMCM} \
-    CONFIG.CLKIN1_JITTER_PS {200.0} \
+    CONFIG.CLKIN1_JITTER_PS {100.0} \
     CONFIG.CLKOUT1_DRIVES {Buffer} \
-    CONFIG.CLKOUT1_JITTER {140.575} \
-    CONFIG.CLKOUT1_PHASE_ERROR {158.235} \
+    CONFIG.CLKOUT1_JITTER {116.571} \
+    CONFIG.CLKOUT1_PHASE_ERROR {91.100} \
     CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {125.000} \
     CONFIG.CLKOUT2_DRIVES {Buffer} \
-    CONFIG.CLKOUT2_JITTER {117.790} \
-    CONFIG.CLKOUT2_PHASE_ERROR {158.235} \
+    CONFIG.CLKOUT2_JITTER {95.380} \
+    CONFIG.CLKOUT2_PHASE_ERROR {91.100} \
     CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {375.000} \
     CONFIG.CLKOUT2_USED {true} \
     CONFIG.CLKOUT3_DRIVES {Buffer} \
@@ -356,9 +354,9 @@ proc create_hier_cell_Ethernet_Subsystem { parentCell nameHier } {
     CONFIG.CLK_OUT2_PORT {clk_375} \
     CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
     CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
-    CONFIG.MMCM_CLKFBOUT_MULT_F {22.500} \
-    CONFIG.MMCM_CLKIN1_PERIOD {20.000} \
-    CONFIG.MMCM_CLKIN2_PERIOD {10.0} \
+    CONFIG.MMCM_CLKFBOUT_MULT_F {11.250} \
+    CONFIG.MMCM_CLKIN1_PERIOD {10.000} \
+    CONFIG.MMCM_CLKIN2_PERIOD {10.000} \
     CONFIG.MMCM_CLKOUT0_DIVIDE_F {9.000} \
     CONFIG.MMCM_CLKOUT1_DIVIDE {3} \
     CONFIG.MMCM_COMPENSATION {AUTO} \
@@ -490,7 +488,7 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   # Create instance: axi_interconnect_0, and set properties
   set axi_interconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_0 ]
   set_property -dict [list \
-    CONFIG.ENABLE_ADVANCED_OPTIONS {1} \
+    CONFIG.ENABLE_ADVANCED_OPTIONS {0} \
     CONFIG.ENABLE_PROTOCOL_CHECKERS {0} \
     CONFIG.NUM_MI {12} \
     CONFIG.NUM_SI {4} \
@@ -500,7 +498,6 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
     CONFIG.S03_HAS_DATA_FIFO {2} \
     CONFIG.S04_HAS_DATA_FIFO {2} \
     CONFIG.STRATEGY {2} \
-    CONFIG.XBAR_DATA_WIDTH {64} \
   ] $axi_interconnect_0
 
 
@@ -520,63 +517,26 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   # Create instance: Ethernet_Subsystem
   create_hier_cell_Ethernet_Subsystem $hier_obj Ethernet_Subsystem
 
-  # Create instance: axi_id_serialize_wrapper, and set properties
-  set block_name axi_id_serialize_wrapper
-  set block_cell_name axi_id_serialize_wrapper
-  if { [catch {set axi_id_serialize_wrapper [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $axi_id_serialize_wrapper eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property -dict [list \
-    CONFIG.AXI_ADDR_WIDTH {64} \
-    CONFIG.AXI_MST_PORT_ID_WIDTH {4} \
-    CONFIG.AXI_SLV_PORT_ID_WIDTH {6} \
-  ] $axi_id_serialize_wrapper
-
-
-  # Create instance: xlconstant_0, and set properties
-  set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
-  set_property -dict [list \
-    CONFIG.CONST_VAL {0} \
-    CONFIG.CONST_WIDTH {6} \
-  ] $xlconstant_0
-
-
-  # Create instance: system_ila_0, and set properties
-  set system_ila_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_0 ]
-  set_property -dict [list \
-    CONFIG.C_MON_TYPE {MIX} \
-    CONFIG.C_NUM_MONITOR_SLOTS {2} \
-    CONFIG.C_NUM_OF_PROBES {2} \
-  ] $system_ila_0
-
-
   # Create interface connections
   connect_bd_intf_net -intf_net CPU_AXI_1 [get_bd_intf_pins CPU_AXI] [get_bd_intf_pins axi_riscv_atomics_wrapper_0/s_axi_in]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets CPU_AXI_1] [get_bd_intf_pins CPU_AXI] [get_bd_intf_pins system_ila_0/SLOT_0_AXI]
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins axi_interconnect_0/M08_AXI] [get_bd_intf_pins GPIO_AXI]
   connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins Ethernet_Subsystem/mdio] [get_bd_intf_pins mdio]
   connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins axi_interconnect_0/M04_AXI] [get_bd_intf_pins BOOTROM_AXI]
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins axi_interconnect_0/M06_AXI] [get_bd_intf_pins SDCARD_AXI]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins Ethernet_Subsystem/rgmii] [get_bd_intf_pins rgmii]
-  connect_bd_intf_net -intf_net DEBUG_MODULE_AXI_1 [get_bd_intf_pins DEBUG_MODULE_AXI] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
+  connect_bd_intf_net -intf_net DEBUG_MODULE_AXI_1 [get_bd_intf_pins DEBUG_MODULE_AXI] [get_bd_intf_pins axi_interconnect_0/S01_AXI]
   connect_bd_intf_net -intf_net S02_AXI_1 [get_bd_intf_pins axi_interconnect_0/S02_AXI] [get_bd_intf_pins Ethernet_Subsystem/ETH_DMA_M_AXI_SG]
   connect_bd_intf_net -intf_net S03_AXI_1 [get_bd_intf_pins axi_interconnect_0/S03_AXI] [get_bd_intf_pins Ethernet_Subsystem/ETH_DMA_M_AXI]
-  connect_bd_intf_net -intf_net axi_id_serialize_wra_0_m_axi [get_bd_intf_pins DEBUG_AXI] [get_bd_intf_pins axi_id_serialize_wrapper/m_axi]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins DDR_AXI] [get_bd_intf_pins axi_interconnect_0/M00_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M01_AXI [get_bd_intf_pins UART_AXI] [get_bd_intf_pins axi_interconnect_0/M01_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_0_M02_AXI [get_bd_intf_pins axi_interconnect_0/M02_AXI] [get_bd_intf_pins axi_id_serialize_wrapper/s_axi]
+  connect_bd_intf_net -intf_net axi_interconnect_0_M02_AXI [get_bd_intf_pins TIMER_AXI] [get_bd_intf_pins axi_interconnect_0/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M03_AXI [get_bd_intf_pins PLIC_AXI] [get_bd_intf_pins axi_interconnect_0/M03_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M05_AXI [get_bd_intf_pins CLINT_AXI] [get_bd_intf_pins axi_interconnect_0/M05_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_0_M07_AXI [get_bd_intf_pins TIMER_AXI] [get_bd_intf_pins axi_interconnect_0/M07_AXI]
+  connect_bd_intf_net -intf_net axi_interconnect_0_M07_AXI [get_bd_intf_pins DEBUG_AXI] [get_bd_intf_pins axi_interconnect_0/M07_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M09_AXI [get_bd_intf_pins axi_interconnect_0/M09_AXI] [get_bd_intf_pins Ethernet_Subsystem/ETH_DMA_S_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M10_AXI [get_bd_intf_pins axi_interconnect_0/M10_AXI] [get_bd_intf_pins Ethernet_Subsystem/ETH_S_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M11_AXI [get_bd_intf_pins ETH_LED_AXI] [get_bd_intf_pins axi_interconnect_0/M11_AXI]
-  connect_bd_intf_net -intf_net axi_riscv_atomics_wrapper_0_m_axi_out [get_bd_intf_pins axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_intf_pins axi_interconnect_0/S01_AXI]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets axi_riscv_atomics_wrapper_0_m_axi_out] [get_bd_intf_pins axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_intf_pins system_ila_0/SLOT_1_AXI]
+  connect_bd_intf_net -intf_net axi_riscv_atomics_wrapper_0_m_axi_out [get_bd_intf_pins axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
 
   # Create port connections
   connect_bd_net -net Ethernet_Subsystem_eth_interrupt [get_bd_pins Ethernet_Subsystem/eth_interrupt] [get_bd_pins eth_interrupt]
@@ -587,12 +547,10 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   connect_bd_net -net M00_ACLK_1 [get_bd_pins ddr_clk] [get_bd_pins axi_interconnect_0/M00_ACLK]
   connect_bd_net -net M00_ARESETN_1 [get_bd_pins ddr_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN]
   connect_bd_net -net S02_ARESETN_1 [get_bd_pins cpu_peripheral_aresetn] [get_bd_pins Ethernet_Subsystem/eth_axi_resetn] [get_bd_pins Ethernet_Subsystem/eth_dma_axi_resetn]
-  connect_bd_net -net S02_ARESETN_2 [get_bd_pins aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/M04_ARESETN] [get_bd_pins axi_interconnect_0/M05_ARESETN] [get_bd_pins axi_interconnect_0/M06_ARESETN] [get_bd_pins axi_interconnect_0/M07_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_0/M08_ARESETN] [get_bd_pins axi_interconnect_0/M09_ARESETN] [get_bd_pins axi_interconnect_0/M10_ARESETN] [get_bd_pins axi_interconnect_0/S02_ARESETN] [get_bd_pins axi_interconnect_0/S03_ARESETN] [get_bd_pins axi_interconnect_0/M11_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_id_serialize_wrapper/rstn] [get_bd_pins system_ila_0/resetn] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn]
-  connect_bd_net -net aclk1_1 [get_bd_pins clk_cpu] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins system_ila_0/clk] [get_bd_pins axi_id_serialize_wrapper/aclk] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK]
-  connect_bd_net -net axi_riscv_atomics_wrapper_0_m_axi_out_awatop [get_bd_pins cpu_atop_in] [get_bd_pins system_ila_0/probe0] [get_bd_pins axi_riscv_atomics_wrapper_0/s_axi_in_awatop]
-  connect_bd_net -net axi_riscv_atomics_wrapper_0_m_axi_out_awatop1 [get_bd_pins axi_riscv_atomics_wrapper_0/m_axi_out_awatop] [get_bd_pins system_ila_0/probe1]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK] [get_bd_pins axi_interconnect_0/M05_ACLK] [get_bd_pins axi_interconnect_0/M06_ACLK] [get_bd_pins axi_interconnect_0/M07_ACLK] [get_bd_pins axi_interconnect_0/M08_ACLK] [get_bd_pins axi_interconnect_0/M09_ACLK] [get_bd_pins axi_interconnect_0/M10_ACLK] [get_bd_pins axi_interconnect_0/S02_ACLK] [get_bd_pins axi_interconnect_0/S03_ACLK] [get_bd_pins Ethernet_Subsystem/axi_clk] [get_bd_pins axi_interconnect_0/M11_ACLK]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_id_serialize_wrapper/s_axi_awatop]
+  connect_bd_net -net S02_ARESETN_2 [get_bd_pins aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/M04_ARESETN] [get_bd_pins axi_interconnect_0/M05_ARESETN] [get_bd_pins axi_interconnect_0/M06_ARESETN] [get_bd_pins axi_interconnect_0/M07_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_0/M08_ARESETN] [get_bd_pins axi_interconnect_0/M09_ARESETN] [get_bd_pins axi_interconnect_0/M10_ARESETN] [get_bd_pins axi_interconnect_0/S02_ARESETN] [get_bd_pins axi_interconnect_0/S03_ARESETN] [get_bd_pins axi_interconnect_0/M11_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn]
+  connect_bd_net -net aclk1_1 [get_bd_pins clk_cpu] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/M07_ACLK] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK]
+  connect_bd_net -net axi_riscv_atomics_wrapper_0_m_axi_out_awatop [get_bd_pins cpu_atop_in] [get_bd_pins axi_riscv_atomics_wrapper_0/s_axi_in_awatop]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK] [get_bd_pins axi_interconnect_0/M05_ACLK] [get_bd_pins axi_interconnect_0/M06_ACLK] [get_bd_pins axi_interconnect_0/M08_ACLK] [get_bd_pins axi_interconnect_0/M09_ACLK] [get_bd_pins axi_interconnect_0/M10_ACLK] [get_bd_pins axi_interconnect_0/S02_ACLK] [get_bd_pins axi_interconnect_0/S03_ACLK] [get_bd_pins Ethernet_Subsystem/axi_clk] [get_bd_pins axi_interconnect_0/M11_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -710,7 +668,7 @@ proc create_root_design { parentCell } {
    }
     set_property -dict [list \
     CONFIG.AXI_DATA_WIDTH {64} \
-    CONFIG.AXI_ID_WIDTH {14} \
+    CONFIG.AXI_ID_WIDTH {6} \
   ] $ariane_peripherals_0
 
 
@@ -754,7 +712,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property CONFIG.AXI_ID_WIDTH {14} $clint_0
+    set_property CONFIG.AXI_ID_WIDTH {6} $clint_0
 
 
   # Create instance: northbridge
@@ -773,9 +731,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property CONFIG.AXI_ID_WIDTH {4} $cpu_debug
-
-
+  
   # Create instance: zynq_ultra_ps_e_0, and set properties
   set zynq_ultra_ps_e_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:3.5 zynq_ultra_ps_e_0 ]
   set_property -dict [list \
@@ -1087,7 +1043,7 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
 
   set_property -dict [list \
     CONFIG.ADDN_UI_CLKOUT1_FREQ_HZ {50} \
-    CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {50} \
+    CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {100} \
     CONFIG.C0.DDR4_AxiDataWidth {64} \
     CONFIG.C0.DDR4_CasLatency {20} \
     CONFIG.C0.DDR4_CasWriteLatency {16} \
@@ -1252,9 +1208,9 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   assign_bd_address -offset 0x40C00000 -range 0x00040000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs northbridge/Ethernet_Subsystem/axi_ethernet_0/s_axi/Reg0] -force
   assign_bd_address -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x40010000 -range 0x00010000 -with_name SEG_axi_gpio_1_Reg -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs axi_eth_led_gpio/S_AXI/Reg] -force
-  assign_bd_address -offset 0x00000000 -range 0x00010000 -with_name SEG_axi_id_serialize_wra_0_reg0 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs northbridge/axi_id_serialize_wrapper/s_axi/reg0] -force
   assign_bd_address -offset 0x10000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x02000000 -range 0x00040000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs clint_0/s_axi_clint/reg0] -force
+  assign_bd_address -offset 0x00000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs cpu_debug/s_axi_dmi_jtag/reg0] -force
   assign_bd_address -offset 0x80000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs ddr4_0/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] -force
   assign_bd_address -offset 0x20000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cpu_debug/m_axi_dmi_jtag] [get_bd_addr_segs sdcard_quad_spi_axi/aximm/MEM0] -force
   assign_bd_address -offset 0xA0000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs axi_jtag_0/s_axi/reg0] -force
@@ -1265,12 +1221,11 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   assign_bd_address -offset 0x40C00000 -range 0x00040000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs northbridge/Ethernet_Subsystem/axi_ethernet_0/s_axi/Reg0] -force
   assign_bd_address -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x40010000 -range 0x00010000 -with_name SEG_axi_gpio_1_Reg -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs axi_eth_led_gpio/S_AXI/Reg] -force
-  assign_bd_address -offset 0x00000000 -range 0x00010000 -with_name SEG_axi_id_serialize_wra_0_reg0 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs northbridge/axi_id_serialize_wrapper/s_axi/reg0] -force
   assign_bd_address -offset 0x10000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x02000000 -range 0x00040000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs clint_0/s_axi_clint/reg0] -force
+  assign_bd_address -offset 0x00000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs cpu_debug/s_axi_dmi_jtag/reg0] -force
   assign_bd_address -offset 0x80000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs ddr4_0/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] -force
   assign_bd_address -offset 0x20000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_addr_segs sdcard_quad_spi_axi/aximm/MEM0] -force
-  assign_bd_address -offset 0x00000000 -range 0x00010000000000000000 -target_address_space [get_bd_addr_spaces northbridge/axi_id_serialize_wrapper/m_axi] [get_bd_addr_segs cpu_debug/s_axi_dmi_jtag/reg0] -force
   assign_bd_address -offset 0x80000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs ddr4_0/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] -force
   assign_bd_address -offset 0x80000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs ddr4_0/C0_DDR4_MEMORY_MAP/C0_DDR4_ADDRESS_BLOCK] -force
 
@@ -1282,9 +1237,9 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   exclude_bd_addr_seg -offset 0x40010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs axi_eth_led_gpio/S_AXI/Reg]
   exclude_bd_addr_seg -offset 0x40C00000 -range 0x00040000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs northbridge/Ethernet_Subsystem/axi_ethernet_0/s_axi/Reg0]
   exclude_bd_addr_seg -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg]
-  exclude_bd_addr_seg -offset 0x00000000 -range 0x00010000000000000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs northbridge/axi_id_serialize_wrapper/s_axi/reg0]
   exclude_bd_addr_seg -offset 0x10000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg]
   exclude_bd_addr_seg -offset 0x2000000000000000 -range 0x2000000000000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs clint_0/s_axi_clint/reg0]
+  exclude_bd_addr_seg -offset 0x00000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs cpu_debug/s_axi_dmi_jtag/reg0]
   exclude_bd_addr_seg -offset 0x20000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data] [get_bd_addr_segs sdcard_quad_spi_axi/aximm/MEM0]
   exclude_bd_addr_seg -offset 0x0800000000000000 -range 0x0800000000000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs ariane_peripherals_0/s_axi_plic/reg0]
   exclude_bd_addr_seg -offset 0x0400000000000000 -range 0x0400000000000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs ariane_peripherals_0/s_axi_timer/reg0]
@@ -1293,9 +1248,9 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   exclude_bd_addr_seg -offset 0x40010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs axi_eth_led_gpio/S_AXI/Reg]
   exclude_bd_addr_seg -offset 0x40C00000 -range 0x00040000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs northbridge/Ethernet_Subsystem/axi_ethernet_0/s_axi/Reg0]
   exclude_bd_addr_seg -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg]
-  exclude_bd_addr_seg -offset 0x00000000 -range 0x00010000000000000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs northbridge/axi_id_serialize_wrapper/s_axi/reg0]
   exclude_bd_addr_seg -offset 0x10000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg]
   exclude_bd_addr_seg -offset 0x00000000 -range 0x00010000000000000000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs clint_0/s_axi_clint/reg0]
+  exclude_bd_addr_seg -offset 0x00000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs cpu_debug/s_axi_dmi_jtag/reg0]
   exclude_bd_addr_seg -offset 0x20000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces northbridge/Ethernet_Subsystem/axi_eth_dma/Data_SG] [get_bd_addr_segs sdcard_quad_spi_axi/aximm/MEM0]
 
 

@@ -1,1 +1,1 @@
-zcu104_50MHz_ethernet.tcl
+zcu104_100MHz_ethernet.tcl

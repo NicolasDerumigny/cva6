@@ -97,7 +97,6 @@ package cva6_config_pkg;
       RVH: bit'(CVA6ConfigHExtEn),
       RVZCB: bit'(CVA6ConfigZcbExtEn),
       RVZCMP: bit'(CVA6ConfigZcmpExtEn),
-      RVZCMT: bit'(0),
       XFVec: bit'(CVA6ConfigFVecEn),
       RVZCMT: bit'(0),
       CvxifEn: bit'(CVA6ConfigCvxifEn),

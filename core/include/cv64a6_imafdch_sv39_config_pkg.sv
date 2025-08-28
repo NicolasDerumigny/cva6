@@ -47,8 +47,8 @@ package cva6_config_pkg;
   localparam CVA6ConfigDcacheFlushOnFence = 1'b0;
   localparam CVA6ConfigDcacheInvalidateOnFlush = 1'b0;
 
-  localparam CVA6ConfigDcacheIdWidth = 1;
-  localparam CVA6ConfigMemTidWidth = 2;
+  localparam CVA6ConfigDcacheIdWidth = 3;
+  localparam CVA6ConfigMemTidWidth = CVA6ConfigAxiIdWidth;
 
   localparam CVA6ConfigWtDcacheWbufDepth = 8;
 
@@ -56,7 +56,7 @@ package cva6_config_pkg;
 
   localparam CVA6ConfigNrLoadPipeRegs = 1;
   localparam CVA6ConfigNrStorePipeRegs = 0;
-  localparam CVA6ConfigNrLoadBufEntries = 2;
+  localparam CVA6ConfigNrLoadBufEntries = 8;
 
   localparam CVA6ConfigRASDepth = 2;
   localparam CVA6ConfigBTBEntries = 32;
@@ -68,7 +68,7 @@ package cva6_config_pkg;
 
   localparam CVA6ConfigPerfCounterEn = 1;
 
-  localparam config_pkg::cache_type_t CVA6ConfigDcacheType = config_pkg::WT;
+  localparam config_pkg::cache_type_t CVA6ConfigDcacheType = config_pkg::HPDCACHE_WT;
 
   localparam CVA6ConfigMmuPresent = 1;
 
@@ -96,13 +96,13 @@ package cva6_config_pkg;
       XF8: bit'(CVA6ConfigF8En),
       RVA: bit'(CVA6ConfigAExtEn),
       RVB: bit'(CVA6ConfigBExtEn),
-      ZKN: bit'(0),
+      ZKN: bit'(1),
       RVV: bit'(CVA6ConfigVExtEn),
       RVC: bit'(CVA6ConfigCExtEn),
       RVH: bit'(CVA6ConfigHExtEn),
       RVZCB: bit'(CVA6ConfigZcbExtEn),
-      RVZCMT: bit'(0),
       RVZCMP: bit'(CVA6ConfigZcmpExtEn),
+      RVZCMT: bit'(0),
       XFVec: bit'(CVA6ConfigFVecEn),
       CvxifEn: bit'(CVA6ConfigCvxifEn),
       CoproType: config_pkg::COPRO_NONE,

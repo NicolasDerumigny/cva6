@@ -123,9 +123,6 @@ ${CVA6_REPO_DIR}/vendor/pulp-platform/obi/src/obi_sram_shim.sv
 ${CVA6_REPO_DIR}/vendor/pulp-platform/obi/src/obi_xbar.sv
 ${CVA6_REPO_DIR}/core/cva6_example_obi.sv
 ${CVA6_REPO_DIR}/core/cva6_example_axi.sv
-${CVA6_REPO_DIR}/core/cva6_top.sv
-${CVA6_REPO_DIR}/core/cva6.sv
-${CVA6_REPO_DIR}/core/cva6_pipeline.sv
 ${CVA6_REPO_DIR}/core/cva6_rvfi_probes.sv
 ${CVA6_REPO_DIR}/core/alu.sv
 ${CVA6_REPO_DIR}/core/alu_wrapper.sv

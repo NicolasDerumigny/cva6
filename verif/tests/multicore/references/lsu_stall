@@ -1,0 +1,20 @@
+[01]: LSU stall test started \(S-mode, paging\)
+[01]: LSU stall test started \(S-mode, paging\)
+[01]: Phase 1 \(uc_busy \+ WAIT_GNT \+ ldbuf_full\) OK
+[01]: Phase 1 \(uc_busy \+ WAIT_GNT \+ ldbuf_full\) OK
+[01]: Phase 2 \(store->load same line\) OK
+[01]: Phase 2 \(store->load same line\) OK
+[01]: Phase 3 \(mispredicted branch \+ pending store\) OK
+[01]: Phase 3 \(mispredicted branch \+ pending store\) OK
+[01]: Phase 4 \(rtab_full\) OK
+[01]: Phase 4 \(rtab_full\) OK
+[01]: Phase 5 \(WAIT_PAGE_OFFSET\) OK
+[01]: Phase 5 \(WAIT_PAGE_OFFSET\) OK
+[01]: Phase 6 \(DTLB miss / ABORT_TRANSACTION\) OK
+[01]: Phase 6 \(DTLB miss / ABORT_TRANSACTION\) OK
+[01]: Phase 7 \(WAIT_GNT_FLUSH\) OK
+[01]: Phase 7 \(WAIT_GNT_FLUSH\) OK
+[01]: Phase 8 \(latency window\) OK
+[01]: Phase 8 \(latency window\) OK
+[01]: LSU stall test PASSED \(handler ran, bad=0\)
+[01]: LSU stall test PASSED \(handler ran, bad=0\)

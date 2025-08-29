@@ -57,7 +57,7 @@ module ariane_regfile_fpga #(
   logic [NUM_WORDS-1:0][LOG_NR_WRITE_PORTS-1:0] mem_block_sel;
   logic [NUM_WORDS-1:0][LOG_NR_WRITE_PORTS-1:0] mem_block_sel_q;
   logic [CVA6Cfg.NrCommitPorts-1:0][DATA_WIDTH-1:0] wdata_reg;
-  logic [NR_READ_PORTS-1:0][CVA6Cfg.NrCommitPorts-1:0] read_after_write;
+  logic [NR_READ_PORTS-1:0] read_after_write;
 
   logic [NR_READ_PORTS-1:0][4:0] raddr_q;
   logic [NR_READ_PORTS-1:0][4:0] raddr;
@@ -66,7 +66,7 @@ module ariane_regfile_fpga #(
   always_comb begin
     for (int unsigned j = 0; j < CVA6Cfg.NrCommitPorts; j++) begin
       for (int unsigned i = 0; i < NUM_WORDS; i++) begin
-        if (32'(waddr_i[j]) == i) begin
+        if (waddr_i[j] == i) begin
           we_dec[j][i] = we_i[j];
         end else begin
           we_dec[j][i] = 1'b0;
@@ -106,9 +106,7 @@ module ariane_regfile_fpga #(
   logic [NR_READ_PORTS-1:0][DATA_WIDTH-1:0] mem_read[CVA6Cfg.NrCommitPorts];
   logic [NR_READ_PORTS-1:0][DATA_WIDTH-1:0] mem_read_sync[CVA6Cfg.NrCommitPorts];
   for (genvar j = 0; j < CVA6Cfg.NrCommitPorts; j++) begin : regfile_ram_block
-    // always, not always_ff: mem is also written by the initial block below,
-    // and always_ff forbids any other process from writing it.
-    always @(posedge clk_i) begin
+    always_ff @(posedge clk_i) begin
       if (we_i[j] && ~waddr_i[j] != 0) begin
         mem[j][waddr_i[j]] <= wdata_i[j];
         if (CVA6Cfg.FpgaAlteraEn)
@@ -118,14 +116,14 @@ module ariane_regfile_fpga #(
       if (CVA6Cfg.FpgaAlteraEn) begin
         for (int k = 0; k < NR_READ_PORTS; k++) begin : block_read
           mem_read_sync[j][k] = mem[j][raddr_i[k]];  // synchronous RAM
-          read_after_write[k][j] <= '0;
+          read_after_write[k] <= '0;
           if (waddr_i[j] == raddr_i[k])
-            read_after_write[k][j] <= we_i[j] && ~waddr_i[j] != 0; // Identify if we need to read the content that was written
+            read_after_write[k] <= we_i[j] && ~waddr_i[j] != 0; // Identify if we need to read the content that was written
         end
       end
     end
     for (genvar k = 0; k < NR_READ_PORTS; k++) begin : block_read
-      assign mem_read[j][k] = CVA6Cfg.FpgaAlteraEn ? ( read_after_write[k]!='0 ? wdata_reg[j]: mem_read_sync[j][k]) : mem[j][raddr_i[k]];
+      assign mem_read[j][k] = CVA6Cfg.FpgaAlteraEn ? ( read_after_write[k] ? wdata_reg[j]: mem_read_sync[j][k]) : mem[j][raddr_i[k]];
     end
   end
   //with synchronous ram there is the need to adjust which address is used at the output MUX
@@ -134,17 +132,38 @@ module ariane_regfile_fpga #(
   // output MUX
   logic [NR_READ_PORTS-1:0][LOG_NR_WRITE_PORTS-1:0] block_addr;
   for (genvar k = 0; k < NR_READ_PORTS; k++) begin : regfile_read_port
-    assign block_addr[k] = mem_block_sel_q[raddr[k]];
-    assign rdata_o[k] = (ZERO_REG_ZERO && raddr[k] == '0) ? '0 : mem_read[block_addr[k]][k];
+    // A read issued in the same cycle as a write to the same address must see
+    // the written value. The distributed RAM only commits on the next clock
+    // edge and the block selector (mem_block_sel_q) is registered, so bypass
+    // both: select the bank being written this cycle (highest write-port index
+    // wins, matching the mem_block_sel priority) and forward its write data.
+    logic [LOG_NR_WRITE_PORTS-1:0] fwd_block;
+    logic                          fwd_en;
+    always_comb begin
+      fwd_en    = 1'b0;
+      fwd_block = mem_block_sel[raddr[k]];
+      for (int j = 0; j < CVA6Cfg.NrCommitPorts; j++) begin
+        if (we_i[j] && (waddr_i[j] == raddr[k]) && (waddr_i[j] != '0)) begin
+          fwd_en    = 1'b1;
+          fwd_block = LOG_NR_WRITE_PORTS'(j);
+        end
+      end
+    end
+    assign block_addr[k] = CVA6Cfg.FpgaAlteraEn ? mem_block_sel[raddr[k]] : fwd_block;
+    assign rdata_o[k     ] = (ZERO_REG_ZERO && raddr[k] == '0) ? '0 :
+        (!CVA6Cfg.FpgaAlteraEn && fwd_en) ? wdata_i[fwd_block] : mem_read[block_addr[k]][k];
   end
 
   // random initialization of the memory to suppress assert warnings on Questa.
+  // The 32-bit $random() only fills the lower half of a RV64 word, which
+  // leaves the upper half at its x-init value; draw twice for RV64.
   initial begin
     for (int i = 0; i < CVA6Cfg.NrCommitPorts; i++) begin
       for (int j = 0; j < NUM_WORDS; j++) begin
-        if (!CVA6Cfg.FpgaAlteraEn)
+        if (!CVA6Cfg.FpgaAlteraEn) begin
           mem[i][j] = $random();  //quartus does not support this random statement on synthesis
-        else mem[i][j] = '0;
+          if (DATA_WIDTH == 64) mem[i][j][63:32] = $random();
+        end else mem[i][j] = '0;
       end
     end
   end

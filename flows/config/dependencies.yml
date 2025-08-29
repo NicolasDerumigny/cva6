@@ -64,17 +64,15 @@ submodule_patches:
       overlap. The patch keeps the ISA string of the configuration file.
       All are still present on core-v-verif master: drop each patch once
       fixed upstream.
-  core/cache_subsystem/hpdcache:
-    patches:
-      - "verif/patches/hpdcache-bufferable-attribute.patch"
-    reason: >
-      The memory requests of the HPDcache only carry the cacheable attribute,
-      and the AXI adapters derive a fixed AxCACHE from it: write-back for
-      every cacheable access, non-bufferable for every other one. The patch
-      adds a bufferable bit to the request PMA and to the memory requests, set
-      by every emitter, and builds AxCACHE from both attributes, so a
-      write-through region and a non-cacheable bufferable region reach the bus
-      with their own memory type (openhwfoundation/cv-hpdcache#163).
+  # No patch declared for core/cache_subsystem/hpdcache: this fork pins its own
+  # branch of cv-hpdcache (dev/nderumig/lr_sc_mc), which reworks the uncached
+  # path for the multicore LR/SC reservations and carries
+  # verif/patches/hpdcache-bufferable-attribute.patch in its history. The patch
+  # does not apply on top of that rework (the is_amo_lr and is_amo_sc request
+  # cases it takes as context are gone), and its --reverse --check detection
+  # fails the same way, so the declaration is dropped and the feature lives in
+  # the pinned revision. Restore it if the submodule tracks upstream master
+  # again, and drop the commit once openhwfoundation/cv-hpdcache#163 merges.
 
 riscv-tests:
   repo: "https://github.com/riscv-software-src/riscv-tests.git"

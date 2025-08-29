@@ -21,7 +21,7 @@
     logic [1:0]                       size;          \
     logic                             we;            \
     logic [DATA_WIDTH-1:0]            wdata;         \
-    logic [cfg.IdWidth-1:0]           aid;           \
+    logic [cfg.DcacheIdWidth-1:0]           aid;           \
     ariane_pkg::amo_t                 atop;          \
     ariane_pkg::fu_op                 cbo_op;        \
     logic                             access_type;   \
@@ -37,7 +37,7 @@
     logic                             pgnt;          \
     logic                             rvalid;        \
     logic [DATA_WIDTH-1:0]            rdata;         \
-    logic [cfg.IdWidth-1:0]           rid;           \
+    logic [cfg.DcacheIdWidth-1:0]           rid;           \
     logic                             err;           \
   }
 

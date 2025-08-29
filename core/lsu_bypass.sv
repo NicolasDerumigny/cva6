@@ -27,27 +27,31 @@ module lsu_bypass
   import ariane_pkg::*;
 #(
     parameter config_pkg::cva6_cfg_t CVA6Cfg = config_pkg::cva6_cfg_empty,
-    parameter type lsu_ctrl_t = logic
+    parameter type lsu_ctrl_t = logic,
+    parameter type bp_resolve_t = logic
 ) (
     // Subsystem Clock - SUBSYSTEM
     input logic clk_i,
     // Asynchronous reset active low - SUBSYSTEM
     input logic rst_ni,
-    // Flush - CONTROLLER
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     input logic flush_i,
 
-    // Load store unit request - LSU_UNIT
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     input lsu_ctrl_t lsu_req_i,
-    // load store unit valid - LSU_UNIT
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     input logic      lsu_req_valid_i,
-    // Pop load - LOAD_UNIT
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     input logic      pop_ld_i,
-    // Pop store - STORE_UNIT
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     input logic      pop_st_i,
 
-    // RVFI information - RVFI
+    // Result from branch unit - EX_STAGE
+    input bp_resolve_t resolved_branch_i,
+
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     output lsu_ctrl_t lsu_ctrl_o,
-    // Load Store Unit is ready - ISSUE_STAGE
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
     output logic      ready_o
 );
 
@@ -56,9 +60,8 @@ module lsu_bypass
   logic write_pointer_n, write_pointer_q;
   logic [1:0] status_cnt_n, status_cnt_q;
 
-  logic empty;
-  assign empty   = (status_cnt_q == 0);
-  assign ready_o = empty;
+  logic empty_n, empty_q;
+  assign ready_o = empty_q;
 
   always_comb begin
     automatic logic [1:0] status_cnt;
@@ -73,6 +76,15 @@ module lsu_bypass
     // we've got a valid LSU request
     if (lsu_req_valid_i) begin
       mem_n[write_pointer_q] = lsu_req_i;
+      if (lsu_req_i.is_speculative_load && resolved_branch_i.valid) begin
+        if (resolved_branch_i.is_mispredict) begin
+          // missprediction: mark speculative loads as misspredicted
+          mem_n[write_pointer_q].is_speculative_load_miss = 1'b1;
+        end else begin
+          // correct prediction: the load is no longer speculative
+          mem_n[write_pointer_q].is_speculative_load = 1'b0;
+        end
+      end
       write_pointer++;
       status_cnt++;
     end
@@ -103,11 +115,12 @@ module lsu_bypass
     read_pointer_n  = read_pointer;
     write_pointer_n = write_pointer;
     status_cnt_n    = status_cnt;
+    empty_n         = (status_cnt == 0);
   end
 
   // output assignment
   always_comb begin : output_assignments
-    if (empty) begin
+    if (empty_q) begin
       lsu_ctrl_o = lsu_req_i;
     end else begin
       lsu_ctrl_o = mem_q[read_pointer_q];
@@ -121,11 +134,13 @@ module lsu_bypass
       status_cnt_q    <= '0;
       write_pointer_q <= '0;
       read_pointer_q  <= '0;
+      empty_q         <= '1;
     end else begin
       mem_q           <= mem_n;
       status_cnt_q    <= status_cnt_n;
       write_pointer_q <= write_pointer_n;
       read_pointer_q  <= read_pointer_n;
+      empty_q         <= empty_n;
     end
   end
 endmodule

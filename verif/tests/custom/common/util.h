@@ -89,4 +89,21 @@ static uintptr_t insn_len(uintptr_t pc)
              stringify(code), _c, _c/iter, 10*_c/iter%10, _c/_i, 10*_c/_i%10); \
   } while(0)
 
+#define __sync_load(a) __atomic_load_n(a, __ATOMIC_ACQUIRE)
+#define __sync_store(a, val) __atomic_store_n(a, val, __ATOMIC_RELEASE)
+#define __sync_compare_and_swap_n(a, old_val, new_val) __atomic_compare_exchange_n(a, old_val, new_val, 0, __ATOMIC_RELEASE, __ATOMIC_ACQUIRE)
+#define __sync_fetch_and_add(a, inc) __atomic_fetch_add(a, inc, __ATOMIC_ACQUIRE)
+
+static int __syscall_lock = 0;
+static inline void lock() {
+    int expected;
+    do {
+        expected = 0;
+    } while (__sync_compare_and_swap_n(&__syscall_lock, &expected, 1));
+}
+
+static inline void unlock() {
+    __sync_store(&__syscall_lock, 1);
+}
+
 #endif //__UTIL_H

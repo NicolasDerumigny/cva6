@@ -30,10 +30,19 @@ corev_apu/fpga/work-fpga
 corev_apu/fpga/reports/
 corev_apu/fpga/ariane.xpr
 corev_apu/fpga/ariane.cache/
-corev_apu/fpga/ariane.hw/
+# Vivado regenerates all of these from the sources under corev_apu/fpga;
+# see the clean target of corev_apu/fpga/Makefile.  ariane.srcs/ is the one
+# exception: it holds the block design (SoC.bd and the .xci IP configs the
+# bitstream flow runs generate_target on), so keep that tracked.
 corev_apu/fpga/ariane.gen/
+corev_apu/fpga/ariane.hw/
+corev_apu/fpga/ariane.ip_user_files/
 corev_apu/fpga/ariane.runs/
-corev_apu/fpga/ariane.srcs/
+corev_apu/fpga/ariane.sim/
+corev_apu/fpga/ariane.srcs/*
+!corev_apu/fpga/ariane.srcs/sources_1/
+corev_apu/fpga/*.str
+corev_apu/fpga/*.mif
 corev_apu/fpga/.Xil/
 corev_apu/fpga/mode*
 stdout/
@@ -59,3 +68,7 @@ verdiRestore.tcl
 /verif/sim/iti.traces
 /verif/sim/verilator.fst.hier
 *.ip_user_files
+verible.filelist
+*.pb
+*.trace
+.vimrc

@@ -146,7 +146,7 @@ CVA6Cfg.NrCommitPorts
   assign instr_0_is_amo = is_amo(commit_instr_i[0].op);
 
   logic amo_resp_ack;
-  assign amo_resp_ack = ypb_amo_rsp_i.rvalid;  // && amo_ypb_req_o.rready;
+  assign amo_resp_ack = ypb_amo_rsp_i.ack;  // && amo_ypb_req_o.rready;
 
 
   // -------------------
@@ -167,7 +167,7 @@ CVA6Cfg.NrCommitPorts
     commit_lsu_o = 1'b0;
     commit_csr_o = 1'b0;
     // amos will commit on port 0
-    wdata_o[0] = (CVA6Cfg.RVA && amo_resp_ack) ? ypb_amo_rsp_i.rdata : commit_instr_i[0].result;
+    wdata_o[0] = (CVA6Cfg.RVA && amo_resp_ack) ? ypb_amo_rsp_i.result[CVA6Cfg.XLEN-1:0] : commit_instr_i[0].result;
     csr_op_o = ADD;  // this corresponds to a CSR NOP
     csr_wdata_o = {CVA6Cfg.XLEN{1'b0}};
     fence_i_o = 1'b0;
@@ -295,7 +295,7 @@ CVA6Cfg.NrCommitPorts
         // from interrupt service routine
         // Fence synchronizes data and instruction streams. That means that we need to flush the private icache
         // and the private dcache. This is the most expensive instruction.
-        if (commit_instr_i[0].op == FENCE_I && CVA6Cfg.RVZifencei) begin
+        if (commit_instr_i[0].op == FENCE_I && 1'b1) begin
           if (!commit_drop_i[0]) begin
             commit_ack_o[0] = no_st_pending_i;
             // tell the controller to flush the I$

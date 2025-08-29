@@ -46,6 +46,9 @@ ${CVA6_REPO_DIR}/corev_apu/tb/ariane_axi_soc_pkg.sv
 ${CVA6_REPO_DIR}/core/cva6_rvfi.sv
 
 ${CVA6_REPO_DIR}/corev_apu/src/ariane.sv
+//  The single core SoC is one hart of the multicore one, so the harness needs
+//  the multicore top as well, which is what it drives when NR_CORES is above 1.
+${CVA6_REPO_DIR}/corev_apu/src/ariane_multicore.sv
 ${CVA6_REPO_DIR}/corev_apu/bootrom/bootrom.sv
 ${CVA6_REPO_DIR}/corev_apu/clint/axi_lite_interface.sv
 ${CVA6_REPO_DIR}/corev_apu/clint/clint.sv

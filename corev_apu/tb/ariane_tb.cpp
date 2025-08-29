@@ -33,6 +33,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <cstring>
+#include <vector>
 #include <getopt.h>
 #include <chrono>
 #include <ctime>
@@ -43,6 +45,7 @@
 #include <fesvr/htif_hexwriter.h>
 #include <fesvr/elfloader.h>
 #include "remote_bitbang.h"
+#include "dpi/syscalls.h"
 
 // This software is heavily based on Rocket Chip
 // Checkout this awesome project:
@@ -342,18 +345,38 @@ done_processing:
   long long addr;
   long long len;
 
-  size_t mem_size = 0xFFFFFF;
+  // Every loadable section is copied to its own address, not only the one
+  // sitting at the base of a memory: a program linked for several harts gets
+  // its sections spread over the address map, and reading the whole memory
+  // window for each of them would take the bytes that follow the section the
+  // fesvr has, and leave zeros in the rest.
+  const size_t mem_size = 0x1000000;  // one memory is 16 MiB of contiguous bytes
+  const long long user_base = 0x84000000;
   while(get_section(&addr, &len))
   {
-    if (addr == 0x80000000)
-        read_section_void(addr, (void *) MEM , mem_size);
-    if (addr == 0x84000000)
-        try {
-          read_section_void(addr, (void *) MEM_USER , mem_size);
-        } catch (...){
-          std::cerr << "No user memory instantiated ...\n";
-        }
+    if (len <= 0)
+      continue;
+
+    const bool user = addr >= user_base;
+    const long long origin = user ? user_base : 0x80000000;
+    if (addr < origin || (size_t)(addr - origin) + (size_t)len > mem_size) {
+      std::cerr << "[preload] section outside the "
+                << (user ? "user" : "main") << " memory, skipped\n";
+      continue;
+    }
+
+    std::vector<char> buf(len);
+    try {
+      read_section_void(addr, buf.data(), len);
+    } catch (...) {
+      std::cerr << "[preload] section could not be read, skipped\n";
+      continue;
+    }
+    char *memory = user ? (char *)MEM_USER : (char *)MEM;
+    memcpy(memory + (addr - origin), buf.data(), len);
   }
+
+  SyscallHandler::init(MEM);
 
   while (!dtm->done() && !jtag->done() && !(top->exit_o & 0x1)) {
     top->clk_i = 0;

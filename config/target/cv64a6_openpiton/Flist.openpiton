@@ -129,9 +129,6 @@ ${CVA6_ROOT}/vendor/pulp-platform/obi/src/obi_intf.sv
 ${CVA6_ROOT}/vendor/pulp-platform/obi/src/obi_mux.sv
 ${CVA6_ROOT}/vendor/pulp-platform/obi/src/obi_sram_shim.sv
 ${CVA6_ROOT}/vendor/pulp-platform/obi/src/obi_xbar.sv
-${CVA6_ROOT}/core/cva6_top.sv
-${CVA6_ROOT}/core/cva6.sv
-${CVA6_ROOT}/core/cva6_pipeline.sv
 ${CVA6_ROOT}/core/cva6_rvfi_probes.sv
 ${CVA6_ROOT}/core/alu.sv
 ${CVA6_ROOT}/core/alu_wrapper.sv

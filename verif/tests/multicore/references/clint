@@ -1,0 +1,16 @@
+[01]: CLINT test started
+[01]: CLINT test started
+[01]: CLINT: MTIMECMP reset and clear OK
+[01]: CLINT: MTIMECMP reset and clear OK
+[01]: CLINT: MTIME monotonic and read/write OK
+[01]: CLINT: MTIME monotonic and read/write OK
+[01]: CLINT: MTIMECMP read/write OK
+[01]: CLINT: MTIMECMP read/write OK
+[01]: CLINT: M timer interrupt OK
+[01]: CLINT: M timer interrupt OK
+[01]: CLINT: IPI 1 -> 0 OK
+[01]: CLINT: IPI 1 -> 0 OK
+[01]: CLINT: IPI 0 -> 1 OK
+[01]: CLINT: IPI 0 -> 1 OK
+[01]: CLINT test PASSED
+[01]: CLINT test PASSED

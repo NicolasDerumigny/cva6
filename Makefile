@@ -38,8 +38,8 @@ test-location  ?= output/test
 torture-logs   :=
 # custom elf bin to run with sim or sim-verilator
 elf_file        ?= tmp/riscv-tests/build/benchmarks/dhrystone.riscv
-# board name for bitstream generation. Currently supported: zcu104, kc705, genesys2, nexys_video
-# pynq_z2
+# board name for bitstream generation. Currently supported: kc705, genesys2, nexys_video, pynq_z2
+# zcu104
 BOARD          ?= genesys2
 ALTERA_BOARD		 ?= DK-DEV-AGF014E3ES
 ALTERA_FAMILY	 ?= "AGILEX"
@@ -174,6 +174,7 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         $(if $(spike-tandem),corev_apu/tb/common/spike.sv)                           \
         core/cva6_rvfi.sv                                                            \
         corev_apu/src/ariane.sv                                                      \
+        corev_apu/src/ariane_multicore.sv                                            \
         $(wildcard corev_apu/bootrom/*.sv)                                           \
         $(wildcard corev_apu/clint/*.sv)                                             \
         $(wildcard corev_apu/fpga/src/axi2apb/src/*.sv)                              \

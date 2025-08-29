@@ -35,6 +35,7 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1, uintpt
   magic_mem[1] = arg0;
   magic_mem[2] = arg1;
   magic_mem[3] = arg2;
+  lock();
 #ifdef __riscv_atomic // __sync_synchronize requires A extension
   __sync_synchronize();
 #endif
@@ -54,6 +55,7 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1, uintpt
 #ifdef __riscv_atomic // __sync_synchronize requires A extension
   __sync_synchronize();
 #endif
+  unlock();
   return magic_mem[0];
 }
 
@@ -279,7 +281,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     case '-':
       padc = '-';
       goto reswitch;
-      
+
     // flag to pad with 0's instead of spaces
     case '0':
       padc = '0';
@@ -388,7 +390,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     case '%':
       putch(ch, putdat);
       break;
-      
+
     // unrecognized escape sequence - just print it literally
     default:
       putch('%', putdat);

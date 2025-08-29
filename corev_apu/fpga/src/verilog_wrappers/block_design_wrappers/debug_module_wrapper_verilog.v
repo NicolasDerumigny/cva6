@@ -1,11 +1,13 @@
 `include "ariane_xlnx_mapper.svh"
+
 module debug_module_wrapper_verilog
 #(
     parameter AXI_ADDR_WIDTH   = 64,
     parameter AXI_DATA_WIDTH   = 64,
     parameter AXI_MST_ID_WIDTH = 4,
     parameter AXI_SLV_ID_WIDTH = 6,
-    parameter AXI_USER_WIDTH   = 1
+    parameter AXI_USER_WIDTH   = 1,
+    parameter NR_CORES         = 1
 )
 (
     input wire aclk,
@@ -25,7 +27,7 @@ module debug_module_wrapper_verilog
     (*X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 ndmreset RST", X_INTERFACE_PARAMETER="POLARITY ACTIVE_HIGH"*)
     output wire ndmreset,
     (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 debug_req_irq INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
-    output wire debug_req_irq
+    output wire[NR_CORES-1:0] debug_req_irq
 );
 
 debug_module_wrapper
@@ -34,7 +36,8 @@ debug_module_wrapper
     .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
     .AXI_MST_ID_WIDTH(AXI_MST_ID_WIDTH),
     .AXI_SLV_ID_WIDTH(AXI_SLV_ID_WIDTH),
-    .AXI_USER_WIDTH(AXI_USER_WIDTH)
+    .AXI_USER_WIDTH(AXI_USER_WIDTH),
+    .NR_CORES(NR_CORES)
 )
 i_debug_module_wrapper
 (

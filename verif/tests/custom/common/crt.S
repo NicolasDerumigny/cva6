@@ -1,6 +1,7 @@
 # See LICENSE for license details.
 
 #include "encoding.h"
+#include "smp.h"
 
 #if __riscv_xlen == 64
 # define LREG ld
@@ -106,10 +107,6 @@ _start:
 1:
 #endif
 
-  # initialize trap vector
-  la t0, trap_entry
-  csrw mtvec, t0
-
   # initialize global pointer
 .option push
 .option norelax
@@ -119,11 +116,19 @@ _start:
   la  tp, _end + 63
   and tp, tp, -64
 
-  # get core id
+  smp_pause(s1, s2)
+  smp_resume(s1, s2)
+
+  # initialize trap vector
+  la t0, trap_entry
+  csrw mtvec, t0
+
+  ## get core id
   csrr a0, mhartid
-  # for now, assume only 1 core
   li a1, 1
-1:bgeu a0, a1, 1b
+  bgeu a0, a1, _exit
+
+  # Execute bench on all cores
 
   # give each core 128KB of stack + TLS
 #define STKSHIFT 17

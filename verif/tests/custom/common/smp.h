@@ -21,6 +21,8 @@
  */
 
 #define smp_pause(reg1, reg2)                                                  \
+  la t0, resume_wfi;                                                           \
+  csrw mtvec, t0;                                                              \
   li reg2, 0x8;                                                                \
   csrw mie, reg2;                                                              \
   li reg1, NONSMP_HART;                                                        \
@@ -37,6 +39,7 @@
   blt reg1, reg2, 41b;                                                         \
   42 :;                                                                        \
   wfi;                                                                         \
+  resume_wfi:;                                                                 \
   csrr reg2, mip;                                                              \
   andi reg2, reg2, 0x8;                                                        \
   beqz reg2, 42b;                                                              \

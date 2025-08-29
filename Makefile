@@ -174,6 +174,7 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         $(if $(spike-tandem),corev_apu/tb/common/spike.sv)                           \
         core/cva6_rvfi.sv                                                            \
         corev_apu/src/ariane.sv                                                      \
+        corev_apu/src/ariane_multicore.sv                                            \
         $(wildcard corev_apu/bootrom/*.sv)                                           \
         $(wildcard corev_apu/clint/*.sv)                                             \
         $(wildcard corev_apu/fpga/src/axi2apb/src/*.sv)                              \

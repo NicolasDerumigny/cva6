@@ -14,7 +14,7 @@
 
 `include "cvxif_types.svh"
 
-module ariane
+module ariane_multicore
   import ariane_pkg::*;
 #(
     parameter config_pkg::cva6_cfg_t CVA6Cfg = config_pkg::cva6_cfg_empty,
@@ -48,32 +48,33 @@ module ariane
     parameter type axi_aw_chan_t = ariane_axi::aw_chan_t,
     parameter type axi_w_chan_t = ariane_axi::w_chan_t,
     parameter type noc_req_t = ariane_axi::req_t,
-    parameter type noc_resp_t = ariane_axi::resp_t
+    parameter type noc_resp_t = ariane_axi::resp_t,
+    parameter unsigned NrHarts = 1
 ) (
     input logic clk_i,
     input logic rst_ni,
     // Core ID, Cluster ID and boot address are considered more or less static
     input logic [CVA6Cfg.VLEN-1:0] boot_addr_i,  // reset boot address
-    input  logic [CVA6Cfg.XLEN-1:0]       hart_id_i,    // hart id in a multicore environment (reflected in a CSR)
 
     // Interrupt inputs
-    input  logic         [1:0] irq_i,          // level sensitive IR lines, mip & sip (async)
-    input  logic               ipi_i,          // inter-processor interrupts (async)
+    input logic [NrHarts*2-1:0] irq_i,  // level sensitive IR lines, mip & sip (async)
+    input logic [NrHarts-1:0] ipi_i,  // inter-processor interrupts (async)
     // Timer facilities
-    input  logic               time_irq_i,     // timer interrupt in (async)
-    input  logic               debug_req_i,    // debug request (async)
+    input logic [NrHarts-1:0] time_irq_i,  // timer interrupt in (async)
+    input logic [NrHarts-1:0] debug_req_i,  // debug request (async)
     // RISC-V formal interface port (`rvfi`):
     // Can be left open when formal tracing is not needed.
-    output rvfi_probes_t       rvfi_probes_o,
+    output rvfi_probes_t [NrHarts-1:0] rvfi_probes_o,
+
     // memory side
-    output noc_req_t           noc_req_o,
-    input  noc_resp_t          noc_resp_i
+    output noc_req_t  noc_req_o,
+    input  noc_resp_t noc_resp_i
 );
 
-  cvxif_req_t  cvxif_req;
-  cvxif_resp_t cvxif_resp;
+  cvxif_req_t  [NrHarts-1:0] cvxif_req;
+  cvxif_resp_t [NrHarts-1:0] cvxif_resp;
 
-  cva6 #(
+  cva6_multicore #(
       .CVA6Cfg(CVA6Cfg),
       .rvfi_probes_instr_t(rvfi_probes_instr_t),
       .rvfi_probes_csr_t(rvfi_probes_csr_t),
@@ -95,12 +96,12 @@ module ariane
       .x_commit_t(x_commit_t),
       .x_result_t(x_result_t),
       .cvxif_req_t(cvxif_req_t),
-      .cvxif_resp_t(cvxif_resp_t)
+      .cvxif_resp_t(cvxif_resp_t),
+      .NrHarts(NrHarts)
   ) i_cva6 (
       .clk_i        (clk_i),
       .rst_ni       (rst_ni),
       .boot_addr_i  (boot_addr_i),
-      .hart_id_i    (hart_id_i),
       .irq_i        (irq_i),
       .ipi_i        (ipi_i),
       .time_irq_i   (time_irq_i),
@@ -112,41 +113,47 @@ module ariane
       .noc_resp_i   (noc_resp_i)
   );
 
-  if (CVA6Cfg.CvxifEn) begin : gen_cvxif
-    if (CVA6Cfg.CoproType == config_pkg::COPRO_EXAMPLE) begin : gen_COPRO_EXAMPLE
-      cvxif_example_coprocessor #(
-          .NrRgprPorts(CVA6Cfg.NrRgprPorts),
-          .XLEN(CVA6Cfg.XLEN),
-          .readregflags_t(readregflags_t),
-          .writeregflags_t(writeregflags_t),
-          .id_t(id_t),
-          .hartid_t(hartid_t),
-          .x_compressed_req_t(x_compressed_req_t),
-          .x_compressed_resp_t(x_compressed_resp_t),
-          .x_issue_req_t(x_issue_req_t),
-          .x_issue_resp_t(x_issue_resp_t),
-          .x_register_t(x_register_t),
-          .x_commit_t(x_commit_t),
-          .x_result_t(x_result_t),
-          .cvxif_req_t(cvxif_req_t),
-          .cvxif_resp_t(cvxif_resp_t)
-      ) i_cvxif_coprocessor (
-          .clk_i       (clk_i),
-          .rst_ni      (rst_ni),
-          .cvxif_req_i (cvxif_req),
-          .cvxif_resp_o(cvxif_resp)
-      );
-    end else begin : gen_COPRO_NONE
-      assign cvxif_resp = '{
-              compressed_ready: 1'b1,
-              issue_ready: 1'b1,
-              register_ready: 1'b1,
-              default: '0
-          };
+
+  genvar HartId;
+  generate
+    for (HartId = 0; HartId < NrHarts; HartId++) begin : gen_one_copro
+      if (CVA6Cfg.CvxifEn) begin : gen_cvxif
+        if (CVA6Cfg.CoproType == config_pkg::COPRO_EXAMPLE) begin : gen_COPRO_EXAMPLE
+          cvxif_example_coprocessor #(
+              .NrRgprPorts(CVA6Cfg.NrRgprPorts),
+              .XLEN(CVA6Cfg.XLEN),
+              .readregflags_t(readregflags_t),
+              .writeregflags_t(writeregflags_t),
+              .id_t(id_t),
+              .hartid_t(HartId),
+              .x_compressed_req_t(x_compressed_req_t),
+              .x_compressed_resp_t(x_compressed_resp_t),
+              .x_issue_req_t(x_issue_req_t),
+              .x_issue_resp_t(x_issue_resp_t),
+              .x_register_t(x_register_t),
+              .x_commit_t(x_commit_t),
+              .x_result_t(x_result_t),
+              .cvxif_req_t(cvxif_req_t),
+              .cvxif_resp_t(cvxif_resp_t)
+          ) i_cvxif_coprocessor (
+              .clk_i       (clk_i),
+              .rst_ni      (rst_ni),
+              .cvxif_req_i (cvxif_req[HartId]),
+              .cvxif_resp_o(cvxif_resp[HartId])
+          );
+        end else begin : gen_COPRO_NONE
+          assign cvxif_resp[HartId] = '{
+                  compressed_ready: 1'b1,
+                  issue_ready: 1'b1,
+                  register_ready: 1'b1,
+                  default: '0
+              };
+        end
+      end else begin : gen_no_cvxif
+        assign cvxif_resp[HartId] = '0;
+      end
     end
-  end else begin : gen_no_cvxif
-    assign cvxif_resp = '0;
-  end
+  endgenerate
 
 
 endmodule  // ariane

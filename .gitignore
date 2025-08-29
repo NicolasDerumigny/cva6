@@ -56,3 +56,5 @@ Bender.lock
 !/vendor/riscv/riscv-isa-manual/build/
 !/vendor/riscv/riscv-isa-manual/build/*
 *.ip_user_files
+verible.filelist
+*.pb

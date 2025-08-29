@@ -1,10 +1,12 @@
 `include "ariane_xlnx_mapper.svh"
+
 module ariane_peripherals_wrapper_verilog
 #(
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
     parameter AXI_ID_WIDTH   = 6,
-    parameter AXI_USER_WIDTH = 1
+    parameter AXI_USER_WIDTH = 1,
+    parameter NR_CORES       = 1
 )
 (
     input wire aclk,
@@ -15,7 +17,7 @@ module ariane_peripherals_wrapper_verilog
     input wire[29:7] irq_i,
     `AXI_INTERFACE_MODULE_INPUT(s_axi_plic, AXI_ID_WIDTH),
     `AXI_INTERFACE_MODULE_INPUT(s_axi_timer, AXI_ID_WIDTH),
-    output wire [1:0] irq_out
+    output wire [NR_CORES*2-1:0] irq_out
 );
 
 // Can't have SystemVerilog modules in a Vivado Block Design
@@ -25,7 +27,8 @@ ariane_peripherals_wrapper
     .AXI_ID_WIDTH(AXI_ID_WIDTH),
     .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
     .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
-    .AXI_USER_WIDTH(AXI_USER_WIDTH)
+    .AXI_USER_WIDTH(AXI_USER_WIDTH),
+    .NR_CORES(NR_CORES)
 )
 i_peripherals_mapper
 (

@@ -1,9 +1,9 @@
 `include "ariane_xlnx_mapper.svh"
 module clint_wrapper_verilog
 #(
-    parameter AXI_ID_WIDTH   = 6,
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
+    parameter AXI_ID_WIDTH   = 6,
     parameter AXI_USER_WIDTH = 1,
     parameter NR_CORES       = 1
 )
@@ -13,8 +13,8 @@ module clint_wrapper_verilog
 
     `AXI_INTERFACE_MODULE_INPUT(s_axi_clint, AXI_ID_WIDTH),
 
-    output wire timer_irq_o,
-    output wire ipi_o
+    output wire [NR_CORES-1:0] timer_irq_o,
+    output wire [NR_CORES-1:0] ipi_o
 );
 
 clint_wrapper #(

@@ -142,56 +142,7 @@ module axi_id_serialize_interface #(
       .AXI_ID_WIDTH  (AXI_SLV_PORT_ID_WIDTH),
       .AXI_USER_WIDTH(AXI_USER_WIDTH)
   ) slv ();
-  /* AW Channel  */
-  assign slv.aw_id = s_axi_awid;
-  assign slv.aw_addr = s_axi_awaddr;
-  assign slv.aw_len = s_axi_awlen;
-  assign slv.aw_size = s_axi_awsize;
-  assign slv.aw_burst = s_axi_awburst;
-  assign slv.aw_lock = s_axi_awlock;
-  assign slv.aw_cache = s_axi_awcache;
-  assign slv.aw_prot = s_axi_awprot;
-  assign slv.aw_qos = s_axi_awqos;
-  assign slv.aw_atop = s_axi_awatop;
-  assign slv.aw_region = s_axi_awregion;
-  assign slv.aw_user = s_axi_awuser;
-  assign slv.aw_valid = s_axi_awvalid;
-  assign slv.aw_ready = s_axi_awready;
-  /* W Channel */
-  assign slv.w_data = s_axi_wdata;
-  assign slv.w_strb = s_axi_wstrb;
-  assign slv.w_last = s_axi_wlast;
-  assign slv.w_user = s_axi_wuser;
-  assign slv.w_valid = s_axi_wvalid;
-  assign slv.w_ready = s_axi_wready;
-  /* B Channel */
-  assign slv.b_id = s_axi_bid;
-  assign slv.b_resp = s_axi_bresp;
-  assign slv.b_user = s_axi_buser;
-  assign slv.b_valid = s_axi_bvalid;
-  assign slv.b_ready = s_axi_bready;
-  /* AR Channel*/
-  assign slv.ar_id = s_axi_arid;
-  assign slv.ar_addr = s_axi_araddr;
-  assign slv.ar_len = s_axi_arlen;
-  assign slv.ar_size = s_axi_arsize;
-  assign slv.ar_burst = s_axi_arburst;
-  assign slv.ar_lock = s_axi_arlock;
-  assign slv.ar_cache = s_axi_arcache;
-  assign slv.ar_prot = s_axi_arprot;
-  assign slv.ar_qos = s_axi_arqos;
-  assign slv.ar_region = s_axi_arregion;
-  assign slv.ar_user = s_axi_aruser;
-  assign slv.ar_valid = s_axi_arvalid;
-  assign slv.ar_ready = s_axi_arready;
-  /* R Channel */
-  assign slv.r_data = s_axi_rdata;
-  assign slv.r_resp = s_axi_rresp;
-  assign slv.r_last = s_axi_rlast;
-  assign slv.r_id = s_axi_rid;
-  assign slv.r_user = s_axi_ruser;
-  assign slv.r_valid = s_axi_rvalid;
-  assign slv.r_ready = s_axi_rready;
+  `ASSIGN_ARIANE_INTERFACE_FROM_XLNX_STYLE_INPUTS(s_axi, slv)
 
   /** Output AXI **/
   AXI_BUS #(
@@ -200,67 +151,17 @@ module axi_id_serialize_interface #(
       .AXI_ID_WIDTH  (AXI_MST_PORT_ID_WIDTH),
       .AXI_USER_WIDTH(AXI_USER_WIDTH)
   ) mst ();
-  /* AW Channel  */
-  /* AW Channel  */
-  assign mst.aw_id = m_axi_awid;
-  assign mst.aw_addr = m_axi_awaddr;
-  assign mst.aw_len = m_axi_awlen;
-  assign mst.aw_size = m_axi_awsize;
-  assign mst.aw_burst = m_axi_awburst;
-  assign mst.aw_lock = m_axi_awlock;
-  assign mst.aw_cache = m_axi_awcache;
-  assign mst.aw_prot = m_axi_awprot;
-  assign mst.aw_qos = m_axi_awqos;
-  assign mst.aw_atop = m_axi_awatop;
-  assign mst.aw_region = m_axi_awregion;
-  assign mst.aw_user = m_axi_awuser;
-  assign mst.aw_valid = m_axi_awvalid;
-  assign mst.aw_ready = m_axi_awready;
-  /* W Channel */
-  assign mst.w_data = m_axi_wdata;
-  assign mst.w_strb = m_axi_wstrb;
-  assign mst.w_last = m_axi_wlast;
-  assign mst.w_user = m_axi_wuser;
-  assign mst.w_valid = m_axi_wvalid;
-  assign mst.w_ready = m_axi_wready;
-  /* B Channel */
-  assign mst.b_id = m_axi_bid;
-  assign mst.b_resp = m_axi_bresp;
-  assign mst.b_user = m_axi_buser;
-  assign mst.b_valid = m_axi_bvalid;
-  assign mst.b_ready = m_axi_bready;
-  /* AR Channel*/
-  assign mst.ar_id = m_axi_arid;
-  assign mst.ar_addr = m_axi_araddr;
-  assign mst.ar_len = m_axi_arlen;
-  assign mst.ar_size = m_axi_arsize;
-  assign mst.ar_burst = m_axi_arburst;
-  assign mst.ar_lock = m_axi_arlock;
-  assign mst.ar_cache = m_axi_arcache;
-  assign mst.ar_prot = m_axi_arprot;
-  assign mst.ar_qos = m_axi_arqos;
-  assign mst.ar_region = m_axi_arregion;
-  assign mst.ar_user = m_axi_aruser;
-  assign mst.ar_valid = m_axi_arvalid;
-  assign mst.ar_ready = m_axi_arready;
-  /* R Channel */
-  assign mst.r_data = m_axi_rdata;
-  assign mst.r_resp = m_axi_rresp;
-  assign mst.r_last = m_axi_rlast;
-  assign mst.r_id = m_axi_rid;
-  assign mst.r_user = m_axi_ruser;
-  assign mst.r_valid = m_axi_rvalid;
-  assign mst.r_ready = m_axi_rready;
+  `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi, mst)
 
   axi_id_serialize_intf #(
-      .AXI_SLV_PORT_ID_WIDTH     (AXI_SLV_PORT_ID_WIDTH),
-      .AXI_SLV_PORT_MAX_TXNS     (AXI_SLV_PORT_MAX_TXNS),
-      .AXI_MST_PORT_ID_WIDTH     (AXI_MST_PORT_ID_WIDTH),
-      .AXI_MST_PORT_MAX_UNIQ_IDS  (AXI_MST_PORT_MAX_UNIQ_IDS),
+      .AXI_SLV_PORT_ID_WIDTH       (AXI_SLV_PORT_ID_WIDTH),
+      .AXI_SLV_PORT_MAX_TXNS       (AXI_SLV_PORT_MAX_TXNS),
+      .AXI_MST_PORT_ID_WIDTH       (AXI_MST_PORT_ID_WIDTH),
+      .AXI_MST_PORT_MAX_UNIQ_IDS   (AXI_MST_PORT_MAX_UNIQ_IDS),
       .AXI_MST_PORT_MAX_TXNS_PER_ID(AXI_MST_PORT_MAX_TXNS_PER_ID),
-      .AXI_ADDR_WIDTH          (AXI_ADDR_WIDTH),
-      .AXI_DATA_WIDTH          (AXI_DATA_WIDTH),
-      .AXI_USER_WIDTH          (AXI_USER_WIDTH)
+      .AXI_ADDR_WIDTH              (AXI_ADDR_WIDTH),
+      .AXI_DATA_WIDTH              (AXI_DATA_WIDTH),
+      .AXI_USER_WIDTH              (AXI_USER_WIDTH)
   ) i_axi_id_serialize_intf (
       .clk_i (aclk),
       .rst_ni(rstn),

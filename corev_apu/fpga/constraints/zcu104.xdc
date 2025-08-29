@@ -2,12 +2,13 @@
 ## ZCU104 Rev1.0 Master XDC                                                     ##
 ##################################################################################
 ## HPDCache
-set_property ALLOW_COMBINATORIAL_LOOPS true [get_nets SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_cache_hpd.i_cache_subsystem/i_dcache/i_hpdcache/hpdcache_mem_req_write_arbiter_i/hpdcache_fxarb_mem_req_write_i/*];
+set_property ALLOW_COMBINATORIAL_LOOPS true [get_nets SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/gen_cache_hpd.i_cva6_hpdcache_subsystem/i_dcache/i_hpdcache/hpdcache_mem_req_write_arbiter_i/hpdcache_fxarb_mem_req_write_i/*];
 
 ## JTAG
 # Controlled by PS (AXI-mapped)
 
 ## UART (on PL-side UART2)
+
 #set_property -dict { PACKAGE_PIN A20  IOSTANDARD LVCMOS18 } [get_ports UART_txd        ];
 #set_property -dict { PACKAGE_PIN C19  IOSTANDARD LVCMOS18 } [get_ports UART_rxd        ];
 

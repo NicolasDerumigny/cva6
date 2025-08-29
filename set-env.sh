@@ -13,5 +13,7 @@ export BOARD=zcu104
 export target=cv64a6_imafdch_sv39
 export PLATFORM=PLAT_XILINX
 
+export DV_SIMULATORS=veri-testharness,spike
+
 source ${SCRIPT_DIR}/venv/bin/activate
 source ${SCRIPT_DIR}/verif/sim/setup-env.sh

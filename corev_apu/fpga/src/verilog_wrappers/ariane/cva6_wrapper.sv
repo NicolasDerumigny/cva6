@@ -2,27 +2,29 @@
 `include "rvfi_types.svh"
 
 `include "ariane_xlnx_mapper.svh"
-`include "ariane_xlnx_config.svh"
 
 import cva6_config_pkg::*;
 
 module cva6_wrapper #(
-    parameter AXI_ADDR_WIDTH = 64,
-    parameter AXI_DATA_WIDTH = 64,
-    parameter AXI_ID_WIDTH   = 4,
-    parameter AXI_USER_WIDTH = 1,
-    parameter AXI_CUT_BYPASS = 1
+    parameter unsigned AXI_ADDR_WIDTH = 64,
+    parameter unsigned AXI_DATA_WIDTH = 64,
+    parameter unsigned AXI_ID_WIDTH   = 4,
+    parameter unsigned AXI_USER_WIDTH = 1,
+    parameter unsigned AXI_CUT_BYPASS = 1,
+    parameter unsigned NR_CORES       = 1
 ) (
     input logic aclk,
     input logic aresetn,
-    input logic [1:0] irqs_in,
-    input logic ipi_in,
-    input logic timer_irq_i,
-    input logic debug_req_irq,
+    input logic [2*NR_CORES-1:0] irqs_in,
+    input logic [NR_CORES-1:0] ipi_in,
+    input logic [NR_CORES-1:0] timer_irq_i,
+    input logic [NR_CORES-1:0] debug_req_irq,
 
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu, AXI_ID_WIDTH)
 );
-
+  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(
+      cva6_config_pkg::cva6_cfg
+  );
 
   ariane_axi::req_t axi_ariane_req, axi_cut_req;
   ariane_axi::resp_t axi_ariane_resp, axi_cut_resp;
@@ -44,29 +46,28 @@ module cva6_wrapper #(
   import axi_pkg::RESP_DECERR;
   import axi_pkg::RESP_SLVERR;
 
-  localparam type rvfi_probes_instr_t = `RVFI_PROBES_INSTR_T(CVA6Cfg);
-  localparam type rvfi_probes_csr_t = `RVFI_PROBES_CSR_T(CVA6Cfg);
-  localparam type rvfi_probes_t = struct packed {
+  typedef `RVFI_PROBES_INSTR_T(CVA6Cfg) rvfi_probes_instr_t;
+  typedef `RVFI_PROBES_CSR_T(CVA6Cfg) rvfi_probes_csr_t;
+  typedef struct packed {
     logic csr;
     logic instr;
-  };
+  } rvfi_probes_t;
 
-
-  ariane #(
+  ariane_multicore #(
       .CVA6Cfg(CVA6Cfg),
       .rvfi_probes_instr_t(rvfi_probes_instr_t),
       .rvfi_probes_csr_t(rvfi_probes_csr_t),
-      .rvfi_probes_t(rvfi_probes_t)
+      .rvfi_probes_t(rvfi_probes_t),
+      .NrHarts(NR_CORES)
   ) i_ariane (
       .clk_i        (aclk),
       .rst_ni       (aresetn),
       .boot_addr_i  (ariane_soc::ROMBase),  // start fetching from ROM
-      .hart_id_i    ('0),
       .irq_i        (irqs_in),
       .ipi_i        (ipi_in),
       .time_irq_i   (timer_irq_i),
-      .rvfi_probes_o(  /* open */),
       .debug_req_i  (debug_req_irq),
+      .rvfi_probes_o(  /* open */),
       .noc_req_o    (axi_ariane_req),
       .noc_resp_i   (axi_ariane_resp)
   );
@@ -81,10 +82,10 @@ module cva6_wrapper #(
       .USER_WIDTH(AXI_USER_WIDTH),
       .BYPASS(AXI_CUT_BYPASS)
   ) i_axi_cut (
-      .clk_i(aclk),
+      .clk_i (aclk),
       .rst_ni(aresetn),
-      .in(cpu_bus),
-      .out(tmp_bus)
+      .in    (cpu_bus),
+      .out   (tmp_bus)
   );
 
   `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_cpu, tmp_bus)

@@ -1,7 +1,6 @@
 `include "axi/typedef.svh"
 `include "axi/assign.svh"
 
-`include "ariane_xlnx_config.svh"
 `include "ariane_xlnx_mapper.svh"
 
 import cva6_config_pkg::*;
@@ -9,9 +8,10 @@ import cva6_config_pkg::*;
 module debug_module_wrapper#(
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
-    parameter AXI_MST_ID_WIDTH   = 4,
-    parameter AXI_SLV_ID_WIDTH   = 6,
-    parameter AXI_USER_WIDTH = 1
+    parameter AXI_MST_ID_WIDTH = 4,
+    parameter AXI_SLV_ID_WIDTH = 6,
+    parameter AXI_USER_WIDTH = 1,
+    parameter NR_CORES       = 1
 )
 (
     input logic aclk,
@@ -29,11 +29,13 @@ module debug_module_wrapper#(
 
     // to CPU/other peripherals
     output logic ndmreset,
-    output logic debug_req_irq
+    output wire[NR_CORES-1:0] debug_req_irq
 );
 
 import ariane_axi::req_t;
 import ariane_axi::resp_t;
+
+localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(cva6_config_pkg::cva6_cfg);
 
 ariane_axi::req_t    dm_axi_m_req;
 ariane_axi::resp_t   dm_axi_m_resp;
@@ -104,9 +106,9 @@ logic [CVA6Cfg.XLEN-1:0]    dm_master_r_rdata;
 
 // debug module
 dm_top #(
-    .NrHarts          ( 1                 ),
+    .NrHarts          ( NR_CORES          ),
     .BusWidth         ( CVA6Cfg.XLEN      ),
-    .SelectableHarts  ( 1'b1              ),
+    .SelectableHarts  ( {NR_CORES{1'b1}}  ),
     .DmBaseAddress    ( 1'h0              ) // Map DM to addr 0
 ) i_dm_top (
     .clk_i            ( aclk              ),
@@ -116,7 +118,7 @@ dm_top #(
     .dmactive_o       ( dmactive          ), // active debug session
     .debug_req_o      ( debug_req_irq     ),
     .unavailable_i    ( '0                ),
-    .hartinfo_i       ( {ariane_pkg::DebugHartInfo} ),
+    .hartinfo_i       ( {NR_CORES{ariane_pkg::DebugHartInfo}} ),
     .slave_req_i      ( dm_slave_req      ),
     .slave_we_i       ( dm_slave_we       ),
     .slave_addr_i     ( dm_slave_addr     ),

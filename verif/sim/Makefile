@@ -110,7 +110,9 @@ endif
 # Make these variables available to sub-Makefiles.
 export DEBUG TRACE_FAST TRACE_COMPACT
 
+ifneq ($(elf),)
 TESTNAME := $(shell basename -s .o $(elf))
+endif
 
 ifeq ($(isspostrun_opts), "")
 grep_address:

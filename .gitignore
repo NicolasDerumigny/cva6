@@ -61,3 +61,7 @@ Bender.lock
 /verif/sim/iti.traces
 /verif/sim/verilator.fst.hier
 *.ip_user_files
+verible.filelist
+*.pb
+*.trace
+.vimrc

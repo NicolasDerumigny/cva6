@@ -213,7 +213,7 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         vendor/pulp-platform/tech_cells_generic/src/deprecated/cluster_clk_cells.sv  \
         vendor/pulp-platform/tech_cells_generic/src/deprecated/pulp_clk_cells.sv     \
         vendor/pulp-platform/tech_cells_generic/src/rtl/tc_clk.sv                    \
-		core/include/iti_pkg.sv														 \
+        core/include/iti_pkg.sv                                                         \
         corev_apu/tb/ariane_testharness.sv                                           \
         corev_apu/tb/ariane_peripherals.sv                                           \
         corev_apu/tb/rvfi_tracer.sv                                                  \
@@ -383,6 +383,8 @@ else
 endif
 
 flist ?= core/Flist.cva6
+
+fpga:
 
 vcs_build: $(dpi-library)/ariane_dpi.so
 	mkdir -p $(vcs-library)

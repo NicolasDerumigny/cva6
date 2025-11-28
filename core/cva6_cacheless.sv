@@ -282,9 +282,14 @@ module cva6_cacheless
     input logic [NumCachePorts-1:0][CVA6Cfg.DCACHE_SET_ASSOC-1:0] miss_vld_bits_i,
 
     // Accelerator port
-    input logic inval_ready_i,
-    output logic [63:0] inval_addr_o,
-    output logic inval_valid_o
+    input  logic              inval_ready_i,
+    output logic       [63:0] inval_addr_o,
+    output logic              inval_valid_o,
+    output wire               page_offset_matches,
+    output exception_t        cva6_mmu_exception,
+    output logic       [ 3:0] state_o,
+    output logic       [ 2:0] lsu_id,
+    output logic       [ 2:0] commit_id
 );
 
   localparam type interrupts_t = struct packed {
@@ -1002,7 +1007,13 @@ module cva6_cacheless
       .pmpaddr_i               (pmpaddr),
       //RVFI
       .rvfi_lsu_ctrl_o         (rvfi_lsu_ctrl),
-      .rvfi_mem_paddr_o        (rvfi_mem_paddr)
+      .rvfi_mem_paddr_o        (rvfi_mem_paddr),
+
+      .page_offset_matches(page_offset_matches),
+      .cva6_mmu_exception,
+      .state_o,
+      .lsu_id,
+      .commit_id
   );
 
   // ---------
@@ -1557,7 +1568,7 @@ module cva6_cacheless
       .rvfi_probes_t      (rvfi_probes_t)
   ) i_cva6_rvfi_probes (
 
-      .flush_i            (flush_ctrl_if),
+      .flush_i            (flush_ctrl_ex),
       .issue_instr_ack_i  (issue_instr_issue_id),
       .fetch_entry_valid_i(fetch_valid_if_id),
       .instruction_i      (rvfi_fetch_instr),

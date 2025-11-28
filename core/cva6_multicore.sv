@@ -103,7 +103,7 @@ module cva6_multicore
     },
 
     // D$ data requests
-    localparam type dcache_req_i_t = struct packed {
+    parameter type dcache_req_i_t = struct packed {
       logic [CVA6Cfg.DCACHE_INDEX_WIDTH-1:0] address_index;
       logic [CVA6Cfg.DCACHE_TAG_WIDTH-1:0]   address_tag;
       logic [CVA6Cfg.XLEN-1:0]               data_wdata;
@@ -116,7 +116,7 @@ module cva6_multicore
       logic                                  kill_req;
       logic                                  tag_valid;
     },
-    localparam type dcache_req_o_t = struct packed {
+    parameter type dcache_req_o_t = struct packed {
       logic                                 data_gnt;
       logic                                 data_rvalid;
       logic [CVA6Cfg.DcacheIdWidth-1:0]     data_rid;
@@ -209,7 +209,17 @@ module cva6_multicore
     input cvxif_resp_t cvxif_resp_i[NrHarts],
     // memory side
     output noc_req_t noc_req_o,
-    input noc_resp_t noc_resp_i
+    input noc_resp_t noc_resp_i,
+
+    // debug
+    output dcache_req_o_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_from_cache,
+    output dcache_req_i_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_to_cache,
+    output wire [NrHarts-1:0] page_offset_matches,
+    output logic [NrHarts * (NUM_CACHE_PORTS + 1):0] arb_req_gnt_d,
+    output exception_t [NrHarts-1:0] cva6_mmu_exception,
+    output logic [NrHarts-1:0][3:0] state_o,
+    output logic [NrHarts-1:0][2:0] lsu_id,
+    output logic [NrHarts-1:0][2:0] commit_id
 );
   localparam unsigned NUM_CACHE_PORTS = 4;
   localparam unsigned NUM_HW_PREFETCHERS = 4;
@@ -218,8 +228,8 @@ module cva6_multicore
   logic [NrHarts-1:0] dcache_en_csr_nbdcache;
   logic [NrHarts-1:0] dcache_flush_ctrl_cache;
   logic [NrHarts-1:0] dcache_flush_ack_cache_ctrl;
-  dcache_req_o_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_from_cache;
-  dcache_req_i_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_to_cache;
+  //dcache_req_o_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_from_cache;
+  //dcache_req_i_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_to_cache;
   logic [NrHarts-1:0] dcache_commit_wbuffer_empty;
   logic [NrHarts-1:0] dcache_commit_wbuffer_not_ni;
 
@@ -312,7 +322,12 @@ module cva6_multicore
           .miss_vld_bits_i               (miss_vld_bits[HartId]),
           .inval_ready_i                 (inval_ready[HartId]),
           .inval_addr_o                  (inval_addr[HartId]),
-          .inval_valid_o                 (inval_valid[HartId])
+          .inval_valid_o                 (inval_valid[HartId]),
+          .page_offset_matches           (page_offset_matches[HartId]),
+          .cva6_mmu_exception            (cva6_mmu_exception[HartId]),
+          .state_o                       (state_o[HartId]),
+          .lsu_id                        (lsu_id[HartId]),
+          .commit_id                     (commit_id[HartId])
       );
 
       cva6_icache #(
@@ -471,7 +486,8 @@ module cva6_multicore
         .wbuffer_empty_o         (dcache_commit_wbuffer_empty),
         .wbuffer_not_ni_o        (dcache_commit_wbuffer_not_ni),
         .noc_req_o               (noc_req_o),
-        .noc_resp_i              (noc_resp_i)
+        .noc_resp_i              (noc_resp_i),
+        .arb_req_gnt_d           (arb_req_gnt_d)
     );
     assign inval_ready = 1'b1;
   end

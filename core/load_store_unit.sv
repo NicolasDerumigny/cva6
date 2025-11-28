@@ -159,9 +159,15 @@ module load_store_unit
     input logic           [avoid_neg(CVA6Cfg.NrPMPEntries-1):0][CVA6Cfg.PLEN-3:0] pmpaddr_i,
 
     // RVFI information - RVFI
-    output lsu_ctrl_t                    rvfi_lsu_ctrl_o,
+    output lsu_ctrl_t                     rvfi_lsu_ctrl_o,
     // RVFI information - RVFI
-    output logic      [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr_o
+    output logic       [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr_o,
+    // Debug
+    output wire                           page_offset_matches,
+    output exception_t                    cva6_mmu_exception,
+    output logic       [             3:0] state_o,
+    output logic       [             2:0] lsu_id,
+    output logic       [             2:0] commit_id
 );
 
   // data is misaligned
@@ -215,7 +221,7 @@ module load_store_unit
   logic [31:0] mmu_tinst;
   logic        mmu_hs_ld_st_inst;
   logic        mmu_hlvx_inst;
-  exception_t mmu_exception, cva6_mmu_exception, acc_mmu_exception;
+  exception_t mmu_exception,  /*cva6_mmu_exception,*/ acc_mmu_exception;
   exception_t   pmp_exception;
   icache_areq_t pmp_icache_areq_i;
   logic         pmp_translation_valid;
@@ -230,7 +236,8 @@ module load_store_unit
   logic [         CVA6Cfg.XLEN-1:0] st_result;
 
   logic [                     11:0] page_offset;
-  logic                             page_offset_matches;
+  // debug
+  //logic                             page_offset_matches;
 
   exception_t misaligned_exception, cva6_misaligned_exception, acc_misaligned_exception;
   exception_t ld_ex;
@@ -586,7 +593,10 @@ module load_store_unit
       // to memory arbiter
       .req_port_i           (dcache_req_ports_i[1]),
       .req_port_o           (dcache_req_ports_o[1]),
-      .dcache_wbuffer_not_ni_i
+      .dcache_wbuffer_not_ni_i,
+      .state_o,
+      .lsu_id,
+      .commit_id
   );
 
   // ----------------------------

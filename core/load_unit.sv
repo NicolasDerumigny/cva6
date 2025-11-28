@@ -78,7 +78,10 @@ module load_unit
     // Data cache request in - CACHES
     output dcache_req_i_t req_port_o,
     // Presence of non-idempotent operations in the D$ write buffer - CACHES
-    input logic dcache_wbuffer_not_ni_i
+    input logic dcache_wbuffer_not_ni_i,
+    output logic [3:0] state_o,
+    output logic [2:0] lsu_id,
+    output logic [2:0] commit_id
 );
   enum logic [3:0] {
     IDLE,
@@ -229,6 +232,14 @@ module load_unit
   assign not_commit_time = commit_tran_id_i != lsu_ctrl_i.trans_id;
   assign inflight_stores = (!dcache_wbuffer_not_ni_i || !store_buffer_empty_i);
   assign stall_ni = (inflight_stores || not_commit_time) && (paddr_ni && CVA6Cfg.NonIdemPotenceEn);
+  // Stuck on 2 5 8 6 1
+  assign state_o = state_q;
+  /*    {
+        not_commit_time, inflight_stores, !dcache_wbuffer_not_ni_i, !store_buffer_empty_i
+      }; */
+  assign lsu_id = lsu_ctrl_i.trans_id;
+  assign commit_id = commit_tran_id_i;
+  // Blocked due to 1 0 0 0
 
   // ---------------
   // Load Control

@@ -241,7 +241,12 @@ module ex_stage
     // Information dedicated to RVFI - RVFI
     output [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr_o,
     // Original instruction AES bits
-    input logic [5:0] orig_instr_aes_i
+    input logic [5:0] orig_instr_aes_i,
+    output wire page_offset_matches,
+    output exception_t cva6_mmu_exception,
+    output logic [3:0] state_o,
+    output logic [2:0] lsu_id,
+    output logic [2:0] commit_id
 );
 
   // -------------------------
@@ -593,7 +598,12 @@ module ex_stage
       .pmpcfg_i,
       .pmpaddr_i,
       .rvfi_lsu_ctrl_o,
-      .rvfi_mem_paddr_o
+      .rvfi_mem_paddr_o,
+      .page_offset_matches,
+      .cva6_mmu_exception,
+      .state_o,
+      .lsu_id,
+      .commit_id
   );
 
   if (CVA6Cfg.CvxifEn) begin : gen_cvxif

@@ -24,6 +24,15 @@ module ariane_multicore
       logic csr;
       logic instr;
     },
+    parameter type exception_t = struct packed {
+      logic [CVA6Cfg.XLEN-1:0] cause;  // cause of exception
+      logic [CVA6Cfg.XLEN-1:0] tval;  // additional information of causing exception (e.g.: instruction causing it),
+      // address of LD/ST fault
+      logic [CVA6Cfg.GPLEN-1:0] tval2;  // additional information when the causing exception in a guest exception
+      logic [31:0] tinst;  // transformed instruction information
+      logic gva;  // signals when a guest virtual address is written to tval
+      logic valid;
+    },
     // CVXIF Types
     localparam type readregflags_t = `READREGFLAGS_T(CVA6Cfg),
     localparam type writeregflags_t = `WRITEREGFLAGS_T(CVA6Cfg),
@@ -40,6 +49,29 @@ module ariane_multicore
     `CVXIF_REQ_T(CVA6Cfg, x_compressed_req_t, x_issue_req_t, x_register_t, x_commit_t),
     localparam type cvxif_resp_t =
     `CVXIF_RESP_T(CVA6Cfg, x_compressed_resp_t, x_issue_resp_t, x_result_t),
+
+    // Debug
+    parameter type dcache_req_i_t = struct packed {
+      logic [CVA6Cfg.DCACHE_INDEX_WIDTH-1:0] address_index;
+      logic [CVA6Cfg.DCACHE_TAG_WIDTH-1:0]   address_tag;
+      logic [CVA6Cfg.XLEN-1:0]               data_wdata;
+      logic [CVA6Cfg.DCACHE_USER_WIDTH-1:0]  data_wuser;
+      logic                                  data_req;
+      logic                                  data_we;
+      logic [(CVA6Cfg.XLEN/8)-1:0]           data_be;
+      logic [1:0]                            data_size;
+      logic [CVA6Cfg.DcacheIdWidth-1:0]      data_id;
+      logic                                  kill_req;
+      logic                                  tag_valid;
+    },
+    parameter type dcache_req_o_t = struct packed {
+      logic                                 data_gnt;
+      logic                                 data_rvalid;
+      logic [CVA6Cfg.DcacheIdWidth-1:0]     data_rid;
+      logic [CVA6Cfg.XLEN-1:0]              data_rdata;
+      logic [CVA6Cfg.DCACHE_USER_WIDTH-1:0] data_ruser;
+    },
+
     // AXI Types
     parameter int unsigned AxiAddrWidth = ariane_axi::AddrWidth,
     parameter int unsigned AxiDataWidth = ariane_axi::DataWidth,
@@ -67,8 +99,17 @@ module ariane_multicore
     output rvfi_probes_t rvfi_probes_o[NrHarts],
 
     // memory side
-    output noc_req_t  noc_req_o,
-    input  noc_resp_t noc_resp_i
+    output noc_req_t                         noc_req_o,
+    input  noc_resp_t                        noc_resp_i,
+    // debug
+    output dcache_req_o_t [NrHarts-1:0][3:0] dcache_req_from_cache,
+    output dcache_req_i_t [NrHarts-1:0][3:0] dcache_req_to_cache,
+    output wire           [NrHarts-1:0]      page_offset_matches,
+    output logic          [       10:0]      arb_req_gnt_d,
+    output exception_t    [NrHarts-1:0]      cva6_mmu_exception,
+    output logic          [NrHarts-1:0][3:0] state_o,
+    output logic          [NrHarts-1:0][2:0] lsu_id,
+    output logic          [NrHarts-1:0][2:0] commit_id
 );
 
   cvxif_req_t  cvxif_req [NrHarts];
@@ -97,20 +138,30 @@ module ariane_multicore
       .x_result_t(x_result_t),
       .cvxif_req_t(cvxif_req_t),
       .cvxif_resp_t(cvxif_resp_t),
+      .dcache_req_i_t(dcache_req_i_t),
+      .dcache_req_o_t(dcache_req_o_t),
       .NrHarts(NrHarts)
   ) i_cva6 (
-      .clk_i        (clk_i),
-      .rst_ni       (rst_ni),
-      .boot_addr_i  (boot_addr_i),
-      .irq_i        (irq_i),
-      .ipi_i        (ipi_i),
-      .time_irq_i   (time_irq_i),
-      .debug_req_i  (debug_req_i),
-      .rvfi_probes_o(rvfi_probes_o),
-      .cvxif_req_o  (cvxif_req),
-      .cvxif_resp_i (cvxif_resp),
-      .noc_req_o    (noc_req_o),
-      .noc_resp_i   (noc_resp_i)
+      .clk_i                (clk_i),
+      .rst_ni               (rst_ni),
+      .boot_addr_i          (boot_addr_i),
+      .irq_i                (irq_i),
+      .ipi_i                (ipi_i),
+      .time_irq_i           (time_irq_i),
+      .debug_req_i          (debug_req_i),
+      .rvfi_probes_o        (rvfi_probes_o),
+      .cvxif_req_o          (cvxif_req),
+      .cvxif_resp_i         (cvxif_resp),
+      .noc_req_o            (noc_req_o),
+      .noc_resp_i           (noc_resp_i),
+      .dcache_req_from_cache(dcache_req_from_cache),
+      .dcache_req_to_cache  (dcache_req_to_cache),
+      .page_offset_matches  (page_offset_matches),
+      .arb_req_gnt_d        (arb_req_gnt_d),
+      .cva6_mmu_exception,
+      .state_o,
+      .commit_id,
+      .lsu_id
   );
 
 

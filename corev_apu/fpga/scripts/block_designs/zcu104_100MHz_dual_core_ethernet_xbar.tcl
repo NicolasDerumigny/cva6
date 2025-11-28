@@ -1234,7 +1234,7 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
     CONFIG.C_DATA_DEPTH {2048} \
     CONFIG.C_MON_TYPE {MIX} \
     CONFIG.C_NUM_MONITOR_SLOTS {1} \
-    CONFIG.C_NUM_OF_PROBES {17} \
+    CONFIG.C_NUM_OF_PROBES {21} \
   ] $system_ila_0
 
 
@@ -1297,6 +1297,10 @@ connect_bd_intf_net -intf_net [get_bd_intf_nets cpu_0_m_axi_cpu] [get_bd_intf_pi
   connect_bd_net -net cpu_0_mem_paddr1 [get_bd_pins cpu_0/mem_paddr1] [get_bd_pins system_ila_0/probe14]
   connect_bd_net -net cpu_0_pc0 [get_bd_pins cpu_0/pc0] [get_bd_pins system_ila_0/probe2]
   connect_bd_net -net cpu_0_pc1 [get_bd_pins cpu_0/pc1] [get_bd_pins system_ila_0/probe3]
+  connect_bd_net -net cpu_0_req_from_cache_gnt1 [get_bd_pins cpu_0/req_from_cache_gnt1] [get_bd_pins system_ila_0/probe18]
+  connect_bd_net -net cpu_0_req_from_cache_valid1 [get_bd_pins cpu_0/req_from_cache_valid1] [get_bd_pins system_ila_0/probe17]
+  connect_bd_net -net cpu_0_req_to_cache_tag1 [get_bd_pins cpu_0/req_to_cache_tag1] [get_bd_pins system_ila_0/probe20]
+  connect_bd_net -net cpu_0_req_to_cache_valid1 [get_bd_pins cpu_0/req_to_cache_valid1] [get_bd_pins system_ila_0/probe19]
   connect_bd_net -net cpu_0_valid0 [get_bd_pins cpu_0/valid0] [get_bd_pins system_ila_0/probe8]
   connect_bd_net -net cpu_0_valid1 [get_bd_pins cpu_0/valid1] [get_bd_pins system_ila_0/probe9]
   connect_bd_net -net cpu_debug_debug_req_irq [get_bd_pins cpu_debug/debug_req_irq] [get_bd_pins system_ila_0/probe6] [get_bd_pins cpu_0/debug_req_irq]

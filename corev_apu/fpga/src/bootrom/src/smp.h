@@ -50,4 +50,16 @@
   bnez reg2, 41b;                                                              \
   addi reg1, reg1, 4;                                                          \
   li reg2, CLINT_END_HART_IPI;                                                 \
-  blt reg1, reg2, 41b
+  blt reg1, reg2, 41b;                                                         \
+  /* Non-SMP harts counts to MAX_HARTS * 50 to let hart 0 be the first to exit \
+   */                                                                          \
+  li reg2, 0x8;                                                                \
+  csrw mie, reg2;                                                              \
+  li reg1, NONSMP_HART;                                                        \
+  csrr reg2, mhartid;                                                          \
+  beq reg1, reg2, 44f;                                                         \
+  li reg1, (MAX_HARTS * 50);                                                   \
+  43 :;                                                                        \
+  addi reg1, reg1, -1;                                                         \
+  bgez reg1, 43b;                                                              \
+  44:

@@ -30,6 +30,47 @@ We currently provide support for the [Genesys 2 board](https://reference.digilen
 
 > The ethernet controller and the corresponding network connection, as well as the SD Card connection and the capability to boot linux are still work in progress and not functional at the moment. Expect some updates soon-ish.
 
+-----
+_Added in this repo_
+
+- **ZCU104**
+    Tested on Vivado 2024.1. This project contains several block designs variations in
+    `corev_apu/fpga/scripts/block_designs/zcu104*.tcl`, namely:
+    - `zcu104_50MHz_ethernet.tcl`: 50 MHz version with Ethernet support.
+    - `zcu104_100MHz_ethernet.tcl`: Similar version, with the core clock set to 100 MHz.
+    - `zcu104_100MHz_second_uart.tcl`: Adds a second UART, which can be set to contains only SBI
+      prints module OpenSBI `platform.c` UART address modification. Usefull for debugging IO deadlocks inside Linux.
+    - `zcu104_100MHz_dual_core_ethernet.tcl`: experimental 2-core version with Xilinx AXI Ethernet.
+      Also relies on the PULP AXI Interconnect rather than Vivado's one, brigning support of AXI5
+      atomics but less block design level customizability.
+    The default one is `zcu104_100MHz_dual_core_ethernet.tcl`. To change it, delete `zcu104.tcl` and
+    create a symbolic link to the desired flavour.
+    The FPGA currently contains the following peripherals:
+    - DDR4 memory controller wire to the SO-DIMM slot, using [MTA8ATF1G64HZ-compatible](https://www.micron.com/products/memory/dram-modules/sodimm/part-catalog/part-detail/mta8atf1g64hz-3g2r1) timings
+    - JTAG port (see debugging section below)
+    - Bootrom containing zero stage bootloader
+    - UART, routed through the integrated USB-to-Quad-UART module
+    - SPI controler router to the PMOD0 header for SDCard support, requires a [PMOD-micoSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
+    - (depending on version) Ethernet MAC Controller, routed to the first port of a
+        [CN0506 FMC module](https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html) using
+        [AMD AXI Ethernet](https://www.amd.com/en/products/adaptive-socs-and-fpgas/intellectual-property/axi_ethernet.html)
+    - GPIOs connected to LEDs (including Ethernet's when applicable)
+
+
+- **PYNQ-Z2**
+    Tested on Vivado 2024.1, using a degraded 25 MHz core clock frequency (50 MHz interconnect one
+    for faster memory/peripheral transfer speed)
+    The FPGA currently contains the following peripherals:
+    - Access to the board's upper 128 MiB of DRAM (if double-booting Linux on the Arm cores, limits
+      its usage to the 127 lower MiB with the kernel parameter `memory=128M`
+    - JTAG port (see debugging section below)
+    - Bootrom containing zero stage bootloader
+    - UART routed through the PMODA lower port, requires a [PMOD-USB-UART adapter](https://digilent.com/reference/pmod/pmodusbuart/start)
+    - SPI controler router to a PMODB header for SDCard support, requires a [PMOD-micoSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
+    - GPIOs connected to LEDs
+
+_End of addition_
+-----
 
 ## Programming the Memory Configuration File or bitstream
 
@@ -53,6 +94,25 @@ We currently provide support for the [Genesys 2 board](https://reference.digilen
    - Right after programming you can connect to the UART and see your CVA6 alive on Agilex!
    - For this you need to use the JTAG UART provided with Quartus installation
 
+
+-----
+_Added in this repo_
+
+- **ZCU104 / PYNQ-Z2**
+   - Open Vivado 2021.1
+   - Open the hardware manager and open the target board
+   - Right-click on the MPSoC node (`xczu7_0` for the ZCU104) in the "Hardware" tab
+   - Select `ariane_xilinx.bit`
+   - Press Ok. Flashing will take a couple of seconds. Booting will begin as soon as flashing is
+     done
+
+_Note:_ Flashing can also be performed from a booted (Arm-side) Linux using [fpga manager](https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18841645/Solution+Zynq+PL+Programming+With+FPGA+Manager) and
+`ariane_xilinx.bin` file generated with Vivado's [bootgen](https://github.com/Xilinx/bootgen).
+
+
+_End of addition_
+-----
+
 ```
 .$quartus_installation_path/qprogrammer/quartus/bin/juart-terminal
 juart-terminal: connected to hardware target using JTAG UART on cable
@@ -63,6 +123,17 @@ Hello World!
 ```
 
 ## Booting Linux
+
+-----
+_Added in this repo_
+
+MPSoC boot is similar, except that:
+- The corresponding ariane-sdk repo is located [here](https://github.com/NicolasDerumigny/cva6-sdk)
+- The USB Serial device is probably not `/dev/ttyUSB0`, as Linux should see the board's programming
+  interface first. On the ZCU104, it should be `/dev/ttyUSB3`.
+
+_End of addition_
+-----
 
 The first stage bootloader will boot from SD Card by default. Get yourself a suitable SD Card (we use [this](https://www.amazon.com/Kingston-Digital-Mobility-MBLY10G2-32GB/dp/B00519BEQO) one). Either grab a pre-built Linux image from [here](https://github.com/pulp-platform/ariane-sdk/releases) or generate the Linux image yourself following the README in the [ariane-sdk repository](https://github.com/pulp-platform/ariane-sdk). Prepare the SD Card by following the "Booting from SD card" section in the ariane-sdk repository.
 
@@ -80,7 +151,7 @@ After you've inserted the SD Card and programmed the FPGA you can connect to the
 [zephyr](https://zephyrproject.org/) is a real-time unikernel operating system developed by the Linux Foundation that targets resource-constrained embedded devices. It is highly configurable and optionally provides subsystems like userspace support with the PMP, a full network stack and a file system.
 
 zephyr natively supports the cva6 SoC and the **Genesys 2** board in two configurations: [cv64a6_imafdc_sv39](https://docs.zephyrproject.org/latest/boards/openhwgroup/cv64a6_genesys_2/doc/index.html) and [cv32a6_imac_sv32](https://docs.zephyrproject.org/latest/boards/openhwgroup/cv32a6_genesys_2/doc/index.html).
-See the 
+See the
 `cv64a6_imafdc_sv39` is the configuration that will be synthesized when you follow the steps [below](#generating-a-bitstream).
 In order to build `cv32a6_imac_sv32`, use the following command instead:
 ```bash
@@ -117,18 +188,17 @@ You can then insert the SD card into the board and have the zero-stage boot load
 
 - **Genesys 2**
 
-To generate the FPGA bitstream (and memory configuration) yourself for the Genesys II board run:
+To generate the FPGA bitstream (and memory configuration) yourself for the Genesys II or MPSoC boards (check the `BOARD` variable in `Makefile` to set the actual target), then run:
 
 ```
 make fpga
 ```
 
-This will produce a bitstream file and memory configuration file (in `fpga/work-fpga`) which you can permanently flash by running the above commands.
+This will produce a bitstream file and memory configuration file (in `fpga/work-fpga`) which you can permanently flash by running the above commands. On MPSoCs, this also creates a customizable Vivado 2024.1 project in `corev_apu/fpga/ariane.xpr`.
 
 - **Agilex 7**
 
 To generate the FPGA bitstream yourself for the Agilex 7 board run:
-
 ```
 make altera
 ```
@@ -230,7 +300,53 @@ Info : Listening on port 6666 for tcl connections
 Info : Listening on port 4444 for telnet connections
 ```
 
-- **Common for both boards**
+-----
+_Added in this repo_
+
+- **AMD MPSoC boards**
+
+The CVA6 is debuggable from a booted Arm-side Linux using Xilinx Virtual Cable interface, now
+supported on latest versions of OpenOCD.
+The steps to run it are:
+- Copy `corev_apu/fpga/ariane-mpsoc.cfg` to the board
+- Edit the `xlnx_axi_xvc dev_addr 0xZZZZZZZ` to match the AXI-JTAG address (0xA0000000 on ZCU104, 0x43C00000 on the PYNQ-Z2)
+- If running the single-core version: delete the line `target create $_TARGETNAME_1 riscv -chain-position $_TARGETNAME -coreid 1`
+- Start OpenOCD:
+```
+sudo openocd -f ariane-mpsoc.cfg
+
+Open On-Chip Debugger 0.12.0+dev-gce83008c6 (2025-07-01-09:37)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+Info : Opening /dev/mem for AXI communication
+Info : Mapped Xilinx XVC/AXI vaddr 0xffff98ed4000 paddr 0xa0000000
+Info : Note: The adapter "xlnx_axi_xvc" doesn't support configurable speed
+Info : WARN: XVC driver has no reset.
+Info : JTAG tap: riscv.cpu tap/device found: 0x00000001 (mfg: 0x000 (<invalid>), part: 0x0000, ver: 0x0)
+Info : datacount=2 progbufsize=8
+Info : Examined RISC-V core; found 2 harts
+Info :  hart 0: XLEN=64, misa=0x800000000014112f
+Info : [riscv.cpu0] Examination succeed
+Info : datacount=2 progbufsize=8
+Info : Examined RISC-V core; found 2 harts
+Info :  hart 1: XLEN=64, misa=0x800000000014112f
+Info : [riscv.cpu1] Examination succeed
+Info : [riscv.cpu0] starting gdb server on 3333
+Info : Listening on port 3333 for gdb connections
+Info : [riscv.cpu1] starting gdb server on 3334
+Info : Listening on port 3334 for gdb connections
+Ready for Remote Connections
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
+```
+
+_End of addition_
+-----
+
+
+
+- **Common for all boards**
 
 Then you will be able to either connect through `telnet` or with `gdb`:
 
@@ -277,3 +393,14 @@ To activate the different cache system, compile your code with the macro `DCACHE
 The zero stage bootloader (ZSBL) for RTL simulation lives in `bootrom/` while the bootcode for the FPGA is in `fpga/src/bootrom`. The RTL bootcode simply jumps to the base of the DRAM where the FSBL takes over. For the FPGA the ZSBL performs additional housekeeping. Both bootloader pass the hartid as well as address to the device tree in argument register `a0` and `a1` respectively.
 
 To re-generate the bootcode you can use the existing makefile within those directories. To generate the SystemVerilog files you will need the `bitstring` python package installed on your system.
+
+-----
+_Added in this repo_
+
+A target `bootrom-fpga` has been added to the top-level Makefile, which will trigger the
+`fpga/src/bootrom` one with the correct arguments.
+
+_End of addition_
+-----
+
+

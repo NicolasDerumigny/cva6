@@ -1,3 +1,18 @@
+# CVA6 MPSoC
+
+This fork of the CVA6 contains several experimental changes compared to the upstream version for
+research purposes. Main changes are:
+- Wrapping of the CoreV SoC core elements in Vivado 2021.1-compatible block design primitives (based
+  initially on [this project](https://github.com/cispa/CVA6-Vivado-Project-with-Xilinx-AXI-Ethernet/)).
+- Support of the ZCU104 (@ 50 / 100 MHz) and PYNQ-Z2 (@ 25 MHz) boards
+- (Modified) [Linux image creation toolchain](https://github.com/NicolasDerumigny/cva6-sdk/); see
+the [FPGA implementation documentation](tutorials/fpga.md) for more details
+- Experimental dual-core, shared L1D configuration
+
+This fork is manually kept up-to-date with respect to the upstream repo on a case-by-case basis.
+
+_Original Readme_
+-----
 # CVA6 RISC-V CPU [![Build Status](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml) [![CVA6 dashboard](https://riscv-ci.pages.thales-invia.fr/dashboard/badge_master.svg)](https://riscv-ci.pages.thales-invia.fr/dashboard/dashboard_cva6.html) [![Documentation Status](https://readthedocs.com/projects/openhw-group-cva6-user-manual/badge/?version=latest)](https://docs.openhwgroup.org/projects/cva6-user-manual/?badge=latest) [![GitHub release](https://img.shields.io/github/release/openhwgroup/cva6?include_prereleases=&sort=semver&color=blue)](https://github.com/openhwgroup/cva6/releases/)
 
 CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13.
@@ -20,7 +35,7 @@ Throughout all build and simulations scripts executions, you can use the environ
 - if left undefined, `NUM_JOBS` will default to 1, resulting in a sequential execution
 of `make` jobs;
 - when setting `NUM_JOBS` to an explicit value, it is recommended not to exceed 2/3 of
-the total number of virtual cores available on your system.    
+the total number of virtual cores available on your system.
 
 1. Checkout the repository and initialize all submodules.
 ```sh

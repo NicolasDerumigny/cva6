@@ -14,6 +14,8 @@ licence: [Vivado prerequisites](../../flows/README.md#vivado-prerequisites).
 |---|---|---|---|
 | [Genesys 2](https://reference.digilentinc.com/reference/programmable-logic/genesys-2/reference-manual) | Xilinx Kintex-7 | `fpga_linux_cv32a6`, `fpga_linux_cv64a6` | `vivado-fpga-*` |
 | [Agilex 7 Development Kit](https://www.intel.la/content/www/xl/es/products/details/fpga/development-kits/agilex/agf014.html) | Intel/Altera | `fpga_linux_cv64a6` | `quartus-fpga-*` |
+| [ZCU104](https://www.xilinx.com/products/boards-and-kits/zcu104.html) | AMD Zynq UltraScale+ MPSoC | `fpga_linux_zcu104` | `vivado-fpga-*` |
+| [PYNQ-Z2](http://www.pynq.io/board.html) | Xilinx Zynq-7000 | `fpga_linux_pynq_z2` | `vivado-fpga-*` |
 
 `kc705`, `vc707` and `nexys_video` also build with `vivado-fpga-build
 --board`, but cannot be programmed by the recipes yet. Pre-built
@@ -28,6 +30,48 @@ bootloader and the device tree, a UART and GPIOs on the LEDs.
 The Agilex 7 design (`cva6_altera`, Quartus Prime Pro 24.1) contains a
 DDR4 controller, the JTAG debug port, the boot ROM, a JTAG UART and GPIOs
 on the LEDs.
+
+### ZCU104 and PYNQ-Z2 (this fork)
+
+The Zynq boards of this fork declare their peripherals in a generated
+block design rather than in the nine IP cores of the seven-series boards
+(`bd` and `ips` of their `BoardParams` in
+[`flows/utils/fpga_board.py`](../../flows/utils/fpga_board.py)), and
+`vivado-fpga-build` sources that TCL to wrap the design into `FPGA_TOP`.
+
+- **ZCU104** — tested on Vivado 2024.1. The block designs live in
+  `corev_apu/fpga/scripts/block_designs/zcu104*.tcl`:
+  - `zcu104_50MHz_ethernet.tcl`: 50 MHz version with Ethernet support.
+  - `zcu104_100MHz_ethernet.tcl`: similar version, core clock at 100 MHz.
+  - `zcu104_100MHz_second_uart.tcl`: adds a second UART, useful to debug
+    I/O deadlocks inside Linux; it requires an OpenSBI `platform.c` UART
+    address change.
+  - `zcu104_100MHz_dual_core_ethernet.tcl`: experimental dual-core version
+    with the Xilinx AXI Ethernet. It relies on the PULP AXI interconnect
+    instead of Vivado's own, which brings AXI5 atomics at the price of
+    less block-design customizability.
+
+  The default one is `zcu104_100MHz_dual_core_ethernet.tcl`: to change it,
+  delete `zcu104.tcl` and symlink the desired flavour under that name.
+  The design contains a DDR4 controller wired to the SO-DIMM slot with
+  [MTA8ATF1G64HZ](https://www.micron.com/products/memory/dram-modules/sodimm/part-catalog/part-detail/mta8atf1g64hz-3g2r1)
+  timings, the JTAG port, the boot ROM with the zero stage bootloader, a
+  UART routed through the board's USB-to-Quad-UART bridge, an SPI
+  controller on PMOD0 for the SD card (a
+  [PMOD-microSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
+  is needed), the AMD AXI Ethernet MAC on the first port of a
+  [CN0506 FMC module](https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html)
+  in the flavours that carry it, and GPIOs on the LEDs.
+
+- **PYNQ-Z2** — tested on Vivado 2024.1 at a degraded 25 MHz core clock
+  (50 MHz on the interconnect, to keep memory and peripherals fast). The
+  design gives access to the upper 128 MiB of the board DRAM (double
+  booting Linux on the Arm cores limits it to the 127 lower MiB with the
+  kernel parameter `memory=128M`), the JTAG port, the boot ROM, a UART on
+  the PMODA lower port (a
+  [PMOD-USB-UART adapter](https://digilent.com/reference/pmod/pmodusbuart/start)
+  is needed), an SPI controller on PMODB for the SD card, and GPIOs on the
+  LEDs.
 
 ## The chain
 
@@ -85,6 +129,19 @@ Flashing takes a few minutes. Then right click on the FPGA device, Boot
 from Configuration Memory Device (or press the program button of the
 board).
 
+### Flashing the MPSoC boards of this fork
+
+The Zynq boards are programmed from Vivado instead: open the hardware
+manager, connect to the board, right-click on the MPSoC node
+(`xczu7ev_0` on the ZCU104) in the Hardware tab, select
+`ariane_xilinx.bit` and press OK. Flashing takes a couple of seconds and
+booting begins as soon as it is done.
+
+Flashing can also be performed from a booted (Arm side) Linux with the
+[Xilinx FPGA manager](https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18841645/Solution+Zynq+PL+Programming+With+FPGA+Manager)
+and the `ariane_xilinx.bin` produced by Vivado's
+[bootgen](https://github.com/Xilinx/bootgen).
+
 ## Booting Linux
 
 The bootloader loads Linux from the SD card. Get an image from the
@@ -101,6 +158,13 @@ The console runs at 115200 baud. The default user is `root`, without
 password. `fpga-linux-boot` answers the shell prompt with `uname -a` and
 passes when the kernel answers. A board that prints nothing is reported
 as an environment failure (console, power, SD card).
+
+The MPSoC boards of this fork boot the same way, with two differences:
+the Linux image toolchain is the fork of
+[cva6-sdk](https://github.com/NicolasDerumigny/cva6-sdk), and the USB
+serial device is probably not `/dev/ttyUSB0` because the host sees the
+board's programming interface first — on the ZCU104 it is
+`/dev/ttyUSB3`.
 
 ## Agilex 7
 
@@ -247,6 +311,32 @@ $quartus_installation_path/qprogrammer/quartus/bin/juart-terminal
 juart-terminal: connected to hardware target using JTAG UART on cable
 juart-terminal: "AGF FPGA Development Kit [1-3]", device 1, instance 0
 Hello World!
+```
+
+### AMD MPSoC boards (this fork)
+
+The CVA6 of the Zynq boards is also debuggable from a booted Arm side
+Linux, through the Xilinx Virtual Cable interface supported by recent
+OpenOCD versions:
+
+- Copy `corev_apu/fpga/ariane-mpsoc.cfg` to the board.
+- Edit `xlnx_axi_xvc dev_addr 0xZZZZZZZ` to the AXI-JTAG address of the
+  board: `0xA0000000` on the ZCU104, `0x43C00000` on the PYNQ-Z2.
+- On the single-core flavours, delete the line
+  `target create $_TARGETNAME_1 riscv -chain-position $_TARGETNAME -coreid 1`.
+- Start OpenOCD and connect GDB to the ports it opens:
+
+```
+sudo openocd -f ariane-mpsoc.cfg
+
+Open On-Chip Debugger 0.12.0+dev-gce83008c6 (2025-07-01-09:37)
+...
+Info : Examined RISC-V core; found 2 harts
+Info : [riscv.cpu0] starting gdb server on 3333
+Info : [riscv.cpu1] starting gdb server on 3334
+Ready for Remote Connections
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
 ```
 
 ### Both boards

@@ -30,7 +30,7 @@ We currently provide support for the [Genesys 2 board](https://reference.digilen
 
 > The ethernet controller and the corresponding network connection, as well as the SD Card connection and the capability to boot linux are still work in progress and not functional at the moment. Expect some updates soon-ish.
 
------
+***
 _Added in this repo_
 
 - **ZCU104**
@@ -70,7 +70,7 @@ _Added in this repo_
     - GPIOs connected to LEDs
 
 _End of addition_
------
+***
 
 ## Programming the Memory Configuration File or bitstream
 
@@ -95,7 +95,7 @@ _End of addition_
    - For this you need to use the JTAG UART provided with Quartus installation
 
 
------
+***
 _Added in this repo_
 
 - **ZCU104 / PYNQ-Z2**
@@ -111,7 +111,7 @@ _Note:_ Flashing can also be performed from a booted (Arm-side) Linux using [fpg
 
 
 _End of addition_
------
+***
 
 ```
 .$quartus_installation_path/qprogrammer/quartus/bin/juart-terminal
@@ -124,7 +124,7 @@ Hello World!
 
 ## Booting Linux
 
------
+***
 _Added in this repo_
 
 MPSoC boot is similar, except that:
@@ -133,7 +133,7 @@ MPSoC boot is similar, except that:
   interface first. On the ZCU104, it should be `/dev/ttyUSB3`.
 
 _End of addition_
------
+***
 
 The first stage bootloader will boot from SD Card by default. Get yourself a suitable SD Card (we use [this](https://www.amazon.com/Kingston-Digital-Mobility-MBLY10G2-32GB/dp/B00519BEQO) one). Either grab a pre-built Linux image from [here](https://github.com/pulp-platform/ariane-sdk/releases) or generate the Linux image yourself following the README in the [ariane-sdk repository](https://github.com/pulp-platform/ariane-sdk). Prepare the SD Card by following the "Booting from SD card" section in the ariane-sdk repository.
 
@@ -300,7 +300,7 @@ Info : Listening on port 6666 for tcl connections
 Info : Listening on port 4444 for telnet connections
 ```
 
------
+***
 _Added in this repo_
 
 - **AMD MPSoC boards**
@@ -342,7 +342,7 @@ Info : Listening on port 4444 for telnet connections
 ```
 
 _End of addition_
------
+***
 
 
 
@@ -394,13 +394,13 @@ The zero stage bootloader (ZSBL) for RTL simulation lives in `bootrom/` while th
 
 To re-generate the bootcode you can use the existing makefile within those directories. To generate the SystemVerilog files you will need the `bitstring` python package installed on your system.
 
------
+***
 _Added in this repo_
 
 A target `bootrom-fpga` has been added to the top-level Makefile, which will trigger the
 `fpga/src/bootrom` one with the correct arguments.
 
 _End of addition_
------
+***
 
 

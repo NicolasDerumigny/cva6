@@ -298,8 +298,11 @@ proc create_hier_cell_Ethernet_Subsystem { parentCell nameHier } {
     CONFIG.ENABLE_AVB {false} \
     CONFIG.Frame_Filter {false} \
     CONFIG.PHY_TYPE {RGMII} \
+    CONFIG.RXCSUM {Full} \
+    CONFIG.RXMEM {4k} \
     CONFIG.Statistics_Counters {false} \
     CONFIG.SupportLevel {1} \
+    CONFIG.TXCSUM {Full} \
     CONFIG.TXMEM {4k} \
     CONFIG.axiliteclkrate {50} \
     CONFIG.axisclkrate {50} \
@@ -627,13 +630,13 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   connect_bd_net -net Ethernet_Subsystem_reset_rtl [get_bd_pins Ethernet_Subsystem/eth_rst] [get_bd_pins eth_rst]
   connect_bd_net -net Ethernet_Subsystem_s2mm_introut [get_bd_pins Ethernet_Subsystem/s2mm_introut] [get_bd_pins s2mm_introut]
   connect_bd_net -net S02_ARESETN_1 [get_bd_pins cpu_peripheral_aresetn] [get_bd_pins Ethernet_Subsystem/eth_axi_resetn] [get_bd_pins Ethernet_Subsystem/eth_dma_axi_resetn]
-  connect_bd_net -net aresetn_1 [get_bd_pins aresetn] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn] [get_bd_pins axi_clock_converter_0/s_axi_aresetn] [get_bd_pins gpio_axi_protocol_convert/aresetn] [get_bd_pins eth_led_axi_protocol_convert/aresetn] [get_bd_pins uart_axi_protocol_convert/aresetn] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins uart_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins gpio_axi_dwidth_converter1/s_axi_aresetn] [get_bd_pins axi_xbar_interface_v_0/aresetn]
+  connect_bd_net -net aresetn_1 [get_bd_pins aresetn] [get_bd_pins axi_clock_converter_0/s_axi_aresetn] [get_bd_pins gpio_axi_protocol_convert/aresetn] [get_bd_pins eth_led_axi_protocol_convert/aresetn] [get_bd_pins uart_axi_protocol_convert/aresetn] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins uart_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins gpio_axi_dwidth_converter1/s_axi_aresetn] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn] [get_bd_pins axi_xbar_interface_v_0/aresetn]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_clint_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_clint_awatop] [get_bd_pins m_axi_clint_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_debug_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_debug_awatop] [get_bd_pins m_axi_debug_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_plic_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_plic_awatop] [get_bd_pins m_axi_plic_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_ram_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_ram_awatop] [get_bd_pins axi_riscv_atomics_wrapper_0/s_axi_in_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_timer_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_timer_awatop] [get_bd_pins m_axi_timer_awatop]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins Ethernet_Subsystem/axi_clk] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK] [get_bd_pins axi_clock_converter_0/s_axi_aclk] [get_bd_pins eth_led_axi_protocol_convert/aclk] [get_bd_pins uart_axi_protocol_convert/aclk] [get_bd_pins gpio_axi_protocol_convert/aclk] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aclk] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aclk] [get_bd_pins uart_axi_dwidth_converter/s_axi_aclk] [get_bd_pins gpio_axi_dwidth_converter1/s_axi_aclk] [get_bd_pins axi_xbar_interface_v_0/aclk]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins Ethernet_Subsystem/axi_clk] [get_bd_pins axi_clock_converter_0/s_axi_aclk] [get_bd_pins eth_led_axi_protocol_convert/aclk] [get_bd_pins uart_axi_protocol_convert/aclk] [get_bd_pins gpio_axi_protocol_convert/aclk] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aclk] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aclk] [get_bd_pins uart_axi_dwidth_converter/s_axi_aclk] [get_bd_pins gpio_axi_dwidth_converter1/s_axi_aclk] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK] [get_bd_pins axi_xbar_interface_v_0/aclk]
   connect_bd_net -net cpu_atop_in_1 [get_bd_pins cpu_atop_in] [get_bd_pins axi_xbar_interface_v_0/s_axi_cpu_awatop]
   connect_bd_net -net ddr_aresetn_1 [get_bd_pins ddr_aresetn] [get_bd_pins axi_clock_converter_0/m_axi_aresetn]
   connect_bd_net -net ddr_clk_1 [get_bd_pins ddr_clk] [get_bd_pins axi_clock_converter_0/m_axi_aclk]
@@ -765,9 +768,9 @@ proc create_root_design { parentCell } {
   # Create instance: irqconcat, and set properties
   set irqconcat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 irqconcat ]
   set_property -dict [list \
-    CONFIG.IN2_WIDTH {21} \
+    CONFIG.IN3_WIDTH {20} \
     CONFIG.IN5_WIDTH {18} \
-    CONFIG.NUM_PORTS {3} \
+    CONFIG.NUM_PORTS {4} \
   ] $irqconcat
 
 
@@ -1223,7 +1226,7 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   set xlconstant_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_3 ]
   set_property -dict [list \
     CONFIG.CONST_VAL {0} \
-    CONFIG.CONST_WIDTH {21} \
+    CONFIG.CONST_WIDTH {20} \
   ] $xlconstant_3
 
 
@@ -1233,6 +1236,14 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
     CONFIG.C_OPERATION {or} \
     CONFIG.C_SIZE {1} \
   ] $util_vector_logic_0
+
+
+  # Create instance: util_vector_logic_1, and set properties
+  set util_vector_logic_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_1 ]
+  set_property -dict [list \
+    CONFIG.C_OPERATION {not} \
+    CONFIG.C_SIZE {1} \
+  ] $util_vector_logic_1
 
 
   # Create interface connections
@@ -1283,9 +1294,10 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   connect_bd_net -net ddr4_0_addn_ui_clkout1 [get_bd_pins ddr4_0/addn_ui_clkout1] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk]
   connect_bd_net -net ddr4_0_c0_ddr4_ui_clk [get_bd_pins ddr4_0/c0_ddr4_ui_clk] [get_bd_pins northbridge/ddr_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
   connect_bd_net -net ext_reset_1 [get_bd_ports ext_reset] [get_bd_pins util_vector_logic_0/Op1]
+  connect_bd_net -net int_n_1 [get_bd_ports int_n] [get_bd_pins util_vector_logic_1/Op1]
   connect_bd_net -net irqconcat_dout [get_bd_pins irqconcat/dout] [get_bd_pins ariane_peripherals_0/irq_i]
   connect_bd_net -net led_0_a_1 [get_bd_ports led_0_a] [get_bd_ports led_ar_c_c2m]
-  connect_bd_net -net mig_aclk_1 [get_bd_pins ddr4_0/addn_ui_clkout2] [get_bd_pins northbridge/aclk] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins cpu_reset_gen/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins axi_eth_led_gpio/s_axi_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_debug/aclk] [get_bd_pins cpu_0/aclk]
+  connect_bd_net -net mig_aclk_1 [get_bd_pins ddr4_0/addn_ui_clkout2] [get_bd_pins northbridge/aclk] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins cpu_reset_gen/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins axi_eth_led_gpio/s_axi_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk] [get_bd_pins cpu_debug/aclk]
   connect_bd_net -net northbridge_eth_interrupt [get_bd_pins northbridge/eth_interrupt] [get_bd_pins ariane_peripherals_0/eth_irq_i]
   connect_bd_net -net northbridge_eth_rst [get_bd_pins northbridge/eth_rst] [get_bd_ports eth_rst]
   connect_bd_net -net northbridge_m_axi_clint_awatop [get_bd_pins northbridge/m_axi_clint_awatop] [get_bd_pins clint_0/s_axi_clint_awatop]
@@ -1299,11 +1311,12 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   connect_bd_net -net sdcard_quad_spi_axi_ip2intc_irpt [get_bd_pins sdcard_quad_spi_axi/ip2intc_irpt] [get_bd_pins ariane_peripherals_0/spi_irq_i]
   connect_bd_net -net spi_miso_1 [get_bd_ports spi_miso] [get_bd_pins sdcard_quad_spi_axi/io1_i]
   connect_bd_net -net util_vector_logic_0_Res [get_bd_pins util_vector_logic_0/Res] [get_bd_pins cpu_reset_gen/ext_reset_in]
+  connect_bd_net -net util_vector_logic_1_Res [get_bd_pins util_vector_logic_1/Res] [get_bd_pins irqconcat/In2]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins xlconcat_0/dout] [get_bd_pins bootrom_wrapper_0/addr_i]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_uart16550_0/freeze]
   connect_bd_net -net xlconstant_1_dout [get_bd_pins xlconstant_1/dout] [get_bd_pins cpu_debug/jtag_trst_n]
   connect_bd_net -net xlconstant_2_dout [get_bd_pins xlconstant_2/dout] [get_bd_ports led_ar_a_c2m]
-  connect_bd_net -net xlconstant_3_dout [get_bd_pins xlconstant_3/dout] [get_bd_pins irqconcat/In2]
+  connect_bd_net -net xlconstant_3_dout [get_bd_pins xlconstant_3/dout] [get_bd_pins irqconcat/In3]
   connect_bd_net -net xlslice_0_Dout [get_bd_pins xlslice_0/Dout] [get_bd_ports led_al_c_c2m]
   connect_bd_net -net xlslice_1_Dout [get_bd_pins xlslice_1/Dout] [get_bd_ports led_al_a_c2m]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0] [get_bd_pins proc_sys_reset_0/ext_reset_in]
@@ -1332,6 +1345,7 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   # Restore current instance
   current_bd_instance $oldCurInst
 
+  validate_bd_design
   save_bd_design
 }
 # End of create_root_design()
@@ -1343,6 +1357,4 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
 
 create_root_design ""
 
-
-common::send_gid_msg -ssname BD::TCL -id 2053 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 

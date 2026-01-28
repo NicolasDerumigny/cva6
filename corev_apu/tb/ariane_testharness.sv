@@ -639,7 +639,7 @@ module ariane_testharness #(
 `endif
       .InclSPI     (1'b0),
       .InclEthernet(1'b0),
-      .NR_CORES    (NR_CORES),
+      .NR_CORES    (NR_CORES)
   ) i_ariane_peripherals (
       .clk_i    (clk_i),
       .rst_ni   (ndmreset_n),

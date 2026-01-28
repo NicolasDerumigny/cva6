@@ -70,5 +70,5 @@ verdiRestore.tcl
 *.ip_user_files
 verible.filelist
 *.pb
-*.trace
+*.traces
 .vimrc

@@ -137,9 +137,8 @@ _start:
   ## get core id
   csrr a0, mhartid
   li a1, 1
+  ## execute bench on core 0
   bgeu a0, a1, _exit
-
-  # Execute bench on all cores
 
   # give each core 128KB of stack + TLS
 #define STKSHIFT 17
@@ -237,8 +236,8 @@ trap_entry:
   .weak   handle_trap
   .type	handle_trap, @function
 handle_trap:
-        li  a0, -32
-	j   _exit
+  li  a0, -32
+  j   _exit
   .size handle_trap, . - handle_trap
 
   // Default, overrideable definition of _init:

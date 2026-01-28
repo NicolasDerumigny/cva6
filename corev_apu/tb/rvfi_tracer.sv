@@ -156,11 +156,8 @@ module rvfi_tracer #(
   assign end_of_test_o = end_of_test_q;
 
   always_ff @(posedge clk_i) begin
-    logic [31:0] end_of_test_d;
-    // Generate the trace based on RVFI
-    logic [63:0] pc64;
-
-    end_of_test_d = (rst_ni && (end_of_test_q[0] == 1'b1)) ? end_of_test_q : 0;
+    end_of_test_q <= end_of_test_d;
+    end_of_test_d <= (rst_ni && (end_of_test_q[0] == 1'b1)) ? end_of_test_q : 0;
     for (int i = 0; i < CVA6Cfg.NrCommitPorts; i++) begin
       pc64 = {
         {CVA6Cfg.XLEN - CVA6Cfg.VLEN{rvfi_i[i].pc_rdata[CVA6Cfg.VLEN-1]}}, rvfi_i[i].pc_rdata
@@ -230,7 +227,7 @@ module rvfi_tracer #(
                rvfi_i[i].mem_addr == TOHOST_ADDR)) begin
             case (rvfi_i[i].mem_wdata[0])
               'b1: begin
-                end_of_test_d = rvfi_i[i].mem_wdata[31:0];
+                end_of_test_q <= rvfi_i[i].mem_wdata[31:0];
                 $display(
                     "*** [rvfi_tracer %d] INFO: Simulation terminated after %d cycles with value 0x%h!",
                     HART_ID, cycles, rvfi_i[i].mem_wdata[31:0]);
@@ -269,14 +266,7 @@ module rvfi_tracer #(
 
     if (~rst_ni) cycles <= 0;
     else cycles <= cycles + 1;
-    if (cycles > SIM_FINISH) begin
-      $display(
-         "*** [rvfi_tracer %d] INFO: Simulation timed out after %d cycles",
-         HART_ID, cycles);
-      end_of_test_d = 32'hffff_ffff;
-    end
-
-    end_of_test_q <= end_of_test_d;
+    if (cycles > SIM_FINISH) end_of_test_d <= 32'hffff_ffff;
   end
 
 

@@ -4,7 +4,6 @@
 #define __UTIL_H
 
 extern void setStats(int enable);
-extern __attribute__((noreturn)) void exit(int);
 
 #include <stdint.h>
 
@@ -14,17 +13,11 @@ extern __attribute__((noreturn)) void exit(int);
   case !!(long)(cond):;                                                        \
   }
 
-extern __thread int hart_id;
 static unsigned long get_hart_id() {
-  if (hart_id == -1) {
-    register unsigned long ret asm("a0");
-    asm volatile("csrr    a0, mhartid" : "=r"(ret));
-    return ret;
-  }
-  return hart_id;
+  register unsigned long ret asm("a0");
+  asm volatile("csrr    a0, mhartid" : "=r"(ret));
+  return ret;
 }
-
-void init_hart_id();
 
 static int verify(int n, const volatile int *test, const int *verify) {
   int i;
@@ -113,22 +106,19 @@ static uintptr_t insn_len(uintptr_t pc) {
   __atomic_fetch_add(a, inc, __ATOMIC_ACQUIRE)
 
 #ifdef __riscv_atomic // __sync_* builtins require A extension
-                      //
-static inline void lock(uint8_t *lock_addr) {
+static uint8_t __syscall_lock = 0;
+
+static inline void lock() {
   uint8_t expected;
   do {
     expected = 0;
-  } while (!__sync_compare_and_swap_n(lock_addr, &expected, 1));
+  } while (__sync_compare_and_swap_n(&__syscall_lock, &expected, 1));
 }
 
-static inline void unlock(uint8_t *lock_addr) { __sync_store(lock_addr, 0); }
+static inline void unlock() { __sync_store(&__syscall_lock, 0); }
 
 static inline void invalidate_cacheline(volatile void *addr) {
   __asm__ volatile("cbo.inval (%0)" ::"r"(addr) : "memory");
-}
-
-static inline void flush_cacheline(volatile void *addr) {
-  __asm__ volatile("cbo.flush (%0)" ::"r"(addr) : "memory");
 }
 
 #endif

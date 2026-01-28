@@ -35,16 +35,14 @@ module ariane_testharness #(
     parameter bit InclSimDTM = 1'b1,
     parameter int unsigned NUM_WORDS = 2 ** 25,  // memory size
     parameter bit StallRandomOutput = 1'b0,
-    parameter bit StallRandomInput = 1'b0
+    parameter bit StallRandomInput = 1'b0,
+    parameter int NR_CORES = 2
 ) (
     input  logic        clk_i,
     input  logic        rtc_i,
     input  logic        rst_ni,
     output logic [31:0] exit_o
 );
-
-  localparam [7:0] hart_id = '0;
-  localparam int NR_CORES = 2;
 
   // RVFI
   localparam type rvfi_instr_t = `RVFI_INSTR_T(CVA6Cfg);
@@ -766,15 +764,15 @@ module ariane_testharness #(
       ) i_encoder (
           .clk_i               (clk_i),
           .rst_ni              (rst_ni),
-          .valid_i             (iti_to_encoder.valid),
-          .itype_i             (iti_to_encoder.itype),
-          .cause_i             (iti_to_encoder.cause),
-          .tval_i              (iti_to_encoder.tval),
-          .priv_i              (iti_to_encoder.priv),
-          .iaddr_i             (iti_to_encoder.iaddr),
-          .iretire_i           (iti_to_encoder.iretire),
-          .ilastsize_i         (iti_to_encoder.ilastsize),
-          .time_i              (iti_to_encoder.cycles),
+          .valid_i             (iti_to_encoder[HartId].valid),
+          .itype_i             (iti_to_encoder[HartId].itype),
+          .cause_i             (iti_to_encoder[HartId].cause),
+          .tval_i              (iti_to_encoder[HartId].tval),
+          .priv_i              (iti_to_encoder[HartId].priv),
+          .iaddr_i             (iti_to_encoder[HartId].iaddr),
+          .iretire_i           (iti_to_encoder[HartId].iretire),
+          .ilastsize_i         (iti_to_encoder[HartId].ilastsize),
+          .time_i              (iti_to_encoder[HartId].cycles),
           .tvec_i              ('0),
           .epc_i               ('0),
           .encapsulator_ready_i('1),
@@ -806,7 +804,7 @@ module ariane_testharness #(
           .flow_i             ('0),
           .timestamp_present_i('1),
           //.srcid_i(),
-          .timestamp_i        (rvfi_to_iti.cycles),
+          .timestamp_i        (rvfi_to_iti[HartId].cycles),
           //.type_i(),
           .trace_payload_i    (packet_payload),
           .valid_o            (encap_valid),

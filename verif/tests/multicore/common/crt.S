@@ -123,14 +123,9 @@ _start:
   la t0, trap_entry
   csrw mtvec, t0
 
-  ## get core id
-  csrr a0, mhartid
-  li a1, 1
-  ## execute bench on core 0
-  bgeu a0, a1, _exit
-
   # give each core 128KB of stack + TLS
 #define STKSHIFT 17
+  csrr a0, mhartid
   add sp, a0, 1
   sll sp, sp, STKSHIFT
   add sp, sp, tp
@@ -223,11 +218,11 @@ trap_entry:
 
   // Default definition of handle_trap: Exit with code 0x7ffffff0.
   .weak   handle_trap
-  .type	handle_trap, @function
+  .type   handle_trap, @function
 handle_trap:
   li  a0, -32
   j   _exit
-  .size handle_trap, . - handle_trap
+  .size handle_trap, .- handle_trap
 
   // Default, overrideable definition of _init:
   // Call 'main' and jump to '_exit' which never returns.

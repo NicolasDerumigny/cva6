@@ -19,7 +19,7 @@ export NUM_JOBS=$(nproc)
 
 export DV_SIMULATORS=veri-testharness,spike
 
-if [ -d "${SCRIPT_DIR}/venv/bin/activate" ]; then
-source ${SCRIPT_DIR}/venv/bin/activate
+if [ -f "${SCRIPT_DIR}/venv/bin/activate" ]; then
+    source ${SCRIPT_DIR}/venv/bin/activate
 fi
 source ${SCRIPT_DIR}/verif/sim/setup-env.sh

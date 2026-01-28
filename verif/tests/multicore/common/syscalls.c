@@ -1,11 +1,12 @@
 // See LICENSE for license details.
 
-#include <stdint.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
 #include <limits.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/signal.h>
+
 #include "util.h"
 
 #define SYS_write 64
@@ -17,7 +18,8 @@ extern volatile uint64_t fromhost;
 
 register void *thread_pointer asm("tp");
 
-// tohost is 64 bits wide, irrespective of XLEN.  The structure expected in Spike is:
+// tohost is 64 bits wide, irrespective of XLEN.  The structure expected in
+// Spike is:
 // - tohost[63:56] == device (syscall: 0)
 // - tohost[55:48] == command (syscall: 0)
 // - tohost[47:0]  == payload (syscall: address of magic_mem)
@@ -26,9 +28,8 @@ register void *thread_pointer asm("tp");
 // - syscall index (93 dec for syscall_exit, cf. Spike values in
 //   riscv-isa-sim/fesvr/syscall.cc:140 and ff.)
 // - syscall args in the declaration order of the given syscall
-
-static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1, uintptr_t arg2)
-{
+static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1,
+                         uintptr_t arg2) {
   // Arguments in magic_mem have XLEN bits each.
   volatile uintptr_t magic_mem[8] __attribute__((aligned(64)));
   magic_mem[0] = which;
@@ -36,6 +37,7 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1, uintpt
   magic_mem[2] = arg1;
   magic_mem[3] = arg2;
 #ifdef __riscv_atomic // __sync_synchronize requires A extension
+  lock();
   __sync_synchronize();
 #endif
 
@@ -46,29 +48,43 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1, uintpt
   // - the environment acknowledges the env request by writing 0 into tohost.
   // - the completion of the request is signalled by the environment through
   //   a write of a non-zero value into fromhost.
-  tohost = (((uint64_t) ((unsigned long int) magic_mem)) << 16) >> 16;    // clear the DEV and CMD bytes, clip payload.
+  tohost = (((uint64_t)((unsigned long int)magic_mem)) << 16) >>
+           16; // clear the DEV and CMD bytes, clip payload.
+
+#ifdef __riscv_atomic
+  // Required for Verilator consistency, else `fromhost` will
+  // be fetched from the cache
+  invalidate_cacheline(&fromhost);
+  invalidate_cacheline(&magic_mem);
+#endif
+
   while (fromhost == 0)
     ;
   fromhost = 0;
 
 #ifdef __riscv_atomic // __sync_synchronize requires A extension
   __sync_synchronize();
+  unlock();
 #endif
   return magic_mem[0];
 }
 
 #define NUM_COUNTERS 2
 static uintptr_t counters[NUM_COUNTERS];
-static char* counter_names[NUM_COUNTERS];
+static char *counter_names[NUM_COUNTERS];
 
-void setStats(int enable)
-{
+void setStats(int enable) {
   int i = 0;
-#define READ_CTR(name) do { \
-    while (i >= NUM_COUNTERS) ; \
-    uintptr_t csr = read_csr(name); \
-    if (!enable) { csr -= counters[i]; counter_names[i] = #name; } \
-    counters[i++] = csr; \
+#define READ_CTR(name)                                                         \
+  do {                                                                         \
+    while (i >= NUM_COUNTERS)                                                  \
+      ;                                                                        \
+    uintptr_t csr = read_csr(name);                                            \
+    if (!enable) {                                                             \
+      csr -= counters[i];                                                      \
+      counter_names[i] = #name;                                                \
+    }                                                                          \
+    counters[i++] = csr;                                                       \
   } while (0)
 
   READ_CTR(mcycle);
@@ -77,65 +93,48 @@ void setStats(int enable)
 #undef READ_CTR
 }
 
-uintptr_t getStats(int counterid)
-{
-  return counters[counterid];
-}
+uintptr_t getStats(int counterid) { return counters[counterid]; }
 
-void __attribute__((noreturn)) tohost_exit(uintptr_t code)
-{
+void __attribute__((noreturn)) tohost_exit(uintptr_t code) {
   // Simply write PASS/FAIL result into 'tohost'.
-  // Left shift 'code' by 1 and set bit 0 to 1, but leave the 16 uppermost bits clear
-  // so that the syscall is properly recognized even if 'code' value is very large.
-  tohost = ((((uint64_t) code) << 17) >> 16) | 1;
+  // Left shift 'code' by 1 and set bit 0 to 1, but leave the 16 uppermost bits
+  // clear so that the syscall is properly recognized even if 'code' value is
+  // very large.
+  tohost = ((((uint64_t)code) << 17) >> 16) | 1;
 
   // Do not care about the value returned by host.
   // Leave 1 cycle of slack (one NOP instruction) to help debugging
   // the termination mechanism if needed.
   __asm__("nop\n\t");
 
-  // Go into an endless loop if the write into 'tohost' did not terminate the simulation.
-  while (1);
+  // Go into an endless loop if the write into 'tohost' did not terminate the
+  // simulation.
+  while (1)
+    ;
 }
 
-uintptr_t __attribute__((weak)) handle_trap(uintptr_t cause, uintptr_t epc, uintptr_t regs[32])
-{
+uintptr_t __attribute__((weak)) handle_trap(uintptr_t cause, uintptr_t epc,
+                                            uintptr_t regs[32]) {
   tohost_exit(1337);
 }
 
-void exit(int code)
-{
-  tohost_exit(code);
-}
+void exit(int code) { tohost_exit(code); }
 
-void abort()
-{
-  exit(128 + SIGABRT);
-}
+void abort() { exit(128 + SIGABRT); }
 
-void printstr(const char* s)
-{
+void printstr(const char *s) {
 #if !NOPRINT
   syscall(SYS_write, 1, (uintptr_t)s, strlen(s));
 #endif
 }
 
-void __attribute__((weak)) thread_entry(int cid, int nc)
-{
-  // multi-threaded programs override this function.
-  // for the case of single-threaded programs, only let core 0 proceed.
-  while (cid != 0);
-}
-
-int __attribute__((weak)) main(int argc, char** argv)
-{
-  // single-threaded programs override this function.
+int __attribute__((weak)) main(int argc, char **argv) {
+  // Programs should override this function!
   printstr("Implement main(), foo!\n");
   return -1;
 }
 
-static void init_tls()
-{
+static void init_tls() {
   extern char _tdata_begin, _tdata_end, _tbss_end;
   size_t tdata_size = &_tdata_end - &_tdata_begin;
   memcpy(thread_pointer, &_tdata_begin, tdata_size);
@@ -143,16 +142,14 @@ static void init_tls()
   memset(thread_pointer + tdata_size, 0, tbss_size);
 }
 
-void _init(int cid, int nc)
-{
+void _init(int cid, int nc) {
   init_tls();
-  thread_entry(cid, nc);
 
-  // only single-threaded programs should ever get here.
+  // MPI-like interface, all cores execute main
   int ret = main(0, 0);
 
   char buf[NUM_COUNTERS * 32] __attribute__((aligned(64)));
-  char* pbuf = buf;
+  char *pbuf = buf;
   for (int i = 0; i < NUM_COUNTERS; i++)
     if (counters[i])
       pbuf += sprintf(pbuf, "%s = %zu\n", counter_names[i], counters[i]);
@@ -162,8 +159,7 @@ void _init(int cid, int nc)
   exit(ret);
 }
 
-int puts(const char *s)
-{
+int puts(const char *s) {
   const char *p = s;
 
   while (*p)
@@ -174,16 +170,14 @@ int puts(const char *s)
 }
 
 #undef putchar
-int putchar(int ch)
-{
+int putchar(int ch) {
 #if !NOPRINT
   static __thread char buf[64] __attribute__((aligned(64)));
   static __thread int buflen = 0;
 
   buf[buflen++] = ch;
 
-  if (ch == '\n' || buflen == sizeof(buf))
-  {
+  if (ch == '\n' || buflen == sizeof(buf)) {
     syscall(SYS_write, 1, (uintptr_t)buf, buflen);
     buflen = 0;
   }
@@ -192,13 +186,11 @@ int putchar(int ch)
   return 0;
 }
 
-void printhex(uint64_t x)
-{
+void printhex(uint64_t x) {
   char str[17];
   int i;
-  for (i = 0; i < 16; i++)
-  {
-    str[15-i] = (x & 0xF) + ((x & 0xF) < 10 ? '0' : 'a'-10);
+  for (i = 0; i < 16; i++) {
+    str[15 - i] = (x & 0xF) + ((x & 0xF) < 10 ? '0' : 'a' - 10);
     x >>= 4;
   }
   str[16] = 0;
@@ -206,14 +198,13 @@ void printhex(uint64_t x)
   printstr(str);
 }
 
-static inline void printnum(void (*putch)(int, void**), void **putdat,
-                    unsigned long long num, unsigned base, int width, int padc)
-{
-  unsigned digs[sizeof(num)*CHAR_BIT];
+static inline void printnum(void (*putch)(int, void **), void **putdat,
+                            unsigned long long num, unsigned base, int width,
+                            int padc) {
+  unsigned digs[sizeof(num) * CHAR_BIT];
   int pos = 0;
 
-  while (1)
-  {
+  while (1) {
     digs[pos++] = num % base;
     if (num < base)
       break;
@@ -227,8 +218,7 @@ static inline void printnum(void (*putch)(int, void**), void **putdat,
     putch(digs[pos] + (digs[pos] >= 10 ? 'a' - 10 : '0'), putdat);
 }
 
-static unsigned long long getuint(va_list *ap, int lflag)
-{
+static unsigned long long getuint(va_list *ap, int lflag) {
   if (lflag >= 2)
     return va_arg(*ap, unsigned long long);
   else if (lflag)
@@ -237,8 +227,7 @@ static unsigned long long getuint(va_list *ap, int lflag)
     return va_arg(*ap, unsigned int);
 }
 
-static long long getint(va_list *ap, int lflag)
-{
+static long long getint(va_list *ap, int lflag) {
   if (lflag >= 2)
     return va_arg(*ap, long long);
   else if (lflag)
@@ -247,17 +236,17 @@ static long long getint(va_list *ap, int lflag)
     return va_arg(*ap, int);
 }
 
-static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt, va_list ap)
-{
-  register const char* p;
-  const char* last_fmt;
+static void vprintfmt(void (*putch)(int, void **), void **putdat,
+                      const char *fmt, va_list ap) {
+  register const char *p;
+  const char *last_fmt;
   register int ch, err;
   unsigned long long num;
   int base, lflag, width, precision, altflag;
   char padc;
 
   while (1) {
-    while ((ch = *(unsigned char *) fmt) != '%') {
+    while ((ch = *(unsigned char *)fmt) != '%') {
       if (ch == '\0')
         return;
       fmt++;
@@ -273,13 +262,13 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     lflag = 0;
     altflag = 0;
   reswitch:
-    switch (ch = *(unsigned char *) fmt++) {
+    switch (ch = *(unsigned char *)fmt++) {
 
     // flag to pad on the right
     case '-':
       padc = '-';
       goto reswitch;
-      
+
     // flag to pad with 0's instead of spaces
     case '0':
       padc = '0';
@@ -295,7 +284,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     case '7':
     case '8':
     case '9':
-      for (precision = 0; ; ++fmt) {
+      for (precision = 0;; ++fmt) {
         precision = precision * 10 + ch - '0';
         ch = *fmt;
         if (ch < '0' || ch > '9')
@@ -338,7 +327,8 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
       if (width > 0 && padc != '-')
         for (width -= strnlen(p, precision); width > 0; width--)
           putch(padc, putdat);
-      for (; (ch = *p) != '\0' && (precision < 0 || --precision >= 0); width--) {
+      for (; (ch = *p) != '\0' && (precision < 0 || --precision >= 0);
+           width--) {
         putch(ch, putdat);
         p++;
       }
@@ -349,9 +339,9 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     // (signed) decimal
     case 'd':
       num = getint(&ap, lflag);
-      if ((long long) num < 0) {
+      if ((long long)num < 0) {
         putch('-', putdat);
-        num = -(long long) num;
+        num = -(long long)num;
       }
       base = 10;
       goto signed_number;
@@ -369,7 +359,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
 
     // pointer
     case 'p':
-      static_assert(sizeof(long) == sizeof(void*));
+      static_assert(sizeof(long) == sizeof(void *));
       lflag = 1;
       putch('0', putdat);
       putch('x', putdat);
@@ -388,7 +378,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     case '%':
       putch(ch, putdat);
       break;
-      
+
     // unrecognized escape sequence - just print it literally
     default:
       putch('%', putdat);
@@ -398,90 +388,83 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
   }
 }
 
-int printf(const char* fmt, ...)
-{
+int printf(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
-  vprintfmt((void*)putchar, 0, fmt, ap);
+  vprintfmt((void *)putchar, 0, fmt, ap);
 
   va_end(ap);
   return 0; // incorrect return value, but who cares, anyway?
 }
 
-void sprintf_putch(int ch, void** data)
-{
-  char** pstr = (char**)data;
+void sprintf_putch(int ch, void **data) {
+  char **pstr = (char **)data;
   **pstr = ch;
   (*pstr)++;
 }
 
-int sprintf(char* str, const char* fmt, ...)
-{
+int sprintf(char *str, const char *fmt, ...) {
   va_list ap;
-  char* str0 = str;
+  char *str0 = str;
   va_start(ap, fmt);
 
-  vprintfmt(sprintf_putch, (void**)&str, fmt, ap);
+  vprintfmt(sprintf_putch, (void **)&str, fmt, ap);
   *str = 0;
 
   va_end(ap);
   return str - str0;
 }
 
-void* memcpy(void* dest, const void* src, size_t len)
-{
-  if ((((uintptr_t)dest | (uintptr_t)src | len) & (sizeof(uintptr_t)-1)) == 0) {
-    const uintptr_t* s = src;
+void *memcpy(void *dest, const void *src, size_t len) {
+  if ((((uintptr_t)dest | (uintptr_t)src | len) & (sizeof(uintptr_t) - 1)) ==
+      0) {
+    const uintptr_t *s = src;
     uintptr_t *d = dest;
-    while (d < (uintptr_t*)(dest + len))
+    while (d < (uintptr_t *)(dest + len))
       *d++ = *s++;
   } else {
-    const char* s = src;
+    const char *s = src;
     char *d = dest;
-    while (d < (char*)(dest + len))
+    while (d < (char *)(dest + len))
       *d++ = *s++;
   }
   return dest;
 }
 
-void* memset(void* dest, int byte, size_t len)
-{
-  if ((((uintptr_t)dest | len) & (sizeof(uintptr_t)-1)) == 0) {
+void *memset(void *dest, int byte, size_t len) {
+  if ((((uintptr_t)dest | len) & (sizeof(uintptr_t) - 1)) == 0) {
     uintptr_t word = byte & 0xFF;
     word |= word << 8;
     word |= word << 16;
     word |= word << 16 << 16;
 
     uintptr_t *d = dest;
-    while (d < (uintptr_t*)(dest + len))
+    while (d < (uintptr_t *)(dest + len))
       *d++ = word;
   } else {
     char *d = dest;
-    while (d < (char*)(dest + len))
+    while (d < (char *)(dest + len))
       *d++ = byte;
   }
   return dest;
 }
 
-size_t strlen(const char *s)
-{
+size_t strlen(const char *s) {
   const char *p = s;
   while (*p)
     p++;
   return p - s;
 }
 
-size_t strnlen(const char *s, size_t n)
-{
+size_t strnlen(const char *s, size_t n) {
   const char *p = s;
   while (n-- && *p)
     p++;
   return p - s;
 }
 
-int strcmp(const char* s1, const char* s2)
-{
+int strcmp(const char *s1, const char *s2) {
   unsigned char c1, c2;
 
   do {
@@ -492,16 +475,14 @@ int strcmp(const char* s1, const char* s2)
   return c1 - c2;
 }
 
-char* strcpy(char* dest, const char* src)
-{
-  char* d = dest;
+char *strcpy(char *dest, const char *src) {
+  char *d = dest;
   while ((*d++ = *src++))
     ;
   return dest;
 }
 
-long atol(const char* str)
-{
+long atol(const char *str) {
   long res = 0;
   int sign = 0;
 

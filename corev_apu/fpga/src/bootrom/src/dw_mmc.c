@@ -37,7 +37,7 @@ void write_print(u32_t print,u32_t address, u32_t val){
 		print_uart_int(val);
 		print_uart( "\n");
 	}
-	
+
 }
 
 u32_t read_print(u32_t print, u32_t address){
@@ -76,7 +76,7 @@ static void dwmci_set_idma_desc(struct dwmci_idmac *idmac,
 	desc->addr = desc2;
 	desc->next_addr = (unsigned long)desc + sizeof(struct dwmci_idmac);
 	print_uart("descriptor pointer address: ");
-	print_uart_int(desc);
+	print_uart_int((uint32_t) desc);
 	print_uart("set descriptor: flags ");
 	print_uart_int(desc->flags);
 	print_uart(" cnt ");
@@ -192,9 +192,9 @@ static int dwmci_data_transfer(struct mmc_data *data)
 			ret = -EINVAL;
 			return ret;
 		}
-		
 
-		
+
+
 		if (FIFO_MODE && size!=0) {
 			// print_uart("FIFO_MODE && size \n");
 			len = 0;
@@ -223,7 +223,7 @@ static int dwmci_data_transfer(struct mmc_data *data)
 					// print_uart("len ");
 					// print_uart_int(len);
 					// print_uart("\n");
-					
+
 					for (i = 0; i < len; i++)
 						*buf++ =
 						read_print(0, DWMCI_DATA);
@@ -384,7 +384,7 @@ static int dwmci_send_cmd(struct mmc_cmd *cmd,
 		print_uart("Timeout. RINTSTS: ");
 		print_uart_int(mask);
 		print_uart("\n");
-		
+
 		return -ETIMEDOUT;
 	}
 
@@ -439,7 +439,7 @@ static int dwmci_send_cmd(struct mmc_cmd *cmd,
 					ret = 0;
 					break;
 				}
-					
+
 				udelay(10);
 			}
 			// ret = wait_for_bit_le32(MMC_BASE_ADDR + DWMCI_IDSTS,
@@ -477,7 +477,7 @@ static u8_t set_block_count(u32_t blkcnt)
 
 	// mmc_trace_before_send(&cmd23);
 	err = dwmci_send_cmd(&cmd23, NULL);
-	// mmc_trace_after_send(&cmd23, err);	
+	// mmc_trace_after_send(&cmd23, err);
 
 	return err;
 }
@@ -520,8 +520,7 @@ u8_t sd_copy_mmc(void *dst, u64_t src_lba, u64_t blkcnt)
 
 	// mmc_trace_before_send(&cmd18);
 	err = dwmci_send_cmd(&cmd18, &data);
-	// mmc_trace_after_send(&cmd18, err);	
+	// mmc_trace_after_send(&cmd18, err);
 
 	return err;
 }
-

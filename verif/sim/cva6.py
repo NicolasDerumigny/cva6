@@ -906,7 +906,7 @@ def load_config(args, cwd):
       base = args.target
     if base in ("cv64a6_imafdch_sv39", "cv64a6_imafdch_sv39_wb"):
       args.mabi = "lp64d"
-      args.isa  = "rv64gch_zba_zbb_zbs_zbc"
+      args.isa  = "rv64gch_zba_zbb_zbs_zbc_zbkb_zbkx_zkne_zknd_zknh_zicbom"
     elif base in ("cv64a6_imafdc_sv39_wb",):
       args.mabi = "lp64d"
       args.isa  = "rv64gc_zba_zbb_zbs_zbc"

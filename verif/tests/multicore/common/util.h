@@ -4,6 +4,7 @@
 #define __UTIL_H
 
 extern void setStats(int enable);
+extern __attribute__((noreturn)) void exit(int);
 
 #include <stdint.h>
 

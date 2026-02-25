@@ -46,7 +46,17 @@ CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g 
 
 cd verif/sim/
 
-python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/hello_world/hello_world.c --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
-#python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/lr_sc/lr_sc.c --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+src0=../tests/custom/rvh/main.c
+srcA=(
+    ../tests/custom/rvh/call.c
+    ../tests/custom/rvh/mmode.c
+    ../tests/custom/rvh/page_table.s
+    ../tests/custom/rvh/tests.c
+    ../tests/custom/rvh/trampoline.S
+    ../tests/custom/rvh/utils.c
+    ../tests/custom/rvh/vm.c
+)
+
+python3 cva6.py --c_tests $src0 --iss_yaml cva6.yaml --target cv64a6_imafdch_sv39 --iss=$DV_SIMULATORS --gcc_opts="${srcA[*]} $CC_OPTS" $DV_OPTS --linker=../tests/custom/rvh/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
 
 cd -

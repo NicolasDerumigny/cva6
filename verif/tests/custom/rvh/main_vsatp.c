@@ -14,23 +14,10 @@ int main(int argc, char* arg[]) {
 void test_routine(void) {
     build_page_tables();
     printf("\n============\n");
-    test_timer();
     reset();
-    test_u_mode();
+    test_vsatp_simple();
     reset();
-    test_vs_mode_1();
-    reset();
-    test_vs_mode_2();
-    reset();
-    test_vs_mode_3();
-    reset();
-    test_vs_mode_4();
-    reset();
-    test_vs_mode_5();
-    reset();
-    test_satp();
-    reset();
-    test_vsatp();
+    test_vsatp_full();
     reset();
     printf("============\n");
 }

@@ -1,9 +1,9 @@
 #include <stdio.h>
 
+#include "utils.h"
+
 #include "csr.h"
 #include "vm.h"
-#include "types.h"
-#include "utils.h"
 
 __attribute__((naked, noreturn, aligned(4))) void panic(void) {
     exit(1);
@@ -29,10 +29,9 @@ void reset(void) {
 }
 
 __attribute__((noreturn, naked, aligned(4))) void panic_vector(void) {
-    uint64_t scause = csr_read(CSR_SCAUSE);
     printf("Panic: ");
-    if (scause & CAUSE_IRQ_FLAG) {
-        switch (scause & ~CAUSE_IRQ_FLAG) {
+    if (csr_read(CSR_SCAUSE) & CAUSE_IRQ_FLAG) {
+        switch (csr_read(CSR_SCAUSE)  & ~CAUSE_IRQ_FLAG) {
             case 1: {
                 printf("Software Interrupt (HS-mode)");
                 break;
@@ -74,7 +73,7 @@ __attribute__((noreturn, naked, aligned(4))) void panic_vector(void) {
             }
         }
     } else {
-        switch (scause) {
+        switch (csr_read(CSR_SCAUSE)) {
             case 0: {
                 printf("Instruction address misaligned");
                 break;
@@ -157,6 +156,6 @@ __attribute__((noreturn, naked, aligned(4))) void panic_vector(void) {
         }
     }
     printf("\n");
-    printf("S-mode : panicked (scause = 0x%lx sepc = 0x%lx)\n", scause, csr_read(CSR_SEPC));
+    printf("S-mode : panicked (scause = 0x%lx sepc = 0x%lx stval = 0x%lx)\n", csr_read(CSR_SCAUSE) , csr_read(CSR_SEPC), csr_read(CSR_STVAL));
     panic();
 }

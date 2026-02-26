@@ -1,9 +1,10 @@
 #include <stdio.h>
 
+#include "utils.h"
+
 #include "sbi.h"
 #include "csr.h"
 #include "trampoline.h"
-#include "utils.h"
 #include "vm.h"
 #include "call.h"
 

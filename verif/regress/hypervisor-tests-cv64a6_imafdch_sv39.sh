@@ -46,7 +46,14 @@ CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g 
 
 cd verif/sim/
 
-src0=../tests/custom/rvh/main.c
+srcs=(
+    ../tests/custom/rvh/main_timer.c
+    ../tests/custom/rvh/main_u.c
+    ../tests/custom/rvh/main_vs.c
+    ../tests/custom/rvh/main_satp.c
+    ../tests/custom/rvh/main_vsatp.c
+    ../tests/custom/rvh/main_hgatp.c
+)
 srcA=(
     ../tests/custom/rvh/call.c
     ../tests/custom/rvh/mmode.c
@@ -57,6 +64,8 @@ srcA=(
     ../tests/custom/rvh/vm.c
 )
 
-python3 cva6.py --c_tests $src0 --iss_yaml cva6.yaml --target cv64a6_imafdch_sv39 --iss=$DV_SIMULATORS --gcc_opts="${srcA[*]} $CC_OPTS" $DV_OPTS --linker=../tests/custom/rvh/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+for src in "${srcs[@]}"; do
+    python3 cva6.py --c_tests $src --iss_yaml cva6.yaml --compare_outputs --no_ecall_exit --target cv64a6_imafdch_sv39 --iss=$DV_SIMULATORS --gcc_opts="${srcA[*]} $CC_OPTS" $DV_OPTS --linker=../tests/custom/rvh/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+done
 
 cd -

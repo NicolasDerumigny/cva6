@@ -68,9 +68,21 @@ struct segment {
     uint64_t mask; // size + 1
     uint64_t *associated_pte;
     uint64_t associated_pa;
+    const char *comment;
 };
 
-enum mapping { MAPPING_LVL1, MAPPING_LVL2, MAPPING_LVL3, MAPPING_MAX };
+enum mapping {
+    MAPPING_S_LVL1,
+    MAPPING_S_LVL2,
+    MAPPING_S_LVL3,
+    MAPPING_H_LVL1,
+    MAPPING_H_LVL2,
+    MAPPING_H_LVL3,
+    MAPPING_VS_LVL1,
+    MAPPING_VS_LVL2,
+    MAPPING_VS_LVL3,
+    MAPPING_MAX
+};
 
 extern struct segment mapping[MAPPING_MAX];
 
@@ -83,10 +95,13 @@ extern uint64_t __satp_lvl1;
 extern uint64_t *const satp_lvl3;
 extern uint64_t *const satp_lvl2;
 extern uint64_t *const satp_lvl1;
-
 #define SATP_ROOT ((uint64_t)satp_lvl3)
 extern uint64_t __hgatp_lvl3;
+extern uint64_t __hgatp_lvl2;
+extern uint64_t __hgatp_lvl1;
 extern uint64_t *const hgatp_lvl3;
+extern uint64_t *const hgatp_lvl2;
+extern uint64_t *const hgatp_lvl1;
 #define HGATP_ROOT ((uint64_t)hgatp_lvl3)
 
 #endif //HMODE_VM_H

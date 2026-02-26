@@ -1,3 +1,5 @@
 parameter-name-style=localparam_style:ALL_CAPS
 -typedef-structs-unions
 -generate-statements
+-generate-label
+-line-length

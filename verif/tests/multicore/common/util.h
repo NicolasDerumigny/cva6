@@ -107,16 +107,15 @@ static uintptr_t insn_len(uintptr_t pc) {
   __atomic_fetch_add(a, inc, __ATOMIC_ACQUIRE)
 
 #ifdef __riscv_atomic // __sync_* builtins require A extension
-static uint8_t __syscall_lock = 0;
-
-static inline void lock() {
+                      //
+static inline void lock(uint8_t* lock_addr) {
   uint8_t expected;
   do {
     expected = 0;
-  } while (__sync_compare_and_swap_n(&__syscall_lock, &expected, 1));
+  } while (!__sync_compare_and_swap_n(lock_addr, &expected, 1));
 }
 
-static inline void unlock() { __sync_store(&__syscall_lock, 0); }
+static inline void unlock(uint8_t *lock_addr) { __sync_store(lock_addr, 0); }
 
 static inline void invalidate_cacheline(volatile void *addr) {
   __asm__ volatile("cbo.inval (%0)" ::"r"(addr) : "memory");

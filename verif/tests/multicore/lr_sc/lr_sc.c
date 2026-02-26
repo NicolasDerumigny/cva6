@@ -33,7 +33,6 @@ int main(int argc, char *arg[]) {
       atomic_inc(&shared_value);
   }
 
-  // FIXME: do not run Spike on that!
   barrier(NUM_HARTS);
 
   printf("%d: LR/SC final value: %d!\n", get_hart_id(), __sync_load(&shared_value));

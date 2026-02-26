@@ -13,6 +13,13 @@
 
 #undef strcmp
 
+#ifdef __riscv_atomic
+static uint8_t __syscall_lock = 0;
+static uint8_t __printf_lock = 0;
+static uint8_t *const syscall_lock = &__syscall_lock;
+static uint8_t *const printf_lock = &__printf_lock;
+#endif
+
 extern volatile uint64_t tohost;
 extern volatile uint64_t fromhost;
 
@@ -37,7 +44,7 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1,
   magic_mem[2] = arg1;
   magic_mem[3] = arg2;
 #ifdef __riscv_atomic // __sync_synchronize requires A extension
-  lock();
+  lock(syscall_lock);
   __sync_synchronize();
 #endif
 
@@ -58,13 +65,18 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1,
   invalidate_cacheline(&magic_mem);
 #endif
 
-  while (fromhost == 0)
-    ;
+  while (__sync_load(&fromhost) == 0) {
+#ifdef __riscv_atomic
+  // Idem
+  invalidate_cacheline(&fromhost);
+#endif
+  }
+
   fromhost = 0;
 
 #ifdef __riscv_atomic // __sync_synchronize requires A extension
   __sync_synchronize();
-  unlock();
+  unlock(syscall_lock);
 #endif
   return magic_mem[0];
 }
@@ -392,7 +404,15 @@ int printf(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
+#ifdef __riscv_atomic // __sync_synchronize requires A extension
+  lock(printf_lock);
+  __sync_synchronize();
+#endif
   vprintfmt((void *)putchar, 0, fmt, ap);
+#ifdef __riscv_atomic // __sync_synchronize requires A extension
+  __sync_synchronize();
+  unlock(printf_lock);
+#endif
 
   va_end(ap);
   return 0; // incorrect return value, but who cares, anyway?

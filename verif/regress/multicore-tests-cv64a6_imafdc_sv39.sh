@@ -15,9 +15,10 @@ if ! [ -n "$RISCV" ]; then
   return
 fi
 
-if ! [ -n "$DV_SIMULATORS" ]; then
-  DV_SIMULATORS=vcs-testharness,spike
-fi
+#if ! [ -n "$DV_SIMULATORS" ]; then
+# Only tested (working?) with Verilator
+  DV_SIMULATORS=veri-testharness
+#fi
 
 # install the required tools
 if [[ "$DV_SIMULATORS" == *"veri-testharness"* ]]; then
@@ -46,7 +47,7 @@ CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g 
 
 cd verif/sim/
 
-python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/hello_world/hello_world.c --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
-#python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/lr_sc/lr_sc.c --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/hello_world/hello_world.c --output_ref_file=../tests/multicore/references/hello_world --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/lr_sc/lr_sc.c  --output_ref_file=../tests/multicore/references/lr_sc --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
 
 cd -

@@ -46,7 +46,7 @@ entry_point:
             }
         }
     }
-    printf("\tFailed (wrong signal received)\n");
+    notice_failure_detailed("wrong signal received");
 
 end:
     return;
@@ -445,7 +445,7 @@ __attribute__((naked, aligned(4))) void noread_entry_point(void) {
         case EXC_STORE_GUEST_PAGE_FAULT:
         case EXC_STORE_PAGE_FAULT: {
             notice_failure();
-            printf("Unexepected store page fault at 0x%lx\n", csr_read(CSR_STVAL));
+            printf("Unexpected store page fault at 0x%lx from 0x%lx\n", csr_read(CSR_STVAL), csr_read(CSR_SEPC));
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
@@ -458,13 +458,12 @@ __attribute__((naked, aligned(4))) void noread_entry_point(void) {
         }
         default: {
             notice_failure();
-            printf("Unexepected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
+            printf("Unexpected exception at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
     }
-    RESTORE_CONTEXT();
-    asm volatile("sret");
+    RESTORE_CONTEXT(sret);
 }
 
 __attribute__((naked, aligned(4))) void nowrite_entry_point(void) {
@@ -484,13 +483,13 @@ __attribute__((naked, aligned(4))) void nowrite_entry_point(void) {
         case EXC_LOAD_GUEST_PAGE_FAULT:
         case EXC_LOAD_PAGE_FAULT: {
             notice_failure();
-            printf("Unexepected load page fault at 0x%lx\n", csr_read(CSR_STVAL));
+            printf("Unexpected load page fault at 0x%lx from 0x%lx\n", csr_read(CSR_STVAL), csr_read(CSR_SEPC));
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
 
         case EXC_VS_SYSCALL: {
-            if (handle_vs_call() == EXTRA_UNKNOWN) {
+            if (handle_vs_call() == EXTRA_ERROR) {
                 panic();
             }
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
@@ -498,13 +497,12 @@ __attribute__((naked, aligned(4))) void nowrite_entry_point(void) {
         }
         default: {
             notice_failure();
-            printf("Unexepected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
+            printf("Unexpected exception at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
     }
-    RESTORE_CONTEXT();
-    asm volatile("sret");
+    RESTORE_CONTEXT(sret);
 }
 
 __attribute__((naked, aligned(4))) void noexec_entry_point(void) {
@@ -521,14 +519,14 @@ __attribute__((naked, aligned(4))) void noexec_entry_point(void) {
         case EXC_LOAD_GUEST_PAGE_FAULT:
         case EXC_LOAD_PAGE_FAULT: {
             notice_failure();
-            printf("Unexepected load page fault at 0x%lx\n", csr_read(CSR_STVAL));
+            printf("Unexpected load page fault at 0x%lx from 0x%lx\n", csr_read(CSR_STVAL), csr_read(CSR_SEPC));
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
         case EXC_STORE_GUEST_PAGE_FAULT:
         case EXC_STORE_PAGE_FAULT: {
             notice_failure();
-            printf("Unexepected store page fault at 0x%lx\n", csr_read(CSR_STVAL));
+            printf("Unexpected store page fault at 0x%lx from 0x%lx\n", csr_read(CSR_STVAL), csr_read(CSR_SEPC));
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
@@ -536,8 +534,6 @@ __attribute__((naked, aligned(4))) void noexec_entry_point(void) {
             if (handle_vs_call() == EXTRA_UNKNOWN) {
                 panic();
             }
-            notice_failure();
-            printf("Unexepected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
             break;
         }
@@ -545,8 +541,7 @@ __attribute__((naked, aligned(4))) void noexec_entry_point(void) {
             panic();
         }
     }
-    RESTORE_CONTEXT();
-    asm volatile("sret");
+    RESTORE_CONTEXT(sret);
 }
 
 __attribute__((naked, aligned(4))) void exec_nowrite_entry_point(void) {
@@ -557,7 +552,7 @@ __attribute__((naked, aligned(4))) void exec_nowrite_entry_point(void) {
         case EXC_INST_GUEST_PAGE_FAULT:
         case EXC_INST_PAGE_FAULT: {
             notice_failure();
-            printf("Unexepected load page fault at 0x%lx\n", csr_read(CSR_STVAL));
+            printf("Unexpected load page fault at 0x%lx from 0x%lx\n", csr_read(CSR_STVAL), csr_read(CSR_SEPC));
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(tc->ra, 1));
             break;
         }
@@ -576,12 +571,11 @@ __attribute__((naked, aligned(4))) void exec_nowrite_entry_point(void) {
         }
         default: {
             notice_failure();
-            printf("Unexepected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
+            printf("Unexpected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
         }
     }
-    RESTORE_CONTEXT();
-    asm volatile("sret");
+    RESTORE_CONTEXT(sret);
 }
 
 __attribute__((naked, aligned(4))) void exec_noread_nowrite_entry_point(void) {
@@ -592,7 +586,7 @@ __attribute__((naked, aligned(4))) void exec_noread_nowrite_entry_point(void) {
         case EXC_INST_GUEST_PAGE_FAULT:
         case EXC_INST_PAGE_FAULT: {
             notice_failure();
-            printf("Unexepected load page fault at 0x%lx\n", csr_read(CSR_STVAL));
+            printf("Unexpected load page fault at 0x%lx from 0x%lx\n", csr_read(CSR_STVAL), csr_read(CSR_SEPC));
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(tc->ra, 1));
             break;
         }
@@ -617,8 +611,27 @@ __attribute__((naked, aligned(4))) void exec_noread_nowrite_entry_point(void) {
         }
         default: {
             notice_failure();
-            printf("Unexepected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
+            printf("Unexpected interrupt at 0x%lx: 0x%lx\n", csr_read(CSR_SEPC), scause);
             csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
+            break;
+        }
+    }
+    RESTORE_CONTEXT(sret);
+}
+
+__attribute__((naked, aligned(4))) void only_call_entry_point(void) {
+    SAVE_CONTEXT();
+    uint64_t scause = csr_read(CSR_SCAUSE);
+    switch (scause) {
+        case EXC_VS_SYSCALL: {
+            if (handle_vs_call() == EXTRA_UNKNOWN) {
+                panic();
+            }
+            csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
+            break;
+        }
+        default: {
+            panic();
             break;
         }
     }
@@ -653,168 +666,127 @@ void flush_htlb_vs(void) {
 /**
  * Tries to read but entries are invalid
  */
-void test_satp_invalid(stvec_f set_stvec, vec_f entry_point, tlb_f flush_tlb, uint64_t flags) {
-    set_stvec(entry_point);
+void test_satp_invalid(struct test_env *env, tlb_f flush_tlb, uint64_t flags) {
+    env->set_stvec(noread_entry_point);
 
-    FLAG_SET(mapping[MAPPING_LVL3].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL2].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL1].associated_pte, flags);
-    flush_tlb();
+    for (uint i = env->count - 1; i < env->count; i++)
+        FLAG_SET(mapping[env->mapping_entries[i]].associated_pte, flags);
+    env->flush_tlb();
 
     char *words[2] = {"Valid", "User"};
-    int i = 0;
+    int j = 0;
     if (flags & FLAG_VALID)
-        i = 1;
+        j = 1;
 
-    printf("\t- %s required (1GB): ", words[i]);
-    test_satp_noread(MAPPING_LVL3);
-
-    printf("\t- %s required (2MB): ", words[i]);
-    test_satp_noread(MAPPING_LVL2);
-
-    printf("\t- %s required (4KB): ", words[i]);
-    test_satp_noread(MAPPING_LVL1);
+    for (uint i = env->count - 1; i < env->count; i++) {
+        printf("\t- %s required (%s): ", words[j], mapping[env->mapping_entries[i]].comment);
+        test_satp_noread(env->mapping_entries[i]);
+    }
 }
 
 /**
  * Tries to read and write but entries are read-only
  */
-void test_satp_rodata(stvec_f set_stvec, vec_f entry_point, tlb_f flush_tlb, uint64_t flags) {
-    set_stvec(entry_point);
+void test_satp_rodata(struct test_env *env, tlb_f flush_tlb, uint64_t flags) {
+    env->set_stvec(nowrite_entry_point);
 
-    FLAG_SET(mapping[MAPPING_LVL3].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL2].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL1].associated_pte, flags);
-    flush_tlb();
+    for (uint i = 0; i < env->count; i++)
+        FLAG_SET(mapping[env->mapping_entries[i]].associated_pte, flags);
+    env->flush_tlb();
 
-    printf("\t- Read works (1GB): ");
-    test_satp_read(MAPPING_LVL3);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Read works (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_read(env->mapping_entries[i]);
+    }
 
-    printf("\t- Read works (2MB): ");
-    test_satp_read(MAPPING_LVL2);
-
-    printf("\t- Read works (4KB): ");
-    test_satp_read(MAPPING_LVL1);
-
-    printf("\t- Store required (1GB): ");
-    test_satp_nowrite(MAPPING_LVL3);
-
-    printf("\t- Store required (2MB): ");
-    test_satp_nowrite(MAPPING_LVL2);
-
-    printf("\t- Store required (4KB): ");
-    test_satp_nowrite(MAPPING_LVL1);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Store required (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_nowrite(env->mapping_entries[i]);
+    }
 }
 
 /**
  * Tries to write and exec but entries are read/write only
  */
-void test_satp_data(stvec_f set_stvec, vec_f entry_point, tlb_f flush_tlb, uint64_t flags) {
-    set_stvec(entry_point);
+void test_satp_data(struct test_env *env, tlb_f flush_tlb, uint64_t flags) {
+    env->set_stvec(noexec_entry_point);
 
-    FLAG_SET(mapping[MAPPING_LVL3].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL2].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL1].associated_pte, flags);
-    flush_tlb();
+    for (uint i = 0; i < env->count; i++)
+        FLAG_SET(mapping[env->mapping_entries[i]].associated_pte, flags);
+    env->flush_tlb();
 
-    printf("\t- Store works (1GB): ");
-    test_satp_write(MAPPING_LVL3);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Store works (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_write(env->mapping_entries[i]);
+    }
 
-    printf("\t- Store works (2MB): ");
-    test_satp_write(MAPPING_LVL2);
-
-    printf("\t- Store works (4KB): ");
-    test_satp_write(MAPPING_LVL1);
-
-    printf("\t- Exec required (1GB): ");
-    test_satp_noexec(MAPPING_LVL3);
-
-    printf("\t- Exec required (2MB): ");
-    test_satp_noexec(MAPPING_LVL2);
-
-    printf("\t- Exec required (4KB): ");
-    test_satp_noexec(MAPPING_LVL1);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Exec required (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_noexec(env->mapping_entries[i]);
+    }
 }
 
 /**
  * Tries to read, write and exec but entries are read/exec only
  */
-void test_satp_code(stvec_f set_stvec, vec_f entry_point, tlb_f flush_tlb, uint64_t flags) {
-    set_stvec(entry_point);
+void test_satp_code(struct test_env *env, tlb_f flush_tlb, uint64_t flags) {
+    env->set_stvec(exec_nowrite_entry_point);
 
-    FLAG_SET(mapping[MAPPING_LVL3].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL2].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL1].associated_pte, flags);
-    flush_tlb();
+    for (uint i = 0; i < env->count; i++)
+        FLAG_SET(mapping[env->mapping_entries[i]].associated_pte, flags);
+    env->flush_tlb();
 
-    printf("\t- Exec works (1GB): ");
-    test_satp_exec(MAPPING_LVL3);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Exec works (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_exec(env->mapping_entries[i]);
+    }
 
-    printf("\t- Exec works (2MB): ");
-    test_satp_exec(MAPPING_LVL2);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Read works (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_read(env->mapping_entries[i]);
+    }
 
-    printf("\t- Exec works (4KB): ");
-    test_satp_exec(MAPPING_LVL1);
-
-    printf("\t- Read works (1GB): ");
-    test_satp_read(MAPPING_LVL3);
-
-    printf("\t- Read works (2MB): ");
-    test_satp_read(MAPPING_LVL2);
-
-    printf("\t- Read works (4KB): ");
-    test_satp_read(MAPPING_LVL1);
-
-    printf("\t- Store required (1GB): ");
-    test_satp_nowrite(MAPPING_LVL3);
-
-    printf("\t- Store required (2MB): ");
-    test_satp_nowrite(MAPPING_LVL2);
-
-    printf("\t- Store required (4KB): ");
-    test_satp_nowrite(MAPPING_LVL1);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Store required (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_nowrite(env->mapping_entries[i]);
+    }
 }
 
 /**
  * Tries to read, write and exec but entries are exec only
  */
-void test_satp_private_code(stvec_f set_stvec, vec_f entry_point, tlb_f flush_tlb, uint64_t flags) {
-    set_stvec(entry_point);
+void test_satp_private_code(struct test_env *env, tlb_f flush_tlb, uint64_t flags) {
+    env->set_stvec(exec_noread_nowrite_entry_point);
 
-    FLAG_SET(mapping[MAPPING_LVL3].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL2].associated_pte, flags);
-    FLAG_SET(mapping[MAPPING_LVL1].associated_pte, flags);
-    flush_tlb();
+    for (uint i = 0; i < env->count; i++)
+        FLAG_SET(mapping[env->mapping_entries[i]].associated_pte, flags);
+    env->flush_tlb();
 
-    printf("\t- Exec works (1GB): ");
-    test_satp_exec(MAPPING_LVL3);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Exec works (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_exec(env->mapping_entries[i]);
+    }
 
-    printf("\t- Exec works (2MB): ");
-    test_satp_exec(MAPPING_LVL2);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Read required (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_noread(env->mapping_entries[i]);
+    }
 
-    printf("\t- Exec works (4KB): ");
-    test_satp_exec(MAPPING_LVL1);
-
-    printf("\t- Read required (1GB): ");
-    test_satp_noread(MAPPING_LVL3);
-
-    printf("\t- Read required (2MB): ");
-    test_satp_noread(MAPPING_LVL2);
-
-    printf("\t- Read required (4KB): ");
-    test_satp_noread(MAPPING_LVL1);
-
-    printf("\t- Store required (1GB): ");
-    test_satp_nowrite(MAPPING_LVL3);
-
-    printf("\t- Store required (2MB): ");
-    test_satp_nowrite(MAPPING_LVL2);
-
-    printf("\t- Store required (4KB): ");
-    test_satp_nowrite(MAPPING_LVL1);
+    for (uint i = 0; i < env->count; i++) {
+        printf("\t- Store required (%s): ", mapping[env->mapping_entries[i]].comment);
+        test_satp_nowrite(env->mapping_entries[i]);
+    }
 }
 
 void test_satp(void) {
+    uint64_t selected_mappings[] = {MAPPING_S_LVL3, MAPPING_S_LVL2, MAPPING_S_LVL1};
+    struct test_env env = {
+        .set_stvec = set_stvec_s,
+        .flush_tlb = flush_tlb_s,
+        .count = LENGTH(selected_mappings),
+        .mapping_entries = selected_mappings,
+    };
+
     printf("Starting test: HS-mode (satp)\n");
 
     csr_clear(CSR_SCAUSE, SR_SIE);
@@ -822,30 +794,35 @@ void test_satp(void) {
     flush_tlb();
 
     printf("    * invalid (R----) *\n");
-    test_satp_invalid(set_stvec_s, &noread_entry_point, flush_tlb_s, FLAG_READ);
+    test_satp_invalid(&env, flush_tlb_s, FLAG_READ);
 
     printf("    * rodata (R---V) *\n");
-    test_satp_rodata(set_stvec_s, &nowrite_entry_point, flush_tlb_s, FLAG_READ | FLAG_VALID);
+    test_satp_rodata(&env, flush_tlb_s, FLAG_READ | FLAG_VALID);
 
     printf("    * data (RW--V) *\n");
-    test_satp_data(set_stvec_s, &noexec_entry_point, flush_tlb_s, FLAG_READ | FLAG_WRITE | FLAG_VALID);
+    test_satp_data(&env, flush_tlb_s, FLAG_READ | FLAG_WRITE | FLAG_VALID);
 
     printf("    * code (R-X-V) *\n");
-    test_satp_code(set_stvec_s, &exec_nowrite_entry_point, flush_tlb_s, FLAG_READ | FLAG_EXEC | FLAG_VALID);
+    test_satp_code(&env, flush_tlb_s, FLAG_READ | FLAG_EXEC | FLAG_VALID);
 
     printf("    * code (--X-V) *\n");
-    test_satp_private_code(set_stvec_s, &exec_noread_nowrite_entry_point, flush_tlb_s, FLAG_EXEC | FLAG_VALID);
+    test_satp_private_code(&env, flush_tlb_s, FLAG_EXEC | FLAG_VALID);
 }
 
-void test_vsatp(void) {
-    printf("Starting test: VS-mode (vsatp)\n");
+void test_vsatp_simple(void) {
+    uint64_t selected_mappings[] = {MAPPING_S_LVL3, MAPPING_S_LVL2, MAPPING_S_LVL1};
+    struct test_env env = {
+        .set_stvec = set_stvec_s,
+        .flush_tlb = flush_tlb_s,
+        .count = LENGTH(selected_mappings),
+        .mapping_entries = selected_mappings,
+    };
+
+    printf("Starting test: VS-mode (vsatp - only S)\n");
 
     uint64_t satp_root = MAKE_SATP(SATP_ROOT, SATP_MODE_39);
 
-    asm volatile goto("la a6, 1f\n"
-                      "csrw stvec, a6" ::
-                          : "memory", "a6"
-                      : host_entry_point);
+    csr_write(CSR_STVEC, &only_call_entry_point);
     csr_set(CSR_VSSTATUS, csr_read(CSR_SSTATUS));
     csr_write(CSR_VSTVEC, &panic); // VS interrupt vector
     csr_write(CSR_VSATP, 0ul); // vs page table
@@ -855,7 +832,6 @@ void test_vsatp(void) {
     csr_write(CSR_HEDELEG,
               bit(EXC_LOAD_MISALIGNED) | bit(EXC_LOAD_ACCESS) | bit(EXC_STORE_MISALIGNED) | bit(EXC_STORE_ACCESS) | bit(EXC_LOAD_PAGE_FAULT) |
                   bit(EXC_STORE_PAGE_FAULT) | bit(EXC_INST_PAGE_FAULT)); // hypervisor exception delegation
-    // EXC_LOAD_ADDRESS EXC_LOAD_ACCESS EXC_STORE_ADDRESS EXC_STORE_ACCESS
     csr_write(CSR_HCOUNTEREN, 0ul); // hypervisor counter controls
     csr_write(CSR_HENVCFG, ENVCFG_CBIE | ENVCFG_CBCFE | ENVCFG_CBZE); // hypervisor environment controls
     csr_write(CSR_SEPC, &&vm_land); // vm entry point
@@ -863,27 +839,28 @@ void test_vsatp(void) {
     csr_write(CSR_HSTATUS, HSTATUS_SPV | HSTATUS_SPVP); // hypervisor status configuration
     csr_write(CSR_HGATP, 0ul); // nested page table
     flush_htlb();
-    asm volatile goto("sret" :: ::host_entry_point);
+    asm volatile("sret");
 
-vm_land: // from here we are running in VS-mode
+vm_land:
+    // From here we are running in VS-mode
     csr_write(CSR_STVEC, &panic_vector);
     csr_write(CSR_SATP, satp_root);
     flush_tlb();
 
     printf("    * nouser (R----) *\n");
-    test_satp_invalid(set_stvec_s, &noread_entry_point, flush_tlb_s, FLAG_READ);
+    test_satp_invalid(&env, flush_tlb_s, FLAG_READ);
 
     printf("    * rodata (R---V) *\n");
-    test_satp_rodata(set_stvec_s, &nowrite_entry_point, flush_tlb_s, FLAG_READ | FLAG_VALID);
+    test_satp_rodata(&env, flush_tlb_s, FLAG_READ | FLAG_VALID);
 
     printf("    * data (RW--V) *\n");
-    test_satp_data(set_stvec_s, &noexec_entry_point, flush_tlb_s, FLAG_READ | FLAG_WRITE | FLAG_VALID);
+    test_satp_data(&env, flush_tlb_s, FLAG_READ | FLAG_WRITE | FLAG_VALID);
 
     printf("    * code (R-X-V) *\n");
-    test_satp_code(set_stvec_s, &exec_nowrite_entry_point, flush_tlb_s, FLAG_READ | FLAG_EXEC | FLAG_VALID);
+    test_satp_code(&env, flush_tlb_s, FLAG_READ | FLAG_EXEC | FLAG_VALID);
 
     printf("    * code (--X-V) *\n");
-    test_satp_private_code(set_stvec_s, &exec_noread_nowrite_entry_point, flush_tlb_s, FLAG_EXEC | FLAG_VALID);
+    test_satp_private_code(&env, flush_tlb_s, FLAG_EXEC | FLAG_VALID);
 
     change_mode(); // from here we are running in HS-mode
 
@@ -894,40 +871,21 @@ vm_land: // from here we are running in VS-mode
     } else {
         notice_failure();
     }
-    goto end;
-
-host_entry_point: {
-    asm volatile(".align 4\n1:");
-    SAVE_CONTEXT();
-    uint64_t scause = csr_read(CSR_SCAUSE);
-    switch (scause) {
-        case EXC_VS_SYSCALL: {
-            if (handle_vs_call() == EXTRA_UNKNOWN) {
-                panic();
-            }
-            csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
-            break;
-        }
-        default: {
-            panic();
-            break;
-        }
-    }
-    RESTORE_CONTEXT();
-    asm volatile("sret");
-}
-
-end:
     return;
 }
 
-void test_hgatp(void) {
-    printf("Starting test: VS-mode (hgatp)\n");
+void test_hgatp_simple(void) {
+    uint64_t selected_mappings[] = {MAPPING_H_LVL3, MAPPING_H_LVL2, MAPPING_H_LVL1};
+    struct test_env env = {
+        .set_stvec = set_stvec_vs,
+        .flush_tlb = flush_htlb_vs,
+        .count = LENGTH(selected_mappings),
+        .mapping_entries = selected_mappings,
+    };
 
-    asm volatile goto("la a6, 1f\n"
-                      "csrw stvec, a6" ::
-                          : "memory", "a6"
-                      : host_entry_point);
+    printf("Starting test: VS-mode (hgatp - only G)\n");
+
+    csr_write(CSR_STVEC, &only_call_entry_point);
     csr_set(CSR_VSSTATUS, csr_read(CSR_SSTATUS));
     csr_write(CSR_VSTVEC, &panic); // VS interrupt vector
     csr_write(CSR_VSATP, 0ul); // vs page table
@@ -937,7 +895,6 @@ void test_hgatp(void) {
     csr_write(CSR_HEDELEG,
               bit(EXC_LOAD_MISALIGNED) | bit(EXC_LOAD_ACCESS) | bit(EXC_STORE_MISALIGNED) | bit(EXC_STORE_ACCESS) | bit(EXC_LOAD_PAGE_FAULT) |
                   bit(EXC_STORE_PAGE_FAULT) | bit(EXC_INST_PAGE_FAULT)); // hypervisor exception delegation
-    // EXC_LOAD_ADDRESS EXC_LOAD_ACCESS EXC_STORE_ADDRESS EXC_STORE_ACCESS
     csr_write(CSR_HCOUNTEREN, 0ul); // hypervisor counter controls
     csr_write(CSR_HENVCFG, ENVCFG_CBIE | ENVCFG_CBCFE | ENVCFG_CBZE); // hypervisor environment controls
     csr_write(CSR_SEPC, &&vm_land); // vm entry point
@@ -948,50 +905,154 @@ void test_hgatp(void) {
     flush_htlb();
     asm volatile("sret");
 
-vm_land: // from here we are running in VS-mode
+vm_land:
+    // From here we are running in VS-mode
     csr_write(CSR_STVEC, &panic_vector);
     flush_tlb();
 
-    printf("    * nouser (R----) *\n");
-    test_satp_invalid(set_stvec_vs, &noread_entry_point, flush_htlb_vs, FLAG_READ);
+    printf("    * nouser (R--U-) *\n");
+    test_satp_invalid(&env, flush_htlb_vs, FLAG_USER | FLAG_READ);
 
-    printf("    * rodata (R---V) *\n");
-    test_satp_rodata(set_stvec_vs, &nowrite_entry_point, flush_htlb_vs, FLAG_READ | FLAG_VALID);
+    printf("    * nouser (R---V) *\n");
+    test_satp_invalid(&env, flush_htlb_vs, FLAG_READ | FLAG_VALID);
 
-    printf("    * data (RW--V) *\n");
-    test_satp_data(set_stvec_vs, &noexec_entry_point, flush_htlb_vs, FLAG_READ | FLAG_WRITE | FLAG_VALID);
+    printf("    * rodata (R--UV) *\n");
+    test_satp_rodata(&env, flush_htlb_vs, FLAG_USER | FLAG_READ | FLAG_VALID);
 
-    printf("    * code (R-X-V) *\n");
-    test_satp_code(set_stvec_vs, &exec_nowrite_entry_point, flush_htlb_vs, FLAG_READ | FLAG_EXEC | FLAG_VALID);
+    printf("    * data (RW-UV) *\n");
+    test_satp_data(&env, flush_htlb_vs, FLAG_USER | FLAG_READ | FLAG_WRITE | FLAG_VALID);
 
-    printf("    * code (--X-V) *\n");
-    test_satp_private_code(set_stvec_vs, &exec_noread_nowrite_entry_point, flush_htlb_vs, FLAG_EXEC | FLAG_VALID);
+    printf("    * code (R-XUV) *\n");
+    test_satp_code(&env, flush_htlb_vs, FLAG_USER | FLAG_READ | FLAG_EXEC | FLAG_VALID);
 
-    change_mode(); // from here we are running in HS-mode
+    printf("    * code (--XUV) *\n");
+    test_satp_private_code(&env, flush_htlb_vs, FLAG_USER | FLAG_EXEC | FLAG_VALID);
 
-    goto end;
-
-host_entry_point: {
-    asm volatile(".align 4\n1:");
-    SAVE_CONTEXT();
-    uint64_t scause = csr_read(CSR_SCAUSE);
-    switch (scause) {
-        case EXC_VS_SYSCALL: {
-            if (handle_vs_call() == EXTRA_UNKNOWN) {
-                panic();
-            }
-            csr_write(CSR_SEPC, NEXT_INSTRUCTION(csr_read(CSR_SEPC), 1));
-            break;
-        }
-        default: {
-            panic();
-            break;
-        }
-    }
-    RESTORE_CONTEXT();
-    asm volatile("sret");
+    change_mode();
+    // From here we are running in HS-mode
 }
 
-end:
-    return;
+void test_vsatp_full(void) {
+    uint64_t selected_mappings[] = {MAPPING_S_LVL3, MAPPING_S_LVL2, MAPPING_S_LVL1};
+    struct test_env env = {
+        .set_stvec = set_stvec_s,
+        .flush_tlb = flush_tlb_s,
+        .count = LENGTH(selected_mappings),
+        .mapping_entries = selected_mappings,
+    };
+
+    printf("Starting test: VS-mode (vsatp - G/S)\n");
+
+    uint64_t satp_root = MAKE_SATP(SATP_ROOT, SATP_MODE_39);
+
+    csr_write(CSR_STVEC, &only_call_entry_point);
+    csr_set(CSR_VSSTATUS, csr_read(CSR_SSTATUS));
+    csr_write(CSR_VSTVEC, &panic); // VS interrupt vector
+    csr_write(CSR_VSATP, 0ul); // vs page table
+    csr_write(CSR_VSIE, 0ul); // interrupts vs control
+    csr_write(CSR_HIE, 0ul); // interrupts h control
+    csr_write(CSR_HIDELEG, 0ul); // hypervisor interrupt delegation
+    csr_write(CSR_HEDELEG,
+              bit(EXC_LOAD_MISALIGNED) | bit(EXC_LOAD_ACCESS) | bit(EXC_STORE_MISALIGNED) | bit(EXC_STORE_ACCESS) | bit(EXC_LOAD_PAGE_FAULT) |
+                  bit(EXC_STORE_PAGE_FAULT) | bit(EXC_INST_PAGE_FAULT)); // hypervisor exception delegation
+    csr_write(CSR_HCOUNTEREN, 0ul); // hypervisor counter controls
+    csr_write(CSR_SENVCFG, ENVCFG_CBIE | ENVCFG_CBCFE | ENVCFG_CBZE);
+    csr_write(CSR_HENVCFG, ENVCFG_CBIE | ENVCFG_CBCFE | ENVCFG_CBZE);
+    csr_write(CSR_SEPC, &&vm_land); // vm entry point
+    csr_set(CSR_SSTATUS, SR_SPP); // making sure the guest will start in VS mode
+    csr_write(CSR_HSTATUS, HSTATUS_SPV | HSTATUS_SPVP); // hypervisor status configuration
+    csr_write(CSR_HGATP, MAKE_SATP(HGATP_ROOT, SATP_MODE_39)); // nested page table
+    flush_htlb();
+
+    asm volatile("sret");
+
+vm_land:
+    // From here we are running in VS-mode
+    csr_write(CSR_STVEC, &panic_vector);
+    csr_write(CSR_SATP, satp_root);
+    flush_tlb();
+
+    printf("    * nouser (R----) *\n");
+    test_satp_invalid(&env, &noread_entry_point, FLAG_READ);
+
+    printf("    * rodata (R---V) *\n");
+    test_satp_rodata(&env, &nowrite_entry_point, FLAG_READ | FLAG_VALID);
+
+    printf("    * data (RW--V) *\n");
+    test_satp_data(&env, &noexec_entry_point, FLAG_READ | FLAG_WRITE | FLAG_VALID);
+
+    printf("    * code (R-X-V) *\n");
+    test_satp_code(&env, &exec_nowrite_entry_point, FLAG_READ | FLAG_EXEC | FLAG_VALID);
+
+    printf("    * code (--X-V) *\n");
+    test_satp_private_code(&env, &exec_noread_nowrite_entry_point, FLAG_EXEC | FLAG_VALID);
+
+    change_mode();
+    // From here we are running in HS-mode
+}
+
+void test_hgatp_full(void) {
+    uint64_t selected_mappings[] = {MAPPING_VS_LVL3, MAPPING_VS_LVL2, MAPPING_VS_LVL1};
+    struct test_env env = {
+        .set_stvec = set_stvec_vs,
+        .flush_tlb = flush_htlb_vs,
+        .count = LENGTH(selected_mappings),
+        .mapping_entries = selected_mappings,
+    };
+
+    printf("Starting test: VS-mode (hgatp - G/S)\n");
+
+    csr_write(CSR_STVEC, &only_call_entry_point);
+    csr_set(CSR_VSSTATUS, csr_read(CSR_SSTATUS));
+    csr_write(CSR_VSTVEC, &panic); // VS interrupt vector
+    csr_write(CSR_VSATP, 0ul); // vs page table
+    csr_write(CSR_VSIE, 0ul); // interrupts vs control
+    csr_write(CSR_HIE, 0ul); // interrupts h control
+    csr_write(CSR_HIDELEG, 0ul); // hypervisor interrupt delegation
+    csr_write(CSR_HEDELEG,
+              bit(EXC_LOAD_MISALIGNED) | bit(EXC_LOAD_ACCESS) | bit(EXC_STORE_MISALIGNED) | bit(EXC_STORE_ACCESS) | bit(EXC_LOAD_PAGE_FAULT) |
+                  bit(EXC_STORE_PAGE_FAULT) | bit(EXC_INST_PAGE_FAULT)); // hypervisor exception delegation
+    csr_write(CSR_HCOUNTEREN, 0ul); // hypervisor counter controls
+    csr_write(CSR_SENVCFG, ENVCFG_CBIE | ENVCFG_CBCFE | ENVCFG_CBZE);
+    csr_write(CSR_HENVCFG, ENVCFG_CBIE | ENVCFG_CBCFE | ENVCFG_CBZE);
+    csr_write(CSR_SEPC, &&vm_land); // vm entry point
+    csr_set(CSR_SSTATUS, SR_SPP); // making sure the guest will start in VS mode
+    csr_write(CSR_HSTATUS, HSTATUS_SPV | HSTATUS_SPVP); // hypervisor status configuration
+    csr_write(CSR_VSATP, 0ul);
+    csr_write(CSR_HGATP, MAKE_SATP(HGATP_ROOT, SATP_MODE_39)); // nested page table
+    flush_htlb();
+
+    asm volatile("sret");
+
+vm_land:
+    // From here we are running in VS-mode
+    csr_write(CSR_STVEC, &panic_vector);
+    csr_write(CSR_SATP, MAKE_SATP(SATP_ROOT, SATP_MODE_39));
+    flush_tlb();
+    // TODO: make an ecall to flush using flush_htlb_addr() on selected GPA
+    // to test it
+
+    printf("    * novalid (R--U-) *\n");
+    test_satp_invalid(&env, &noread_entry_point, FLAG_READ | FLAG_USER);
+
+    printf("    * nouser (R---V) *\n");
+    test_satp_invalid(&env, &noread_entry_point, FLAG_READ | FLAG_VALID);
+
+    printf("    * rodata (R--UV) *\n");
+    test_satp_rodata(&env, &nowrite_entry_point, FLAG_READ | FLAG_VALID | FLAG_USER);
+
+    printf("    * data (RW-UV) *\n");
+    test_satp_data(&env, &noexec_entry_point, FLAG_READ | FLAG_WRITE | FLAG_VALID | FLAG_USER);
+
+    printf("    * code (R-XUV) *\n");
+    test_satp_code(&env, &exec_nowrite_entry_point, FLAG_READ | FLAG_EXEC | FLAG_VALID | FLAG_USER);
+
+    printf("    * code (--XUV) *\n");
+    test_satp_private_code(&env, &exec_noread_nowrite_entry_point, FLAG_EXEC | FLAG_VALID | FLAG_USER);
+
+    printf("    * novalid (R--U-) *\n");
+    test_satp_invalid(&env, &noread_entry_point, FLAG_READ | FLAG_USER);
+
+    change_mode();
+    // From here we are running in HS-mode
 }

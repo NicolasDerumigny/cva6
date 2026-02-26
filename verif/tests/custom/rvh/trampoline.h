@@ -40,83 +40,87 @@ struct trap_context {
     /*  27 */ uint64_t s9;
     /*  28 */ uint64_t s10;
     /*  29 */ uint64_t s11;
-};
+} __attribute__((packed));
 
-#define SAVE_CONTEXT()                  \
-    asm volatile("addi sp, sp, -256\n"  \
-                 "sd ra,   0*8(sp)\n"   \
-                 "sd gp,   1*8(sp)\n"   \
-                 "sd tp,   2*8(sp)\n"   \
-                 "sd a0,   3*8(sp)\n"   \
-                 "sd a1,   4*8(sp)\n"   \
-                 "sd a2,   5*8(sp)\n"   \
-                 "sd a3,   6*8(sp)\n"   \
-                 "sd a4,   7*8(sp)\n"   \
-                 "sd a5,   8*8(sp)\n"   \
-                 "sd a6,   9*8(sp)\n"   \
-                 "sd a7,   10*8(sp)\n"  \
-                 "sd t0,   11*8(sp)\n"  \
-                 "sd t1,   12*8(sp)\n"  \
-                 "sd t2,   13*8(sp)\n"  \
-                 "sd t3,   14*8(sp)\n"  \
-                 "sd t4,   15*8(sp)\n"  \
-                 "sd t5,   16*8(sp)\n"  \
-                 "sd t6,   17*8(sp)\n"  \
-                 "sd s0,   18*8(sp)\n"  \
-                 "sd s1,   19*8(sp)\n"  \
-                 "sd s2,   20*8(sp)\n"  \
-                 "sd s3,   21*8(sp)\n"  \
-                 "sd s4,   22*8(sp)\n"  \
-                 "sd s5,   23*8(sp)\n"  \
-                 "sd s6,   24*8(sp)\n"  \
-                 "sd s7,   25*8(sp)\n"  \
-                 "sd s8,   26*8(sp)\n"  \
-                 "sd s9,   27*8(sp)\n"  \
-                 "sd s10,   28*8(sp)\n" \
-                 "sd s11,   29*8(sp)\n" \
-                 "mv tp, sp\n")
+extern __thread struct trap_context* __tc;
 
-#define RESTORE_CONTEXT()                \
-    asm volatile("mv sp,tp\n"            \
-                 "ld ra,   0*8(sp)\n"    \
-                 "ld gp,   1*8(sp)\n"    \
-                 "ld tp,   2*8(sp)\n"    \
-                 "ld a0,   3*8(sp)\n"    \
-                 "ld a1,   4*8(sp)\n"    \
-                 "ld a2,   5*8(sp)\n"    \
-                 "ld a3,   6*8(sp)\n"    \
-                 "ld a4,   7*8(sp)\n"    \
-                 "ld a5,   8*8(sp)\n"    \
-                 "ld a6,   9*8(sp)\n"    \
-                 "ld a7,   10*8(sp)\n"   \
-                 "ld t0,   11*8(sp)\n"   \
-                 "ld t1,   12*8(sp)\n"   \
-                 "ld t2,   13*8(sp)\n"   \
-                 "ld t3,   14*8(sp)\n"   \
-                 "ld t4,   15*8(sp)\n"   \
-                 "ld t5,   16*8(sp)\n"   \
-                 "ld t6,   17*8(sp)\n"   \
-                 "ld s0,   18*8(sp)\n"   \
-                 "ld s1,   19*8(sp)\n"   \
-                 "ld s2,   20*8(sp)\n"   \
-                 "ld s3,   21*8(sp)\n"   \
-                 "ld s4,   22*8(sp)\n"   \
-                 "ld s5,   23*8(sp)\n"   \
-                 "ld s6,   24*8(sp)\n"   \
-                 "ld s7,   25*8(sp)\n"   \
-                 "ld s8,   26*8(sp)\n"   \
-                 "ld s9,   27*8(sp)\n"   \
-                 "ld s10,   28*8(sp)\n"  \
-                 "ld s11,   29*8(sp)\n"  \
-                 "addi sp, sp, 256\n" :: \
-                     : "memory")
+#define SAVE_CONTEXT()                                \
+    asm volatile("addi sp, sp, -256\n"                \
+                 "sd ra,   0*8(sp)\n"                 \
+                 "sd gp,   1*8(sp)\n"                 \
+                 "sd tp,   2*8(sp)\n"                 \
+                 "sd a0,   3*8(sp)\n"                 \
+                 "sd a1,   4*8(sp)\n"                 \
+                 "sd a2,   5*8(sp)\n"                 \
+                 "sd a3,   6*8(sp)\n"                 \
+                 "sd a4,   7*8(sp)\n"                 \
+                 "sd a5,   8*8(sp)\n"                 \
+                 "sd a6,   9*8(sp)\n"                 \
+                 "sd a7,   10*8(sp)\n"                \
+                 "sd t0,   11*8(sp)\n"                \
+                 "sd t1,   12*8(sp)\n"                \
+                 "sd t2,   13*8(sp)\n"                \
+                 "sd t3,   14*8(sp)\n"                \
+                 "sd t4,   15*8(sp)\n"                \
+                 "sd t5,   16*8(sp)\n"                \
+                 "sd t6,   17*8(sp)\n"                \
+                 "sd s0,   18*8(sp)\n"                \
+                 "sd s1,   19*8(sp)\n"                \
+                 "sd s2,   20*8(sp)\n"                \
+                 "sd s3,   21*8(sp)\n"                \
+                 "sd s4,   22*8(sp)\n"                \
+                 "sd s5,   23*8(sp)\n"                \
+                 "sd s6,   24*8(sp)\n"                \
+                 "sd s7,   25*8(sp)\n"                \
+                 "sd s8,   26*8(sp)\n"                \
+                 "sd s9,   27*8(sp)\n"                \
+                 "sd s10,  28*8(sp)\n"                \
+                 "sd s11,  29*8(sp)\n"                \
+                 /* Store thread_context to TLS */    \
+                 "lui a5,  %%tprel_hi(__tc)\n"        \
+                 "add a5, a5, tp, %%tprel_add(__tc)\n"\
+                 "sd sp,   %%tprel_lo(__tc)(a5)\n"    \
+                 ::: "memory")
 
-#define GET_TRAP_CONTEXT()                                \
-    ({                                                    \
-        uint64_t __tc;                                         \
-        asm volatile("mv %0, tp" : "=r"(__tc)::"memory"); \
-        (struct trap_context *)__tc;                      \
-    })
+#define RESTORE_CONTEXT(ret)                          \
+    asm volatile(/* Store thread_context to TLS */    \
+                 "lui a5,  %%tprel_hi(__tc)\n"        \
+                 "add a5, a5, tp, %%tprel_add(__tc)\n"\
+                 "ld sp, %%tprel_lo(__tc)(a5)\n"      \
+                 "ld ra,   0*8(sp)\n"                 \
+                 "ld gp,   1*8(sp)\n"                 \
+                 "ld tp,   2*8(sp)\n"                 \
+                 "ld a0,   3*8(sp)\n"                 \
+                 "ld a1,   4*8(sp)\n"                 \
+                 "ld a2,   5*8(sp)\n"                 \
+                 "ld a3,   6*8(sp)\n"                 \
+                 "ld a4,   7*8(sp)\n"                 \
+                 "ld a5,   8*8(sp)\n"                 \
+                 "ld a6,   9*8(sp)\n"                 \
+                 "ld a7,   10*8(sp)\n"                \
+                 "ld t0,   11*8(sp)\n"                \
+                 "ld t1,   12*8(sp)\n"                \
+                 "ld t2,   13*8(sp)\n"                \
+                 "ld t3,   14*8(sp)\n"                \
+                 "ld t4,   15*8(sp)\n"                \
+                 "ld t5,   16*8(sp)\n"                \
+                 "ld t6,   17*8(sp)\n"                \
+                 "ld s0,   18*8(sp)\n"                \
+                 "ld s1,   19*8(sp)\n"                \
+                 "ld s2,   20*8(sp)\n"                \
+                 "ld s3,   21*8(sp)\n"                \
+                 "ld s4,   22*8(sp)\n"                \
+                 "ld s5,   23*8(sp)\n"                \
+                 "ld s6,   24*8(sp)\n"                \
+                 "ld s7,   25*8(sp)\n"                \
+                 "ld s8,   26*8(sp)\n"                \
+                 "ld s9,   27*8(sp)\n"                \
+                 "ld s10,  28*8(sp)\n"                \
+                 "ld s11,  29*8(sp)\n"                \
+                 "addi sp, sp, 256\n"                 \
+                 #ret ::: "memory")
+
+#define GET_TRAP_CONTEXT() (__tc)
 
 void test_ret(void);
 void test_ecall(void);
@@ -124,13 +128,13 @@ extern uint64_t flag;
 
 #define RV_INS_LEN(ins) ((((ins) & 0x3) != 0x3) ? 2 : ((((ins) & 0x1f) != 0x1f) ? 4 : ((((ins) & 0x3f) != 0x3f) ? 6 : 8)))
 
-#define NEXT_INSTRUCTION(inst, n)               \
-    ({                                          \
+#define NEXT_INSTRUCTION(inst, n)                    \
+    ({                                               \
         uint64_t __pc = (inst);                      \
-        for (int i = 0; i < (n); i++) {         \
-            __pc += RV_INS_LEN(*(uint8_t *)(__pc)); \
-        };                                      \
-        __pc;                                   \
+        for (int i = 0; i < (n); i++) {              \
+            __pc += RV_INS_LEN(*(uint8_t *)(__pc));  \
+        };                                           \
+        __pc;                                        \
     })
 
 

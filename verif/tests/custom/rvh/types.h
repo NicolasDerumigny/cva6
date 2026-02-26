@@ -1,6 +1,8 @@
 #ifndef HMODE_TYPES_H
 #define HMODE_TYPES_H
 
+#define LENGTH(array) (sizeof(array) / sizeof(array[0]))
+
 typedef unsigned long uint64_t;
 typedef unsigned int uint;
 

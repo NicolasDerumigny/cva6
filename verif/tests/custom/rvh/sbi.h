@@ -163,7 +163,6 @@ enum sbi_ext_dbcn {
 
 static inline struct sbiret sbi_ecall(enum sbi_ext_id ext, int fid, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
     struct sbiret ret;
-
     register uint64_t a0 asm("a0") = (uint64_t)(arg0);
     register uint64_t a1 asm("a1") = (uint64_t)(arg1);
     register uint64_t a2 asm("a2") = (uint64_t)(arg2);
@@ -173,49 +172,50 @@ static inline struct sbiret sbi_ecall(enum sbi_ext_id ext, int fid, uint64_t arg
     register uint64_t a6 asm("a6") = (uint64_t)(fid);
     register uint64_t a7 asm("a7") = (uint64_t)(ext);
     asm volatile("ecall" : "+r"(a0), "+r"(a1) : "r"(a2), "r"(a3), "r"(a4), "r"(a5), "r"(a6), "r"(a7) : "memory");
+    register uint64_t sp asm("sp");
     ret.error = (long)a0;
     ret.value = (long)a1;
-
     return ret;
 }
 
 // PMU extension
 static inline long sbi_pmu_num_counters(void) {
-    return sbi_ecall(SBI_EXT_PMU, SBI_EXT_PMU_NUM_COUNTERS, 0, 0, 0, 0, 0, 0).value;
+    struct sbiret r = sbi_ecall(SBI_EXT_PMU, SBI_EXT_PMU_NUM_COUNTERS, 0, 0, 0, 0, 0, 0);
+    return r.value;
 }
-static inline struct sbiret sbi_pmu_counter_get_info(uint64_t counter_idx) {
+static inline struct sbiret sbi_pmu_counter_get_info(struct sbiret *ret, uint64_t counter_idx) {
     return sbi_ecall(SBI_EXT_PMU, SBI_EXT_PMU_COUNTER_GET_INFO, counter_idx, 0, 0, 0, 0, 0);
 }
-static inline struct sbiret sbi_pmu_counter_config_matching(uint64_t counter_idx_base, uint64_t counter_idx_mask, uint64_t config_flags, uint64_t event_idx, uint64_t event_data) {
+static inline struct sbiret sbi_pmu_counter_config_matching(struct sbiret *ret, uint64_t counter_idx_base, uint64_t counter_idx_mask, uint64_t config_flags, uint64_t event_idx, uint64_t event_data) {
     return sbi_ecall(SBI_EXT_PMU, SBI_EXT_PMU_COUNTER_CFG_MATCH, counter_idx_base, counter_idx_mask, config_flags, event_idx, event_data, 0);
 }
-static inline struct sbiret sbi_pmu_counter_start(uint64_t counter_idx_base, uint64_t counter_idx_mask, uint64_t start_flags, uint64_t initial_value) {
+static inline struct sbiret sbi_pmu_counter_start(struct sbiret *ret, uint64_t counter_idx_base, uint64_t counter_idx_mask, uint64_t start_flags, uint64_t initial_value) {
     return sbi_ecall(SBI_EXT_PMU, SBI_EXT_PMU_COUNTER_START, counter_idx_base, counter_idx_mask, start_flags, initial_value, 0, 0);
 }
-static inline struct sbiret sbi_pmu_counter_stop(uint64_t counter_idx_base, uint64_t counter_idx_mask, uint64_t stop_flags) {
+static inline struct sbiret sbi_pmu_counter_stop(struct sbiret *ret, uint64_t counter_idx_base, uint64_t counter_idx_mask, uint64_t stop_flags) {
     return sbi_ecall(SBI_EXT_PMU, SBI_EXT_PMU_COUNTER_STOP, counter_idx_base, counter_idx_mask, stop_flags, 0, 0, 0);
 }
 
 // RFENCE extension
-static inline struct sbiret sbi_remote_fence_i(uint64_t mask, uint64_t base) {
+static inline struct sbiret sbi_remote_fence_i(struct sbiret *ret, uint64_t mask, uint64_t base) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_FENCE_I, mask, base, 0, 0, 0, 0);
 }
-static inline struct sbiret sbi_remote_sfence_vma(uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size) {
+static inline struct sbiret sbi_remote_sfence_vma(struct sbiret *ret, uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_SFENCE_VMA, mask, base, start_addr, size, 0, 0);
 }
-static inline struct sbiret sbi_remote_sfence_vma_asid(uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size, uint64_t asid) {
+static inline struct sbiret sbi_remote_sfence_vma_asid(struct sbiret *ret, uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size, uint64_t asid) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_SFENCE_VMA_ASID, mask, base, start_addr, size, asid, 0);
 }
-static inline struct sbiret sbi_remote_hfence_gvma(uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size) {
+static inline struct sbiret sbi_remote_hfence_gvma(struct sbiret *ret, uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_HFENCE_GVMA, mask, base, start_addr, size, 0, 0);
 }
-static inline struct sbiret sbi_remote_hfence_gvma_vmid(uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size, uint64_t vmid) {
+static inline struct sbiret sbi_remote_hfence_gvma_vmid(struct sbiret *ret, uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size, uint64_t vmid) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_HFENCE_GVMA_VMID, mask, base, start_addr, size, vmid, 0);
 }
-static inline struct sbiret sbi_remote_hfence_vvma(uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size) {
+static inline struct sbiret sbi_remote_hfence_vvma(struct sbiret *ret, uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_HFENCE_VVMA, mask, base, start_addr, size, 0, 0);
 }
-static inline struct sbiret sbi_remote_hfence_vvma_asid(uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size, uint64_t asid) {
+static inline struct sbiret sbi_remote_hfence_vvma_asid(struct sbiret *ret, uint64_t mask, uint64_t base, uint64_t start_addr, uint64_t size, uint64_t asid) {
     return sbi_ecall(SBI_EXT_RFENCE, SBI_EXT_RFENCE_REMOTE_HFENCE_VVMA_ASID, mask, base, start_addr, size, asid, 0);
 }
 

@@ -1,0 +1,76 @@
+# Copyright 2021 Thales DIS design services SAS
+# Inria 2026
+#
+# Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
+# You may obtain a copy of the License at https://solderpad.org/licenses/
+#
+# Original Author: Jean-Roch COULON - Thales
+# Modified by Nicolas Derumigny - Inria
+
+# ================================================================================
+#                  Regression test list format
+# --------------------------------------------------------------------------------
+# testlist        : Assembly test list
+# test            : Assembly test name
+# description     : Description of this test
+# gen_opts        : Instruction generator options
+# iterations      : Number of iterations of this test
+# no_iss          : Enable/disable ISS simulator (Optional)
+# gen_test        : Test name used by the instruction generator
+# asm_tests       : Path to directed, hand-coded assembly test file or directory
+# rtl_test        : RTL simulation test name
+# cmp_opts        : Compile options passed to the instruction generator
+# sim_opts        : Simulation options passed to the instruction generator
+# no_post_compare : Enable/disable comparison of trace log and ISS log (Optional)
+# compare_opts    : Options for the RTL & ISS trace comparison
+# gcc_opts        : gcc compile options
+# --------------------------------------------------------------------------------
+#
+# The hypervisor tests of verif/tests/custom/rvh: one program per aspect of the
+# two stage address translation, run on a target whose ISA carries H. Each of
+# them builds the same environment: the supervisor and machine mode boot of the
+# directory, and the start file and the system calls of verif/tests/multicore/common,
+# which is what the tests were written against -- it hands the program its stack
+# and serves the system calls by which it prints and reports to the harness.
+
+common_test_config: &common_test_config
+  path_var: TESTS_PATH
+  # The march of the targets which carry H, with Zicbom: the environment the
+  # tests are linked with invalidates the line of its tohost with a cache
+  # operation, so that the harness sees the write the program made of it.
+  march: rv64imafdch_zicsr_zifencei_zba_zbb_zbs_zbc_zcb_zicbom
+  mabi: lp64d
+  gcc_opts: "-static -no-pie -fno-pic -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g -T<path_var>/custom/rvh/main.ld <path_var>/custom/rvh/call.c <path_var>/custom/rvh/mmode.c <path_var>/custom/rvh/page_table.s <path_var>/custom/rvh/tests.c <path_var>/custom/rvh/trampoline.S <path_var>/custom/rvh/utils.c <path_var>/custom/rvh/vm.c <path_var>/multicore/common/syscalls.c <path_var>/multicore/common/crt.S -I<path_var>/custom/rvh -I<path_var>/multicore/common -I<path_var>/multicore/env -lgcc"
+
+testlist:
+  - test: hypervisor_timer
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/custom/rvh/main_timer.c
+
+  - test: hypervisor_u
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/custom/rvh/main_u.c
+
+  - test: hypervisor_vs
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/custom/rvh/main_vs.c
+
+  - test: hypervisor_satp
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/custom/rvh/main_satp.c
+
+  - test: hypervisor_vsatp
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/custom/rvh/main_vsatp.c
+
+  - test: hypervisor_hgatp
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/custom/rvh/main_hgatp.c

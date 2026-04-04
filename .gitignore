@@ -65,3 +65,6 @@ verible.filelist
 *.pb
 *.traces
 .vimrc
+.emacs
+.dir-locals.el
+colout_cva6.py

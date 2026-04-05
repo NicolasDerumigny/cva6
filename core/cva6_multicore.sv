@@ -249,6 +249,11 @@ module cva6_multicore
   // Data-endian-ness
   logic [NrHarts-1:0] mbe;
 
+  // fu data from cacheless
+  fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu_i;
+
+  // flush control from controller
+  logic flush_ctrl_fpu_i;
 
   // Cores + (private) I$
   generate
@@ -320,7 +325,9 @@ module cva6_multicore
           .inval_ready_i                 (inval_ready[HartId]),
           .inval_addr_o                  (inval_addr[HartId]),
           .inval_valid_o                 (inval_valid[HartId]),
-          .mbe_o                         (mbe[HartId])
+          .mbe_o                         (mbe[HartId]),
+          .fu_data_iss_2_fpu             (fu_data_iss_2_fpu_i),
+          .flush_ctrl_fpu_o              (flush_ctrl_fpu_i)
       );
 
       cva6_icache #(

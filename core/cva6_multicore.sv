@@ -268,6 +268,9 @@ module cva6_multicore
   // fpu valid signal from issue
   logic [CVA6Cfg.NrIssuePorts-1:0] fpu_valid_iss_2_fpu_i;
 
+  // fpu fmt signal from issue
+  logic [1:0] fpu_fmt_iss_fpu_i;
+
   // Cores + (private) I$
   generate
     for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_one_core
@@ -340,9 +343,10 @@ module cva6_multicore
           .inval_addr_o                  (inval_addr[HartId]),
           .inval_valid_o                 (inval_valid[HartId]),
           .mbe_o                         (mbe[HartId]),
-          .fu_data_iss_2_fpu             (fu_data_iss_2_fpu_i),
+          .fu_data_iss_2_fpu_o           (fu_data_iss_2_fpu_i),
           .flush_ctrl_fpu_o              (flush_ctrl_fpu_i),
-          .fpu_valid_o                   (fpu_valid_iss_2_fpu_i)
+          .fpu_valid_o                   (fpu_valid_iss_2_fpu_i),
+          .fpu_fmt_iss_fpu_o             (fpu_fmt_iss_fpu_i)
       );
 
       cva6_icache #(

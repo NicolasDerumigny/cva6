@@ -298,7 +298,9 @@ module cva6_cacheless
     output logic [CVA6Cfg.NrIssuePorts-1:0] fpu_valid_o,
 
     // fmt signal to external fpu
-    output logic [1:0] fpu_fmt_iss_fpu_o
+    output logic [1:0] fpu_fmt_iss_fpu_o,
+
+    output logic [2:0] fpu_rm_iss_fpu_o
 );
 
   localparam type interrupts_t = struct packed {
@@ -1641,5 +1643,5 @@ module cva6_cacheless
   assign fpu_valid_o = fpu_valid_id_ex;
   assign fu_data_iss_2_fpu_o = fu_data_id_ex;
   assign fpu_fmt_iss_fpu_o = fpu_fmt_id_ex;
-
+  assign fpu_rm_iss_fpu_o = fpu_rm_id_ex;
 endmodule

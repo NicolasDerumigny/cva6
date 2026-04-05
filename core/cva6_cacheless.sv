@@ -303,8 +303,11 @@ module cva6_cacheless
     // rm signal to external fpu
     output logic [2:0] fpu_rm_iss_fpu_o,
 
-    // csr signal to external fpu
-    output logic [2:0] frm_csr_acc_fpu_o
+    // frm signal to external fpu
+    output logic [2:0] frm_csr_acc_fpu_o,
+
+    // prec signal to external fpu
+    output logic [6:0] fprec_csr_fpu_o
 
 );
 
@@ -1650,5 +1653,6 @@ module cva6_cacheless
   assign fpu_fmt_iss_fpu_o = fpu_fmt_id_ex;
   assign fpu_rm_iss_fpu_o = fpu_rm_id_ex;
   assign frm_csr_acc_fpu_o = frm_csr_id_issue_ex;
+  assign fprec_csr_fpu_o = fprec_csr_ex;
 
 endmodule

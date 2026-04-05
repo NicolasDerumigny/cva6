@@ -292,7 +292,10 @@ module cva6_cacheless
     output fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu,
 
     // flush control to fpu
-    output logic flush_ctrl_fpu_o
+    output logic flush_ctrl_fpu_o,
+
+    // valid signal to external fpu
+    output logic [CVA6Cfg.NrIssuePorts-1:0] fpu_valid_o
 );
 
   localparam type interrupts_t = struct packed {
@@ -1633,5 +1636,6 @@ module cva6_cacheless
   //pragma translate_on
 
   assign flush_ctrl_fpu_o = flush_ctrl_ex;
+  assign fpu_valid_o = fpu_valid_id_ex;
 
 endmodule

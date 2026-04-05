@@ -127,6 +127,16 @@ module cva6_multicore
       logic [CVA6Cfg.DCACHE_USER_WIDTH-1:0] data_ruser;
     },
 
+    // FPU types
+    localparam type fu_data_t = struct packed {
+      fu_t                              fu;
+      fu_op                             operation;
+      logic [CVA6Cfg.XLEN-1:0]          operand_a;
+      logic [CVA6Cfg.XLEN-1:0]          operand_b;
+      logic [CVA6Cfg.XLEN-1:0]          imm;
+      logic [CVA6Cfg.TRANS_ID_BITS-1:0] trans_id;
+    },
+
     // AXI types
     parameter type axi_ar_chan_t = struct packed {
       logic [CVA6Cfg.AxiIdWidth-1:0]   id;
@@ -249,6 +259,8 @@ module cva6_multicore
   // Data-endian-ness
   logic [NrHarts-1:0] mbe;
 
+  // fu data from cacheless
+  fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu;
 
   // Cores + (private) I$
   generate
@@ -286,7 +298,8 @@ module cva6_multicore
           .x_register_t(x_register_t),
           .x_commit_t(x_commit_t),
           .x_result_t(x_result_t),
-          .NumCachePorts(NUM_CACHE_PORTS)
+          .NumCachePorts(NUM_CACHE_PORTS),
+          .fu_data_t(fu_data_t)
       ) i_cva6 (
           .clk_i                         (clk_i),
           .rst_ni                        (rst_ni),
@@ -320,7 +333,8 @@ module cva6_multicore
           .inval_ready_i                 (inval_ready[HartId]),
           .inval_addr_o                  (inval_addr[HartId]),
           .inval_valid_o                 (inval_valid[HartId]),
-          .mbe_o                         (mbe[HartId])
+          .mbe_o                         (mbe[HartId]),
+          .fu_data_iss_2_fpu             (fu_data_iss_2_fpu)
       );
 
       cva6_icache #(

@@ -82,6 +82,7 @@ module cva6_cacheless
       logic [CVA6Cfg.DCACHE_USER_WIDTH-1:0] data_ruser;
     },
 
+
     // Branchpredict scoreboard entry
     // this is the struct which we will inject into the pipeline to guide the various
     // units towards the correct branch decision and resolve
@@ -182,15 +183,6 @@ module cva6_cacheless
       logic                             is_speculative_load_miss;
     },
 
-    localparam type fu_data_t = struct packed {
-      fu_t                              fu;
-      fu_op                             operation;
-      logic [CVA6Cfg.XLEN-1:0]          operand_a;
-      logic [CVA6Cfg.XLEN-1:0]          operand_b;
-      logic [CVA6Cfg.XLEN-1:0]          imm;
-      logic [CVA6Cfg.TRANS_ID_BITS-1:0] trans_id;
-    },
-
     // Accelerator - CVA6
     parameter type accelerator_req_t  = logic,
     parameter type accelerator_resp_t = logic,
@@ -218,7 +210,9 @@ module cva6_cacheless
     `CVXIF_REQ_T(CVA6Cfg, x_compressed_req_t, x_issue_req_t, x_register_t, x_commit_t),
     parameter type cvxif_resp_t =
     `CVXIF_RESP_T(CVA6Cfg, x_compressed_resp_t, x_issue_resp_t, x_result_t),
-    parameter unsigned NumCachePorts = 4
+    parameter unsigned NumCachePorts = 4,
+    // FPU types
+    parameter type fu_data_t = logic
 ) (
     // Subsystem Clock - SUBSYSTEM
     input logic clk_i,
@@ -292,7 +286,10 @@ module cva6_cacheless
     output logic inval_valid_o,
 
     // Data endianness
-    output logic mbe_o
+    output logic mbe_o,
+
+    // fu data to fpu
+    output fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu
 );
 
   localparam type interrupts_t = struct packed {
@@ -386,6 +383,8 @@ module cva6_cacheless
   logic [CVA6Cfg.NrIssuePorts-1:0][CVA6Cfg.XLEN-1:0] rvfi_rs2;
 
   fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_id_ex;
+  assign fu_data_iss_2_fpu = fu_data_id_ex;
+
   alu_bypass_t alu_bypass_id_ex;
   logic [CVA6Cfg.VLEN-1:0] pc_id_ex;
   logic zcmt_id_ex;

@@ -289,7 +289,10 @@ module cva6_cacheless
     output logic mbe_o,
 
     // fu data to fpu
-    output fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu
+    output fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu,
+
+    // flush control to fpu
+    output logic flush_ctrl_fpu_o
 );
 
   localparam type interrupts_t = struct packed {
@@ -384,6 +387,7 @@ module cva6_cacheless
 
   fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_id_ex;
   assign fu_data_iss_2_fpu = fu_data_id_ex;
+
 
   alu_bypass_t alu_bypass_id_ex;
   logic [CVA6Cfg.VLEN-1:0] pc_id_ex;
@@ -601,6 +605,7 @@ module cva6_cacheless
   logic [CVA6Cfg.PLEN-1:0] rvfi_mem_paddr;
   logic [CVA6Cfg.NrIssuePorts-1:0] rvfi_is_compressed;
   rvfi_probes_csr_t rvfi_csr;
+
 
   // --------------
   // Frontend
@@ -1626,5 +1631,7 @@ module cva6_cacheless
     else $fatal(1, "Accelerator is not supported by superscalar pipeline");
   end
   //pragma translate_on
+
+  assign flush_ctrl_fpu_o = flush_ctrl_ex;
 
 endmodule

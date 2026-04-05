@@ -273,6 +273,10 @@ module cva6_multicore
 
   // fpu rm signal from issue
   logic [2:0] fpu_rm_iss_fpu_i;
+
+  // fpu csr signal from acc_dispatcher
+  logic [2:0] frm_csr_acc_fpu_i;
+
   // Cores + (private) I$
   generate
     for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_one_core
@@ -349,7 +353,8 @@ module cva6_multicore
           .flush_ctrl_fpu_o              (flush_ctrl_fpu_i),
           .fpu_valid_o                   (fpu_valid_iss_2_fpu_i),
           .fpu_fmt_iss_fpu_o             (fpu_fmt_iss_fpu_i),
-          .fpu_rm_iss_fpu_o              (fpu_rm_iss_fpu_i)
+          .fpu_rm_iss_fpu_o              (fpu_rm_iss_fpu_i),
+          .frm_csr_acc_fpu_o             (frm_csr_acc_fpu_i)
       );
 
       cva6_icache #(

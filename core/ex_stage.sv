@@ -121,27 +121,27 @@ module ex_stage
     // Atomic result is valid - COMMIT_STAGE
     input logic amo_valid_commit_i,
     // FU is ready - ISSUE_STAGE
-    output logic fpu_ready_o,
+    // output logic fpu_ready_o,
     // FPU instruction is ready - ISSUE_STAGE
-    input logic [CVA6Cfg.NrIssuePorts-1:0] fpu_valid_i,
+    // input logic [CVA6Cfg.NrIssuePorts-1:0] fpu_valid_i,
     // FPU format - ISSUE_STAGE
-    input logic [1:0] fpu_fmt_i,
+    // input logic [1:0] fpu_fmt_i,
     // FPU rm - ISSUE_STAGE
-    input logic [2:0] fpu_rm_i,
+    // input logic [2:0] fpu_rm_i,
     // FPU frm - ISSUE_STAGE
-    input logic [2:0] fpu_frm_i,
+    // input logic [2:0] fpu_frm_i,
     // FPU precision control - CSR_REGFILE
-    input logic [6:0] fpu_prec_i,
+    // input logic [6:0] fpu_prec_i,
     // FPU transaction ID - ISSUE_STAGE
-    output logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id_o,
+    // output logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id_o,
     // FPU result - ISSUE_STAGE
-    output logic [CVA6Cfg.XLEN-1:0] fpu_result_o,
+    // output logic [CVA6Cfg.XLEN-1:0] fpu_result_o,
     // FPU valid - ISSUE_STAGE
-    output logic fpu_valid_o,
+    // output logic fpu_valid_o,
     // FPU exception - ISSUE_STAGE
-    output exception_t fpu_exception_o,
+    // output exception_t fpu_exception_o,
     // FPU early valid - ISSUE_STAGE
-    output logic fpu_early_valid_o,
+    // output logic fpu_early_valid_o,
     // ALU2 instruction is valid - ISSUE_STAGE
     input logic [CVA6Cfg.NrIssuePorts-1:0] alu2_valid_i,
     // CVXIF instruction is valid - ISSUE_STAGE
@@ -438,76 +438,76 @@ module ex_stage
   // ----------------
   // FPU
   // ----------------
-  logic fpu_valid;
-  logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id;
-  logic [CVA6Cfg.XLEN-1:0] fpu_result;
+  // logic fpu_valid;
+  // logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id;
+  // logic [CVA6Cfg.XLEN-1:0] fpu_result;
 
-  generate
-    if (CVA6Cfg.FpPresent) begin : fpu_gen
-      fu_data_t fpu_data;
-      always_comb begin
-        fpu_data = fpu_valid_i[0] ? fu_data_i[0] : '0;
-        if (CVA6Cfg.SuperscalarEn) begin
-          if (fpu_valid_i[1]) begin
-            fpu_data = fu_data_i[1];
-          end
-        end
-      end
+  // generate
+  //   if (CVA6Cfg.FpPresent) begin : fpu_gen
+  //     fu_data_t fpu_data;
+  //     always_comb begin
+  //       fpu_data = fpu_valid_i[0] ? fu_data_i[0] : '0;
+  //       if (CVA6Cfg.SuperscalarEn) begin
+  //         if (fpu_valid_i[1]) begin
+  //           fpu_data = fu_data_i[1];
+  //         end
+  //       end
+  //     end
 
-      fpu_wrap #(
-          .CVA6Cfg(CVA6Cfg),
-          .exception_t(exception_t),
-          .fu_data_t(fu_data_t)
-      ) fpu_i (
-          .clk_i,
-          .rst_ni,
-          .flush_i,
-          .fpu_valid_i(|fpu_valid_i),
-          .fpu_ready_o,
-          .fu_data_i(fpu_data),
-          .fpu_fmt_i,
-          .fpu_rm_i,
-          .fpu_frm_i,
-          .fpu_prec_i,
-          .fpu_trans_id_o(fpu_trans_id),
-          .result_o(fpu_result),
-          .fpu_valid_o(fpu_valid),
-          .fpu_exception_o,
-          .fpu_early_valid_o
-      );
-    end else begin : no_fpu_gen
-      assign fpu_ready_o       = '0;
-      assign fpu_trans_id      = '0;
-      assign fpu_result        = '0;
-      assign fpu_valid         = '0;
-      assign fpu_exception_o   = '0;
-      assign fpu_early_valid_o = '0;
-    end
-  endgenerate
+  //     fpu_wrap #(
+  //         .CVA6Cfg(CVA6Cfg),
+  //         .exception_t(exception_t),
+  //         .fu_data_t(fu_data_t)
+  //     ) fpu_i (
+  //         .clk_i,
+  //         .rst_ni,
+  //         .flush_i,
+  //         .fpu_valid_i(|fpu_valid_i),
+  //         .fpu_ready_o,
+  //         .fu_data_i(fpu_data),
+  //         .fpu_fmt_i,
+  //         .fpu_rm_i,
+  //         .fpu_frm_i,
+  //         .fpu_prec_i,
+  //         .fpu_trans_id_o(fpu_trans_id),
+  //         .result_o(fpu_result),
+  //         .fpu_valid_o(fpu_valid),
+  //         .fpu_exception_o,
+  //         .fpu_early_valid_o
+  //     );
+  //   end else begin : no_fpu_gen
+  //     assign fpu_ready_o       = '0;
+  //     assign fpu_trans_id      = '0;
+  //     assign fpu_result        = '0;
+  //     assign fpu_valid         = '0;
+  //     assign fpu_exception_o   = '0;
+  //     assign fpu_early_valid_o = '0;
+  //   end
+  // endgenerate
 
-  // result MUX
-  // This is really explicit so that synthesis tools can elide unused signals
-  if (CVA6Cfg.SuperscalarEn) begin
-    if (CVA6Cfg.FpPresent) begin
-      assign fpu_valid_o    = fpu_valid || |alu2_valid_i;
-      assign fpu_result_o   = fpu_valid ? fpu_result   : alu_result[1];
-      assign fpu_trans_id_o = fpu_valid ? fpu_trans_id : alu_data[1].trans_id;
-    end else begin
-      assign fpu_valid_o    = |alu2_valid_i;
-      assign fpu_result_o   = alu_result[1];
-      assign fpu_trans_id_o = alu_data[1].trans_id;
-    end
-  end else begin
-    if (CVA6Cfg.FpPresent) begin
-      assign fpu_valid_o    = fpu_valid;
-      assign fpu_result_o   = fpu_result;
-      assign fpu_trans_id_o = fpu_trans_id;
-    end else begin
-      assign fpu_valid_o    = '0;
-      assign fpu_result_o   = '0;
-      assign fpu_trans_id_o = '0;
-    end
-  end
+  // // result MUX
+  // // This is really explicit so that synthesis tools can elide unused signals
+  // if (CVA6Cfg.SuperscalarEn) begin
+  //   if (CVA6Cfg.FpPresent) begin
+  //     assign fpu_valid_o    = fpu_valid || |alu2_valid_i;
+  //     assign fpu_result_o   = fpu_valid ? fpu_result   : alu_result[1];
+  //     assign fpu_trans_id_o = fpu_valid ? fpu_trans_id : alu_data[1].trans_id;
+  //   end else begin
+  //     assign fpu_valid_o    = |alu2_valid_i;
+  //     assign fpu_result_o   = alu_result[1];
+  //     assign fpu_trans_id_o = alu_data[1].trans_id;
+  //   end
+  // end else begin
+  //   if (CVA6Cfg.FpPresent) begin
+  //     assign fpu_valid_o    = fpu_valid;
+  //     assign fpu_result_o   = fpu_result;
+  //     assign fpu_trans_id_o = fpu_trans_id;
+  //   end else begin
+  //     assign fpu_valid_o    = '0;
+  //     assign fpu_result_o   = '0;
+  //     assign fpu_trans_id_o = '0;
+  //   end
+  // end
 
   // ----------------
   // Load-Store Unit

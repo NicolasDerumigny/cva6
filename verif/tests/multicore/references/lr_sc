@@ -1,4 +1,8 @@
 [01]: LR/SC test started, val is 0x[0-9]+!
 [01]: LR/SC test started, val is 0x[0-9]+!
-[01]: LR/SC final value: 200!
-[01]: LR/SC final value: 200!
+[01]: LR/SC int value: 200!
+[01]: LR/SC int value: 200!
+[01]: LR/SC mix amoadd final value: 2400!
+[01]: LR/SC mix amoadd final value: 2400!
+[01]: Amoadd final value: 6600!
+[01]: Amoadd final value: 6600!

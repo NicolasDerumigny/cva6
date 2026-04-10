@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2021 Thales DIS design services SAS
 # Inria 2026
 #

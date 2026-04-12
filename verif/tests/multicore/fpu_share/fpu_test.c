@@ -22,18 +22,18 @@
 #include "util.h"
 
 int main(int argc, char *arg[]) {
-  float op1 = 1.4142;
-  float op2 = 1.4142;
-  float ans = op1 * op2;
+  /* float op1 = 1.4142; */
+  /* float op2 = 1.4142; */
+  /* float ans = op1 * op2; */
 
   // Cast the memory address of the floats to uint32_t pointers
-  uint32_t op1_bits = *(uint32_t *)&op1;
-  uint32_t op2_bits = *(uint32_t *)&op2;
-  uint32_t ans_bits = *(uint32_t *)&ans;
+  /* uint32_t op1_bits = *(uint32_t *)&op1; */
+  /* uint32_t op2_bits = *(uint32_t *)&op2; */
+  /* uint32_t ans_bits = *(uint32_t *)&ans; */
 
   /* printf("op1 in core %d: 0x%08x\n", get_hart_id(), op1_bits); */
   /* printf("op2 in core %d: 0x%08x\n", get_hart_id(), op2_bits); */
-  printf("result in core %d: 0x%08x\n", get_hart_id(), ans_bits);
+  /* printf("result in core %d: 0x%08x\n", get_hart_id(), ans_bits); */
   /* uint32_t core_id = get_hart_id(); */
   /* if (core_id == 0) { */
   /*   float a = 3.14; */
@@ -41,14 +41,27 @@ int main(int argc, char *arg[]) {
   /*   float res_add = a + b; */
   /*   uint32_t bits = *(uint32_t *)&res_add; */
   /*   printf("Core 0 Addition: 0x%08x\n", bits); */
-
   /* } else if (core_id == 1) { */
-  /*   float x = 1.4142; */
-  /*   float y = 1.4142; */
-  /*   float res_mul = x * y; */
-  /*   uint32_t bits = *(uint32_t *)&res_mul; */
-  /*   printf("Core 1 Multiplication: 0x%08x\n", bits); */
+  /*   /\* float x = 1.4142; *\/ */
+  /*   /\* float y = 1.4142; *\/ */
+  /*   /\* float res_mul = x * y; *\/ */
+  /*   /\* uint32_t bits = *(uint32_t *)&res_mul; *\/ */
+  /*   /\* printf("Core 1 Multiplication: 0x%08x\n", bits); *\/ */
+  /*   printf("%d: Hello World!\n", core_id); */
+  /*   /\* int a = 0; *\/ */
+  /*   /\* for (int i = 0; i < 5; i++) { *\/ */
+  /*   /\*   a += i; *\/ */
+  /*   /\* } *\/ */
+  /*   /\* printf("%d: Hello World finished!\n", core_id); *\/ */
   /* } */
 
+  printf("%d: Hello World!\n", get_hart_id());
+
+  int a = 0;
+  for (int i = 0; i < 5; i++) {
+    a += i;
+  }
+
+  printf("%d: Hello World finished!\n", get_hart_id());
   return 0;
 }

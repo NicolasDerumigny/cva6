@@ -42,12 +42,10 @@ fi
 
 export DV_OPTS="$DV_OPTS --issrun_opts=+debug_disable=1+UVM_VERBOSITY=$UVM_VERBOSITY"
 
-CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g ../tests/multicore/common/syscalls.c ../tests/multicore/common/crt.S -I../tests/multicore/env -I../tests/multicore/common -lgcc"
-
+CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g -U__riscv_flen ../tests/multicore/common/syscalls.c ../tests/multicore/common/crt.S -I../tests/multicore/env -I../tests/multicore/common -lgcc"
 
 cd verif/sim/
 
 python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/fpu_share/fpu_test.c --output_ref_file=../tests/multicore/references/fpu_test --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
-# python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/lr_sc/lr_sc.c  --output_ref_file=../tests/multicore/references/lr_sc --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
 
 cd -

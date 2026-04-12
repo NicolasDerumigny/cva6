@@ -553,17 +553,11 @@ module cva6_multicore
       logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id;
       logic [CVA6Cfg.XLEN-1:0] fpu_result;
       // fpu input mu// x
-      if (CVA6Cfg.FpPresent) begin : fpu_active_block
+      if (!CVA6Cfg.FpPresent) begin : fpu_active_block
         fu_data_t fpu_data;
         always_comb begin
           fpu_data = fpu_valid_iss_2_fpu_i[HartId][0] ? fu_data_iss_2_fpu_i[HartId][0] : '0;
-          if (CVA6Cfg.SuperscalarEn) begin
-            if (fpu_valid_iss_2_fpu_i[HartId][1]) begin
-              fpu_data = fu_data_iss_2_fpu_i[HartId][1];
-            end
-          end
         end
-
         fpu_wrap #(
             .CVA6Cfg(CVA6Cfg),
             .exception_t(exception_t),
@@ -585,14 +579,23 @@ module cva6_multicore
             .fpu_exception_o(fpu_exception_ex_id_o[HartId]),
             .fpu_early_valid_o(fpu_early_valid_o[HartId])
         );
+      end else begin : no_fpu_gen
+        assign fpu_result                    = '0;
+        assign fpu_valid                     = '0;
+        assign fpu_trans_id                  = '0;
+        assign fpu_ready_ex_id[HartId]       = '0;
+        assign fpu_exception_ex_id_o[HartId] = '0;
+        assign fpu_early_valid_o[HartId]     = '0;
       end
-      if (CVA6Cfg.FpPresent) begin
+      if (!CVA6Cfg.FpPresent) begin
         assign fpu_valid_from_external[HartId] = fpu_valid;
         assign fpu_result_from_external[HartId] = fpu_result;
         assign fpu_trans_id_from_external[HartId] = fpu_trans_id;
+      end else begin
+        assign fpu_valid_from_external[HartId] = '0;
+        assign fpu_result_from_external[HartId] = '0;
+        assign fpu_trans_id_from_external[HartId] = '0;
       end
     end
   endgenerate
-
-
 endmodule

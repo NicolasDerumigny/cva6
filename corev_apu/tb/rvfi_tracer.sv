@@ -225,6 +225,11 @@ module rvfi_tracer #(
             32'h6: cause = "ST_ADDR_MISALIGNED";
             32'h7: cause = "ST_ACCESS_FAULT";
             32'hb: cause = "ENV_CALL_MMODE";
+            32'h8: cause = "ENV_CALL_UMODE";
+            32'h9: cause = "ENV_CALL_SMODE";
+            32'hc: cause = "INSTR_PAGE_FAULT";
+            32'hd: cause = "LOAD_PAGE_FAULT";
+            32'hf: cause = "STORE_PAGE_FAULT";
           endcase
           ;
           if (rvfi_i[i].insn[1:0] != 2'b11) begin
@@ -239,9 +244,7 @@ module rvfi_tracer #(
     if (~rst_ni) cycles <= 0;
     else cycles <= cycles + 1;
     if (cycles > SIM_FINISH) begin
-      $display(
-         "*** [rvfi_tracer %d] INFO: Simulation timed out after %d cycles",
-         HART_ID, cycles);
+      $display("*** [rvfi_tracer %d] INFO: Simulation timed out after %d cycles", HART_ID, cycles);
       end_of_test_d = 32'hffff_ffff;
     end
 

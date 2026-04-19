@@ -51,7 +51,7 @@ module cva6_multicore
     parameter int unsigned AxiDataWidth = CVA6Cfg.AxiDataWidth,
     parameter int unsigned AxiIdWidth = CVA6Cfg.AxiIdWidth,
     parameter int unsigned NrHarts = 1,
-    parameter int unsigned SharedFPU = 0,
+    parameter int unsigned SharedFPU = 1,
 
     // ----- Cache types -----
     // cache request ports
@@ -549,54 +549,80 @@ module cva6_multicore
   end
 
   generate
-    for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : fpu_gen
-      logic fpu_valid;
-      logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id;
-      logic [CVA6Cfg.XLEN-1:0] fpu_result;
-      // fpu input mu// x
-      if (CVA6Cfg.FpPresent && !SharedFPU) begin : fpu_active_block
-        fu_data_t fpu_data;
-        always_comb begin
-          fpu_data = fpu_valid_iss_2_fpu_i[HartId][0] ? fu_data_iss_2_fpu_i[HartId][0] : '0;
+    if (SharedFPU) begin : gen_shared_fpu
+      shared_fpu #(
+          .CVA6Cfg(CVA6Cfg),
+          .exception_t(exception_t),
+          .fu_data_t(fu_data_t),
+          .NrHarts(NrHarts)
+      ) shared_i (
+          .clk_i,
+          .rst_ni,
+          .flush_i(flush_ctrl_fpu_i),
+          .fpu_valid_i(fpu_valid_iss_2_fpu_i),
+          .fpu_ready_o(fpu_ready_ex_id),
+          .fu_data_i(fu_data_iss_2_fpu_i),
+          .fpu_fmt_i(fpu_fmt_iss_fpu_i),
+          .fpu_rm_i(fpu_rm_iss_fpu_i),
+          .fpu_frm_i(frm_csr_acc_fpu_i),
+          .fpu_prec_i(fprec_csr_fpu_i),
+          .fpu_trans_id_o(fpu_trans_id_from_external),
+          .result_o(fpu_result_from_external),
+          .fpu_valid_o(fpu_valid_from_external),
+          .fpu_exception_o(fpu_exception_ex_id_o),
+          .fpu_early_valid_o(fpu_early_valid_o)
+      );
+    end else begin : gen_no_shared_fpu
+      for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : fpu_gen
+        logic fpu_valid;
+        logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id;
+        logic [CVA6Cfg.XLEN-1:0] fpu_result;
+        // fpu input mu// x
+        if (CVA6Cfg.FpPresent) begin : fpu_active_block
+          fu_data_t fpu_data;
+          always_comb begin
+            fpu_data = fpu_valid_iss_2_fpu_i[HartId][0] ? fu_data_iss_2_fpu_i[HartId][0] : '0;
+          end
+          fpu_wrap #(
+              .CVA6Cfg(CVA6Cfg),
+              .exception_t(exception_t),
+              .fu_data_t(fu_data_t)
+          ) fpu_i (
+              .clk_i,
+              .rst_ni,
+              .flush_i(flush_ctrl_fpu_i[HartId]),
+              .fpu_valid_i(|fpu_valid_iss_2_fpu_i[HartId]),
+              .fpu_ready_o(fpu_ready_ex_id[HartId]),
+              .fu_data_i(fpu_data),
+              .fpu_fmt_i(fpu_fmt_iss_fpu_i[HartId]),
+              .fpu_rm_i(fpu_rm_iss_fpu_i[HartId]),
+              .fpu_frm_i(frm_csr_acc_fpu_i[HartId]),
+              .fpu_prec_i(fprec_csr_fpu_i[HartId]),
+              .fpu_trans_id_o(fpu_trans_id),
+              .result_o(fpu_result),
+              .fpu_valid_o(fpu_valid),
+              .fpu_exception_o(fpu_exception_ex_id_o[HartId]),
+              .fpu_early_valid_o(fpu_early_valid_o[HartId])
+          );
+        end else begin : no_fpu_gen
+          assign fpu_result                    = '0;
+          assign fpu_valid                     = '0;
+          assign fpu_trans_id                  = '0;
+          assign fpu_ready_ex_id[HartId]       = '0;
+          assign fpu_exception_ex_id_o[HartId] = '0;
+          assign fpu_early_valid_o[HartId]     = '0;
         end
-        fpu_wrap #(
-            .CVA6Cfg(CVA6Cfg),
-            .exception_t(exception_t),
-            .fu_data_t(fu_data_t)
-        ) fpu_i (
-            .clk_i,
-            .rst_ni,
-            .flush_i(flush_ctrl_fpu_i[HartId]),
-            .fpu_valid_i(|fpu_valid_iss_2_fpu_i[HartId]),
-            .fpu_ready_o(fpu_ready_ex_id[HartId]),
-            .fu_data_i(fpu_data),
-            .fpu_fmt_i(fpu_fmt_iss_fpu_i[HartId]),
-            .fpu_rm_i(fpu_rm_iss_fpu_i[HartId]),
-            .fpu_frm_i(frm_csr_acc_fpu_i[HartId]),
-            .fpu_prec_i(fprec_csr_fpu_i[HartId]),
-            .fpu_trans_id_o(fpu_trans_id),
-            .result_o(fpu_result),
-            .fpu_valid_o(fpu_valid),
-            .fpu_exception_o(fpu_exception_ex_id_o[HartId]),
-            .fpu_early_valid_o(fpu_early_valid_o[HartId])
-        );
-      end else begin : no_fpu_gen
-        assign fpu_result                    = '0;
-        assign fpu_valid                     = '0;
-        assign fpu_trans_id                  = '0;
-        assign fpu_ready_ex_id[HartId]       = '0;
-        assign fpu_exception_ex_id_o[HartId] = '0;
-        assign fpu_early_valid_o[HartId]     = '0;
-      end
-      if (CVA6Cfg.FpPresent && !SharedFPU) begin
-        assign fpu_valid_from_external[HartId] = fpu_valid;
-        assign fpu_result_from_external[HartId] = fpu_result;
-        assign fpu_trans_id_from_external[HartId] = fpu_trans_id;
-      end else begin
-        assign fpu_valid_from_external[HartId] = '0;
-        assign fpu_result_from_external[HartId] = '0;
-        assign fpu_trans_id_from_external[HartId] = '0;
+        if (CVA6Cfg.FpPresent) begin
+          assign fpu_valid_from_external[HartId] = fpu_valid;
+          assign fpu_result_from_external[HartId] = fpu_result;
+          assign fpu_trans_id_from_external[HartId] = fpu_trans_id;
+        end else begin
+          assign fpu_valid_from_external[HartId] = '0;
+          assign fpu_result_from_external[HartId] = '0;
+          assign fpu_trans_id_from_external[HartId] = '0;
+        end
       end
     end
+
   endgenerate
 endmodule

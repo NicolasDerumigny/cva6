@@ -1,4 +1,6 @@
-[0-9]: Hello World!
-[0-9]: Hello World!
-[0-9]: Hello World finished!
-[0-9]: Hello World finished!
+result in core 0: 0x5bfb365e
+result in core 1: 0x5bfb365e
+result in core 0: 0x23826fda
+result in core 1: 0x23826fda
+result in core 0: 0x23826fda
+result in core 1: 0x23826fda

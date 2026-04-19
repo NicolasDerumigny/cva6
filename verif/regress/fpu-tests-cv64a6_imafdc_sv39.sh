@@ -42,7 +42,7 @@ fi
 
 export DV_OPTS="$DV_OPTS --issrun_opts=+debug_disable=1+UVM_VERBOSITY=$UVM_VERBOSITY"
 
-CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g -U__riscv_flen ../tests/multicore/common/syscalls.c ../tests/multicore/common/crt.S -I../tests/multicore/env -I../tests/multicore/common -lgcc"
+CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g ../tests/multicore/common/syscalls.c ../tests/multicore/common/crt.S -I../tests/multicore/env -I../tests/multicore/common -lgcc"
 
 cd verif/sim/
 

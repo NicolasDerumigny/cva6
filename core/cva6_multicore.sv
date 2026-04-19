@@ -51,6 +51,7 @@ module cva6_multicore
     parameter int unsigned AxiDataWidth = CVA6Cfg.AxiDataWidth,
     parameter int unsigned AxiIdWidth = CVA6Cfg.AxiIdWidth,
     parameter int unsigned NrHarts = 1,
+    parameter int unsigned SharedFPU = 0,
 
     // ----- Cache types -----
     // cache request ports
@@ -553,7 +554,7 @@ module cva6_multicore
       logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id;
       logic [CVA6Cfg.XLEN-1:0] fpu_result;
       // fpu input mu// x
-      if (!CVA6Cfg.FpPresent) begin : fpu_active_block
+      if (CVA6Cfg.FpPresent && !SharedFPU) begin : fpu_active_block
         fu_data_t fpu_data;
         always_comb begin
           fpu_data = fpu_valid_iss_2_fpu_i[HartId][0] ? fu_data_iss_2_fpu_i[HartId][0] : '0;
@@ -587,7 +588,7 @@ module cva6_multicore
         assign fpu_exception_ex_id_o[HartId] = '0;
         assign fpu_early_valid_o[HartId]     = '0;
       end
-      if (!CVA6Cfg.FpPresent) begin
+      if (CVA6Cfg.FpPresent && !SharedFPU) begin
         assign fpu_valid_from_external[HartId] = fpu_valid;
         assign fpu_result_from_external[HartId] = fpu_result;
         assign fpu_trans_id_from_external[HartId] = fpu_trans_id;

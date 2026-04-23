@@ -11,12 +11,19 @@ module ariane_peripherals_wrapper_verilog
 (
     input wire aclk,
     input wire aresetn,
+    // Should be EDGE_RISING
+    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 uart_irq_i INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY LEVEL_HIGH" *)
     input wire uart_irq_i,
+    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 spi_irq_i INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
     input wire spi_irq_i,
+    // Should be EDGE_RISING
+    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 eth_irq_i INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY LEVEL_HIGH" *)
     input wire eth_irq_i,
+    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 irq_i INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
     input wire[29:7] irq_i,
     `AXI_INTERFACE_MODULE_INPUT(s_axi_plic, AXI_ID_WIDTH),
     `AXI_INTERFACE_MODULE_INPUT(s_axi_timer, AXI_ID_WIDTH),
+    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 irq_out INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY LEVEL_HIGH" *)
     output wire [NR_CORES*2-1:0] irq_out
 );
 

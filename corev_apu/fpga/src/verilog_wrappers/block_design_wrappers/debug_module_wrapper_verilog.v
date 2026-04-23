@@ -26,7 +26,7 @@ module debug_module_wrapper_verilog
     // to CPU/other peripherals
     (*X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 ndmreset RST", X_INTERFACE_PARAMETER="POLARITY ACTIVE_HIGH"*)
     output wire ndmreset,
-    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 debug_req_irq INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
+    (*X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 debug_req_irq INTERRUPT", X_INTERFACE_PARAMETER = "SENSITIVITY LEVEL_HIGH" *)
     output wire[NR_CORES-1:0] debug_req_irq
 );
 

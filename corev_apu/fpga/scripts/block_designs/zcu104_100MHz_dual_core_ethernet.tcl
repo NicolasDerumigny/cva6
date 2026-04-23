@@ -304,8 +304,8 @@ proc create_hier_cell_Ethernet_Subsystem { parentCell nameHier } {
     CONFIG.SupportLevel {1} \
     CONFIG.TXCSUM {Full} \
     CONFIG.TXMEM {4k} \
-    CONFIG.axiliteclkrate {50} \
-    CONFIG.axisclkrate {50} \
+    CONFIG.axiliteclkrate {100} \
+    CONFIG.axisclkrate {100} \
     CONFIG.speed_1_2p5 {1G} \
   ] $axi_ethernet_0
 
@@ -785,6 +785,7 @@ proc create_root_design { parentCell } {
      return 1
    }
     set_property -dict [list \
+    CONFIG.AXI_CUT_BYPASS {1} \
     CONFIG.AXI_ID_WIDTH {4} \
     CONFIG.AXI_USER_WIDTH {0} \
     CONFIG.NR_CORES {2} \
@@ -1290,14 +1291,14 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   connect_bd_net -net cpu_debug_m_axi_dmi_jtag_awatop [get_bd_pins cpu_debug/m_axi_dmi_jtag_awatop] [get_bd_pins northbridge/debug_module_atop]
   connect_bd_net -net cpu_debug_ndmreset [get_bd_pins cpu_debug/ndmreset] [get_bd_pins util_vector_logic_0/Op2]
   connect_bd_net -net cpu_interconnect_aresetn_1 [get_bd_pins cpu_reset_gen/interconnect_aresetn] [get_bd_pins northbridge/aresetn] [get_bd_pins ps8_0_axi_periph/ARESETN] [get_bd_pins ps8_0_axi_periph/S00_ARESETN] [get_bd_pins ps8_0_axi_periph/M00_ARESETN] [get_bd_pins axi_jtag_0/s_axi_aresetn] [get_bd_pins cpu_debug/aresetn]
-  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen/peripheral_aresetn] [get_bd_pins northbridge/cpu_peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins northbridge/ddr_aresetn] [get_bd_pins ddr4_0/c0_ddr4_aresetn] [get_bd_pins axi_eth_led_gpio/s_axi_aresetn] [get_bd_pins ariane_peripherals_0/aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins cpu_0/aresetn]
+  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen/peripheral_aresetn] [get_bd_pins northbridge/cpu_peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins northbridge/ddr_aresetn] [get_bd_pins ddr4_0/c0_ddr4_aresetn] [get_bd_pins axi_eth_led_gpio/s_axi_aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins cpu_0/aresetn] [get_bd_pins ariane_peripherals_0/aresetn]
   connect_bd_net -net ddr4_0_addn_ui_clkout1 [get_bd_pins ddr4_0/addn_ui_clkout1] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk]
   connect_bd_net -net ddr4_0_c0_ddr4_ui_clk [get_bd_pins ddr4_0/c0_ddr4_ui_clk] [get_bd_pins northbridge/ddr_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
   connect_bd_net -net ext_reset_1 [get_bd_ports ext_reset] [get_bd_pins util_vector_logic_0/Op1]
   connect_bd_net -net int_n_1 [get_bd_ports int_n] [get_bd_pins util_vector_logic_1/Op1]
   connect_bd_net -net irqconcat_dout [get_bd_pins irqconcat/dout] [get_bd_pins ariane_peripherals_0/irq_i]
   connect_bd_net -net led_0_a_1 [get_bd_ports led_0_a] [get_bd_ports led_ar_c_c2m]
-  connect_bd_net -net mig_aclk_1 [get_bd_pins ddr4_0/addn_ui_clkout2] [get_bd_pins northbridge/aclk] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins cpu_reset_gen/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins axi_eth_led_gpio/s_axi_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk] [get_bd_pins cpu_debug/aclk]
+  connect_bd_net -net mig_aclk_1 [get_bd_pins ddr4_0/addn_ui_clkout2] [get_bd_pins northbridge/aclk] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins cpu_reset_gen/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins axi_eth_led_gpio/s_axi_aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk] [get_bd_pins cpu_debug/aclk] [get_bd_pins ariane_peripherals_0/aclk]
   connect_bd_net -net northbridge_eth_interrupt [get_bd_pins northbridge/eth_interrupt] [get_bd_pins ariane_peripherals_0/eth_irq_i]
   connect_bd_net -net northbridge_eth_rst [get_bd_pins northbridge/eth_rst] [get_bd_ports eth_rst]
   connect_bd_net -net northbridge_m_axi_clint_awatop [get_bd_pins northbridge/m_axi_clint_awatop] [get_bd_pins clint_0/s_axi_clint_awatop]
@@ -1345,7 +1346,6 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   # Restore current instance
   current_bd_instance $oldCurInst
 
-  validate_bd_design
   save_bd_design
 }
 # End of create_root_design()
@@ -1357,4 +1357,6 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
 
 create_root_design ""
 
+
+common::send_gid_msg -ssname BD::TCL -id 2053 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 

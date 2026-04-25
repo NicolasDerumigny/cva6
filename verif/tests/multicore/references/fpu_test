@@ -1,3 +1,2 @@
-core 0: FCSR Before: 0x00000021 | Result: 0x3eaaaaaa
-core 0: FCSR After:  0x00000001 | Result: 0x3eaaaaab
-core 0: IMPACT CONFIRMED: Hex pattern changed.
+core 0: pi: 0x4046eddf
+core 1: pi: 0x4046eddf

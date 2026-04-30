@@ -37,7 +37,6 @@ module shared_fpu
     logic [CVA6Cfg.TRANS_ID_BITS:0] trans_id;
   } fu_data_sf_t;
 
-  // logic                                   last_port;
   logic                                   internal_flush_i;
   logic       [ CVA6Cfg.NrIssuePorts-1:0] internal_fpu_valid_i;
   fu_data_t   [ CVA6Cfg.NrIssuePorts-1:0] internal_fu_data_i;
@@ -128,6 +127,22 @@ module shared_fpu
     logic                                  current_core;
     logic        [            NrHarts-1:0] valid_inputs;
 
+    typedef enum logic [1:0] {
+      EMPTY,
+      WAIT_DOWNSTREAM,
+      DRAIN_BUFFER
+    } buffer_state_t;
+
+    buffer_state_t                            arb_buff_status;
+    logic                                     arb_buff_flush_i;
+    logic          [CVA6Cfg.NrIssuePorts-1:0] arb_buff_fpu_valid_i;
+    fu_data_sf_t                              arb_buff_fu_data_i;
+    logic          [                     1:0] arb_buff_fpu_fmt_i;
+    logic          [                     2:0] arb_buff_fpu_rm_i;
+    logic          [                     2:0] arb_buff_fpu_frm_i;
+    logic          [                     6:0] arb_buff_fpu_prec_i;
+    logic          [             NrHarts-1:0] arb_ready_out;
+
     always_comb begin
       fpu_ready_data_port_0.fu        = fu_data_i[0].fu;
       fpu_ready_data_port_0.operation = fu_data_i[0].operation;
@@ -148,70 +163,201 @@ module shared_fpu
     end
 
     always_comb begin
-      case (valid_inputs)
-        2'b00: begin
-          internal_flush_i     = flush_i[0] | flush_i[1];
-          internal_fpu_valid_i = '0;
-          fpu_data_mod         = '0;
-          internal_fpu_fmt_i   = '0;
-          internal_fpu_rm_i    = '0;
-          internal_fpu_frm_i   = '0;
-          internal_fpu_prec_i  = '0;
-          next_core            = current_core;
+      next_core            = current_core;
+      arb_ready_out        = 2'b11;
+      internal_flush_i     = flush_i[0] | flush_i[1];
+
+      internal_fpu_valid_i = '0;
+      fpu_data_mod         = '0;
+      internal_fpu_fmt_i   = '0;
+      internal_fpu_rm_i    = '0;
+      internal_fpu_frm_i   = '0;
+      internal_fpu_prec_i  = '0;
+
+      case (arb_buff_status)
+        WAIT_DOWNSTREAM: begin
+          case (valid_inputs)
+            2'b01: begin
+              internal_flush_i     = flush_i[0];
+              internal_fpu_valid_i = fpu_valid_i[0];
+              internal_fpu_fmt_i   = fpu_fmt_i[0];
+              internal_fpu_rm_i    = fpu_rm_i[0];
+              internal_fpu_frm_i   = fpu_frm_i[0];
+              internal_fpu_prec_i  = fpu_prec_i[0];
+              fpu_data_mod         = fpu_ready_data_port_0;
+              arb_ready_out[1]     = 1'b0;
+            end
+            2'b10: begin
+              internal_flush_i     = flush_i[1];
+              internal_fpu_valid_i = fpu_valid_i[1];
+              internal_fpu_fmt_i   = fpu_fmt_i[1];
+              internal_fpu_rm_i    = fpu_rm_i[1];
+              internal_fpu_frm_i   = fpu_frm_i[1];
+              internal_fpu_prec_i  = fpu_prec_i[1];
+              fpu_data_mod         = fpu_ready_data_port_1;
+              arb_ready_out[0]     = 1'b0;
+            end
+            2'b11: begin
+              if (current_core) begin
+                internal_flush_i     = flush_i[0];
+                internal_fpu_valid_i = fpu_valid_i[0];
+                fpu_data_mod         = fpu_ready_data_port_0;
+                internal_fpu_fmt_i   = fpu_fmt_i[0];
+                internal_fpu_rm_i    = fpu_rm_i[0];
+                internal_fpu_frm_i   = fpu_frm_i[0];
+                internal_fpu_prec_i  = fpu_prec_i[0];
+                arb_ready_out[1]     = 1'b0;
+                arb_ready_out[0]     = 1'b0;
+              end else begin
+                internal_flush_i     = flush_i[1];
+                internal_fpu_valid_i = fpu_valid_i[1];
+                fpu_data_mod         = fpu_ready_data_port_1;
+                internal_fpu_fmt_i   = fpu_fmt_i[1];
+                internal_fpu_rm_i    = fpu_rm_i[1];
+                internal_fpu_frm_i   = fpu_frm_i[1];
+                internal_fpu_prec_i  = fpu_prec_i[1];
+                arb_ready_out[0]     = 1'b0;
+                arb_ready_out[1]     = 1'b0;
+              end
+            end
+            default: begin
+              arb_ready_out = '0;
+            end
+          endcase
         end
-        2'b01: begin
-          internal_flush_i     = flush_i[0];
-          internal_fpu_valid_i = fpu_valid_i[0];
-          internal_fpu_fmt_i   = fpu_fmt_i[0];
-          internal_fpu_rm_i    = fpu_rm_i[0];
-          internal_fpu_frm_i   = fpu_frm_i[0];
-          internal_fpu_prec_i  = fpu_prec_i[0];
-          fpu_data_mod         = fpu_ready_data_port_0;
+        DRAIN_BUFFER: begin
+          internal_flush_i     = arb_buff_flush_i;
+          internal_fpu_valid_i = arb_buff_fpu_valid_i;
+          fpu_data_mod         = arb_buff_fu_data_i;
+          internal_fpu_fmt_i   = arb_buff_fpu_fmt_i;
+          internal_fpu_rm_i    = arb_buff_fpu_rm_i;
+          internal_fpu_frm_i   = arb_buff_fpu_frm_i;
+          internal_fpu_prec_i  = arb_buff_fpu_prec_i;
+          arb_ready_out        = '0;
         end
-        2'b10: begin
-          internal_flush_i     = flush_i[1];
-          internal_fpu_valid_i = fpu_valid_i[1];
-          internal_fpu_fmt_i   = fpu_fmt_i[1];
-          internal_fpu_rm_i    = fpu_rm_i[1];
-          internal_fpu_frm_i   = fpu_frm_i[1];
-          internal_fpu_prec_i  = fpu_prec_i[1];
-          fpu_data_mod         = fpu_ready_data_port_1;
-        end
-        2'b11: begin
-          if (current_core) begin
-            internal_flush_i     = flush_i[0];
-            internal_fpu_valid_i = fpu_valid_i[0];
-            fpu_data_mod         = fpu_ready_data_port_0;
-            internal_fpu_fmt_i   = fpu_fmt_i[0];
-            internal_fpu_rm_i    = fpu_rm_i[0];
-            internal_fpu_frm_i   = fpu_frm_i[0];
-            internal_fpu_prec_i  = fpu_prec_i[0];
-            next_core            = 1'b0;  // Toggle priority
-          end else begin
-            internal_flush_i     = flush_i[1];
-            internal_fpu_valid_i = fpu_valid_i[1];
-            fpu_data_mod         = fpu_ready_data_port_1;
-            internal_fpu_fmt_i   = fpu_fmt_i[1];
-            internal_fpu_rm_i    = fpu_rm_i[1];
-            internal_fpu_frm_i   = fpu_frm_i[1];
-            internal_fpu_prec_i  = fpu_prec_i[1];
-            next_core            = 1'b1;  // Toggle priority
-          end
+        default: begin
+          case (valid_inputs)
+            2'b01: begin
+              internal_flush_i     = flush_i[0];
+              internal_fpu_valid_i = fpu_valid_i[0];
+              internal_fpu_fmt_i   = fpu_fmt_i[0];
+              internal_fpu_rm_i    = fpu_rm_i[0];
+              internal_fpu_frm_i   = fpu_frm_i[0];
+              internal_fpu_prec_i  = fpu_prec_i[0];
+              fpu_data_mod         = fpu_ready_data_port_0;
+            end
+            2'b10: begin
+              internal_flush_i     = flush_i[1];
+              internal_fpu_valid_i = fpu_valid_i[1];
+              internal_fpu_fmt_i   = fpu_fmt_i[1];
+              internal_fpu_rm_i    = fpu_rm_i[1];
+              internal_fpu_frm_i   = fpu_frm_i[1];
+              internal_fpu_prec_i  = fpu_prec_i[1];
+              fpu_data_mod         = fpu_ready_data_port_1;
+            end
+            2'b11: begin
+              if (current_core) begin
+                internal_flush_i     = flush_i[0];
+                internal_fpu_valid_i = fpu_valid_i[0];
+                fpu_data_mod         = fpu_ready_data_port_0;
+                internal_fpu_fmt_i   = fpu_fmt_i[0];
+                internal_fpu_rm_i    = fpu_rm_i[0];
+                internal_fpu_frm_i   = fpu_frm_i[0];
+                internal_fpu_prec_i  = fpu_prec_i[0];
+                arb_ready_out[1]     = 1'b0;
+                arb_ready_out[0]     = 1'b0;
+              end else begin
+                internal_flush_i     = flush_i[1];
+                internal_fpu_valid_i = fpu_valid_i[1];
+                fpu_data_mod         = fpu_ready_data_port_1;
+                internal_fpu_fmt_i   = fpu_fmt_i[1];
+                internal_fpu_rm_i    = fpu_rm_i[1];
+                internal_fpu_frm_i   = fpu_frm_i[1];
+                internal_fpu_prec_i  = fpu_prec_i[1];
+                arb_ready_out[0]     = 1'b0;
+                arb_ready_out[1]     = 1'b0;
+              end
+              next_core = ~current_core;
+            end
+            default: begin
+            end
+          endcase
         end
       endcase
+
     end
+
 
     // ---------------------------------------------------------
     // Arbiter State Register
     // ---------------------------------------------------------
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (~rst_ni) begin
-        current_core <= 1'b0;
+        current_core         <= 1'b0;
+        arb_buff_status      <= EMPTY;
+        arb_buff_flush_i     <= '0;
+        arb_buff_fpu_valid_i <= '0;
+        arb_buff_fu_data_i   <= '0;
+        arb_buff_fpu_fmt_i   <= '0;
+        arb_buff_fpu_rm_i    <= '0;
+        arb_buff_fpu_frm_i   <= '0;
+        arb_buff_fpu_prec_i  <= '0;
       end else begin
         current_core <= next_core;
+
+        case (arb_buff_status)
+          EMPTY: begin
+            if (valid_inputs == 2'b11) begin
+              if (current_core) begin
+                arb_buff_flush_i     <= flush_i[1];
+                arb_buff_fpu_valid_i <= fpu_valid_i[1];
+                arb_buff_fu_data_i   <= fpu_ready_data_port_1;
+                arb_buff_fpu_fmt_i   <= fpu_fmt_i[1];
+                arb_buff_fpu_rm_i    <= fpu_rm_i[1];
+                arb_buff_fpu_frm_i   <= fpu_frm_i[1];
+                arb_buff_fpu_prec_i  <= fpu_prec_i[1];
+              end else begin
+                arb_buff_flush_i     <= flush_i[0];
+                arb_buff_fpu_valid_i <= fpu_valid_i[0];
+                arb_buff_fu_data_i   <= fpu_ready_data_port_0;
+                arb_buff_fpu_fmt_i   <= fpu_fmt_i[0];
+                arb_buff_fpu_rm_i    <= fpu_rm_i[0];
+                arb_buff_fpu_frm_i   <= fpu_frm_i[0];
+                arb_buff_fpu_prec_i  <= fpu_prec_i[0];
+              end
+              arb_buff_status <= internal_fpu_ready_o ? DRAIN_BUFFER : WAIT_DOWNSTREAM;
+            end
+          end
+          WAIT_DOWNSTREAM: begin
+            if (internal_fpu_ready_o) begin
+              arb_buff_status <= DRAIN_BUFFER;
+            end
+          end
+          DRAIN_BUFFER: begin
+            if (internal_fpu_ready_o) begin
+              arb_buff_status      <= EMPTY;
+              arb_buff_flush_i     <= '0;
+              arb_buff_fpu_valid_i <= '0;
+              arb_buff_fu_data_i   <= '0;
+              arb_buff_fpu_fmt_i   <= '0;
+              arb_buff_fpu_rm_i    <= '0;
+              arb_buff_fpu_frm_i   <= '0;
+              arb_buff_fpu_prec_i  <= '0;
+            end
+          end
+          default: begin
+            arb_buff_status      <= EMPTY;
+            arb_buff_flush_i     <= '0;
+            arb_buff_fpu_valid_i <= '0;
+            arb_buff_fu_data_i   <= '0;
+            arb_buff_fpu_fmt_i   <= '0;
+            arb_buff_fpu_rm_i    <= '0;
+            arb_buff_fpu_frm_i   <= '0;
+            arb_buff_fpu_prec_i  <= '0;
+          end
+        endcase
       end
     end
-
     // ---------------------------------------------------------
     // Shared FPU Instantiation
     // ---------------------------------------------------------
@@ -305,8 +451,8 @@ module shared_fpu
       fpu_exception_o   = '0;
 
       // 2. Ready is combinational through to both cores
-      fpu_ready_o[0]    = internal_fpu_ready_o;
-      fpu_ready_o[1]    = internal_fpu_ready_o;
+      fpu_ready_o[0]    = internal_fpu_ready_o && arb_ready_out[0];
+      fpu_ready_o[1]    = internal_fpu_ready_o && arb_ready_out[1];
 
       // 3. Cycle T Routing: Early Valid
       // Triggered by the internal FPU's actual valid signal
@@ -331,6 +477,5 @@ module shared_fpu
         end
       end
     end
-
   end
 endmodule

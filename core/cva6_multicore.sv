@@ -50,7 +50,7 @@ module cva6_multicore
     parameter int unsigned AxiAddrWidth = CVA6Cfg.AxiAddrWidth,
     parameter int unsigned AxiDataWidth = CVA6Cfg.AxiDataWidth,
     parameter int unsigned AxiIdWidth = CVA6Cfg.AxiIdWidth,
-    parameter int unsigned NrHarts = 1,
+    parameter int unsigned NrHarts = 0,
     parameter int unsigned SharedFPU = 1,
 
     // ----- Cache types -----

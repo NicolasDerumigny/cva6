@@ -15,8 +15,6 @@ module axi_xbar_interface_wrapper #(
 
     `AXI_INTERFACE_MODULE_INPUT(s_axi_cpu, AXI_SLV_ID_WIDTH),
     `AXI_INTERFACE_MODULE_INPUT(s_axi_debug, AXI_SLV_ID_WIDTH),
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_eth_dma_sg, AXI_SLV_ID_WIDTH),
-    `AXI_INTERFACE_MODULE_INPUT(s_axi_eth_dma, AXI_SLV_ID_WIDTH),
 
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_ram, AXI_MST_ID_WIDTH),
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_uart, AXI_MST_ID_WIDTH),
@@ -26,16 +24,13 @@ module axi_xbar_interface_wrapper #(
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_sdcard, AXI_MST_ID_WIDTH),
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_debug, AXI_MST_ID_WIDTH),
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_plic, AXI_MST_ID_WIDTH),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_gpio, AXI_MST_ID_WIDTH),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth_dma, AXI_MST_ID_WIDTH),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth, AXI_MST_ID_WIDTH),
-    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth_leds, AXI_MST_ID_WIDTH)
+    `AXI_INTERFACE_MODULE_OUTPUT(m_axi_gpio, AXI_MST_ID_WIDTH)
 );
   localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(
       cva6_config_pkg::cva6_cfg
   );
-  localparam NrSlave = 4;
-  localparam NrMaster = 12;
+  localparam NrSlave = 2;
+  localparam NrMaster = 9;
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
       NoSlvPorts: NrSlave,
@@ -107,24 +102,6 @@ module axi_xbar_interface_wrapper #(
         idx: 8,
         start_addr: 'h4000_0000,
         end_addr:   'h4001_0000
-    },
-    // ETH_DMA
-    '{
-        idx: 9,
-        start_addr: 'h41E0_0000,
-        end_addr:   'h41E1_0000
-    },
-    // ETH
-    '{
-        idx: 10,
-        start_addr: 'h40C0_0000,
-        end_addr:   'h40C4_0000
-    },
-    // ETH_LEDS
-    '{
-        idx: 11,
-        start_addr: 'h4001_0000,
-        end_addr:   'h4002_0000
     }
  };
 
@@ -144,9 +121,6 @@ AXI_BUS #(
 
 `ASSIGN_ARIANE_INTERFACE_FROM_XLNX_STYLE_INPUTS(s_axi_cpu, slave[0])
 `ASSIGN_ARIANE_INTERFACE_FROM_XLNX_STYLE_INPUTS(s_axi_debug, slave[1])
-`ASSIGN_ARIANE_INTERFACE_FROM_XLNX_STYLE_INPUTS(s_axi_eth_dma_sg, slave[2])
-`ASSIGN_ARIANE_INTERFACE_FROM_XLNX_STYLE_INPUTS(s_axi_eth_dma, slave[3])
-
 `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_ram, master[0])
 `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_uart, master[1])
 `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_clint, master[2])
@@ -156,10 +130,6 @@ AXI_BUS #(
 `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_debug, master[6])
 `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_plic, master[7])
 `ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_gpio, master[8])
-`ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_eth_dma, master[9])
-`ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_eth, master[10])
-`ASSIGN_XLNX_INTERFACE_FROM_ARIANE_STYLE_INPUTS(m_axi_eth_leds, master[11])
-
 axi_xbar_intf #(
     .AXI_USER_WIDTH(AXI_USER_WIDTH),
     .Cfg           (AXI_XBAR_CFG),

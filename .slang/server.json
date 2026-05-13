@@ -1,0 +1,8 @@
+{
+  "flags": "-f core/Flist.cva6",
+  "index": [
+      {
+          "dirs": [ "core", "corev_apu", "vendor" ]
+      }
+  ]
+}

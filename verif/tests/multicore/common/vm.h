@@ -39,30 +39,6 @@ static inline void flush_tlb_asid(uint64_t asid) {
 static inline void flush_tlb_asid_addr(uint64_t asid, uint64_t va) {
   asm volatile("sfence.vma %0,%1" : : "r"(va), "r"(asid) : "memory");
 }
-static inline void flush_htlb(void) {
-  asm volatile("hfence.gvma" : : : "memory");
-}
-static inline void flush_htlb_addr(uint64_t gpa) {
-  asm volatile("hfence.gvma %0" : : "r"(gpa >> 2) : "memory");
-}
-static inline void flush_htlb_vmid(uint64_t vmid) {
-  asm volatile("hfence.gvma x0,%0" : : "r"(vmid >> 2) : "memory");
-}
-static inline void flush_htlb_vmid_addr(uint64_t vmid, uint64_t gpa) {
-  asm volatile("hfence.gvma %0,%1" : : "r"(gpa >> 2), "r"(vmid) : "memory");
-}
-static inline void flush_vtlb(void) {
-  asm volatile("hfence.vvma" : : : "memory");
-}
-static inline void flush_vtlb_addr(uint64_t gva) {
-  asm volatile("hfence.vvma %0" : : "r"(gva) : "memory");
-}
-static inline void flush_vtlb_asid(uint64_t asid) {
-  asm volatile("hfence.vvma x0,%0" : : "r"(asid) : "memory");
-}
-static inline void flush_vtlb_asid_addr(uint64_t asid, uint64_t gva) {
-  asm volatile("hfence.vvma %0,%1" : : "r"(gva), "r"(asid) : "memory");
-}
 
 struct segment {
   uint64_t base;
@@ -98,12 +74,5 @@ extern uint64_t *const satp_lvl3;
 extern uint64_t *const satp_lvl2;
 extern uint64_t *const satp_lvl1;
 #define SATP_ROOT ((uint64_t)satp_lvl3)
-extern uint64_t __hgatp_lvl3;
-extern uint64_t __hgatp_lvl2;
-extern uint64_t __hgatp_lvl1;
-extern uint64_t *const hgatp_lvl3;
-extern uint64_t *const hgatp_lvl2;
-extern uint64_t *const hgatp_lvl1;
-#define HGATP_ROOT ((uint64_t)hgatp_lvl3)
 
 #endif // VM_H

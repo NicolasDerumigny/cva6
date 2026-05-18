@@ -1,0 +1,5 @@
+Test region   \(pinned\): 0x800..000->0x800..000
+Test region \(unpinned\): 0x800..000->0x800..000
+Pinned/mem coherency \+ flush ok
+Switching to virtualized memory
+Pinned/mem coherency \+ flush ok

@@ -1,0 +1,5 @@
+Test region   \(pinned\): 0x800..000->0x800..000
+Test region \(unpinned\): 0x800..000->0x800..000
+Pinned after inval ok
+Switching to virtualized memory
+Pinned after inval ok

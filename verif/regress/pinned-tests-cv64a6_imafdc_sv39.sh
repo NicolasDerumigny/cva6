@@ -45,9 +45,26 @@ export DV_OPTS="$DV_OPTS --issrun_opts=+debug_disable=1+UVM_VERBOSITY=$UVM_VERBO
 
 CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g ../tests/multicore/common/syscalls.c ../tests/multicore/common/crt.S -I../tests/multicore/env -I../tests/multicore/common -lgcc"
 
+srcs=(
+    ../tests/multicore/pinned/pinned_csr.c
+    ../tests/multicore/pinned/pinned_mem_coherency.c
+    ../tests/multicore/pinned/pinned_after_inval.c
+    ../tests/multicore/pinned/pinned_full.c
+)
+
+srcA=(
+    ../tests/multicore/common/page_table.s
+    ../tests/multicore/common/trampoline.S
+    ../tests/multicore/common/vm.c
+)
+
+./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS" "verif/tests/multicore/pinned"
 
 cd verif/sim/
 
-python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/pinned/csr.c --output_ref_file=../tests/multicore/references/hpdcache_csr --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../../config/gen_from_riscv_config/linker/link.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+for src in "${srcs[@]}"; do
+    ref_file=`basename ${src/.c//}`
+    python3 cva6.py --nr_harts 2 --c_tests $src  --output_ref_file=../tests/multicore/references/hpdcache_${ref_file} --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="${srcA[*]} $CC_OPTS" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+done
 
 cd -

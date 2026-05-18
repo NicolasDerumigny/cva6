@@ -179,9 +179,7 @@ module cva6_multicore_hpdcache_subsystem
     userCfg.wtEn =
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT) ||
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
-    userCfg.wbEn =
-        (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WB) ||
-        (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
+    userCfg.wbEn = 1'b1;  // Mandated by pinning
     userCfg.lowLatency = 1'b1;
     userCfg.eccEn = CVA6Cfg.DcacheEccEnable;
     userCfg.eccScrubberEn = CVA6Cfg.DcacheEccScrubberEnable;

@@ -62,7 +62,12 @@ module rvfi_tracer #(
   string binary;
   int f;
   int unsigned SIM_FINISH;
+  // Number of records written since the trace file was last emptied: see the
+  // flush in the commit monitor below.
+  localparam int unsigned TRACE_FLUSH_RECORDS = 256;
+  int unsigned trace_records;
   initial begin
+    trace_records = 0;
     TOHOST_ADDR = '0;
     GLOBAL_PATTERN_start = '0;
     GLOBAL_PATTERN_end = '0;
@@ -113,6 +118,7 @@ module rvfi_tracer #(
 
   final begin
     $display("*** [rvfi_tracer] INFO: Simulation terminated after %d cycles!\n", cycles);
+    $fflush(f);
     $fclose(f);
   end
 
@@ -159,7 +165,9 @@ module rvfi_tracer #(
     logic [31:0] end_of_test_d;
     // Generate the trace based on RVFI
     logic [63:0] pc64;
+    logic wrote_record;
 
+    wrote_record = 1'b0;
     end_of_test_d = (rst_ni && (end_of_test_q[0] == 1'b1)) ? end_of_test_q : 0;
     for (int i = 0; i < CVA6Cfg.NrCommitPorts; i++) begin
       pc64 = {
@@ -246,6 +254,7 @@ module rvfi_tracer #(
           end
         end
         $fwrite(f, "\n");
+        wrote_record = 1'b1;
       end else begin
         if (rvfi_i[i].trap) begin
           case (rvfi_i[i].cause)
@@ -269,13 +278,30 @@ module rvfi_tracer #(
           end else begin
             $fwrite(f, "%s exception @ 0x%h (0x%h)\n", cause, pc64, rvfi_i[i].insn);
           end
+          wrote_record = 1'b1;
         end
       end
     end
 
+    // The records go through the standard I/O buffer, which the tools empty
+    // only when it is full or the file is closed. A hart which retires few
+    // instructions, or a run ending on the timeout, would otherwise leave
+    // everything it wrote in that buffer.
+    if (wrote_record && trace_records + 1 >= TRACE_FLUSH_RECORDS) begin
+      trace_records <= 0;
+      $fflush(f);
+    end else if (wrote_record) begin
+      trace_records <= trace_records + 1;
+    end
+
     if (~rst_ni) cycles <= 0;
     else cycles <= cycles + 1;
-    if (cycles > SIM_FINISH) end_of_test_d = 32'hffff_ffff;
+    if (cycles > SIM_FINISH) begin
+      $display(
+         "*** [rvfi_tracer %d] INFO: Simulation timed out after %d cycles",
+         HART_ID, cycles);
+      end_of_test_d = 32'hffff_ffff;
+    end
 
     end_of_test_q <= end_of_test_d;
   end

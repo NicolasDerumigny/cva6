@@ -65,3 +65,4 @@ verible.filelist
 *.pb
 *.traces
 corev_apu/fpga/NA
+compile_commands.json

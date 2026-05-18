@@ -238,7 +238,12 @@ module rvfi_tracer #(
 
     if (~rst_ni) cycles <= 0;
     else cycles <= cycles + 1;
-    if (cycles > SIM_FINISH) end_of_test_d = 32'hffff_ffff;
+    if (cycles > SIM_FINISH) begin
+      $display(
+         "*** [rvfi_tracer %d] INFO: Simulation timed out after %d cycles",
+         HART_ID, cycles);
+      end_of_test_d = 32'hffff_ffff;
+    end
 
     end_of_test_q <= end_of_test_d;
   end

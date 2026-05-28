@@ -1,1 +1,1 @@
-zcu104_100MHz_dual_core_ethernet.tcl
+zcu104_75MHz_dual_core_ethernet.tcl

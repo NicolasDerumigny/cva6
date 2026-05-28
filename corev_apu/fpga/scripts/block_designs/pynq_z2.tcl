@@ -44,7 +44,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 # source SoC_script.tcl
 
 
-# The design that will be created by this Tcl script contains the following 
+# The design that will be created by this Tcl script contains the following
 # module references:
 # bootrom_wrapper, ariane_peripherals_wrapper_verilog, cva6_wrapper_verilog, clint_wrapper_verilog, ram_offset_to_zero, debug_module_wrapper_verilog, axi_riscv_atomics_wrapper_verilog
 
@@ -102,7 +102,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES: 
+   # USE CASES:
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -136,7 +136,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\ 
+   set list_check_ips "\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:axi_quad_spi:3.2\
 xilinx.com:ip:xlconstant:1.1\
@@ -171,7 +171,7 @@ xilinx.com:ip:axi_jtag:1.0\
 ##################################################################
 set bCheckModules 1
 if { $bCheckModules == 1 } {
-   set list_check_mods "\ 
+   set list_check_mods "\
 bootrom_wrapper\
 ariane_peripherals_wrapper_verilog\
 cva6_wrapper_verilog\
@@ -372,7 +372,7 @@ proc create_root_design { parentCell } {
   set uart_txd [ create_bd_port -dir O uart_txd ]
   set uart_rxd [ create_bd_port -dir I uart_rxd ]
   set sys_clock [ create_bd_port -dir I -type clk -freq_hz 125000000 sys_clock ]
-  set ext_reset [ create_bd_port -dir I ext_reset ]
+  set sys_rst [ create_bd_port -dir I sys_rst ]
 
   # Create instance: axi_bootrom_control, and set properties
   set axi_bootrom_control [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bootrom_control ]
@@ -409,7 +409,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: ariane_peripherals_0, and set properties
   set block_name ariane_peripherals_wrapper_verilog
   set block_cell_name ariane_peripherals_0
@@ -1118,7 +1118,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
   set_property CONFIG.CONST_VAL {0} $xlconstant_0
@@ -1173,7 +1173,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net debug_module_wrapper_0_ndmreset [get_bd_pins debug_module_wrapper_0/ndmreset] [get_bd_pins cpu_reset_gen25/mb_debug_sys_rst]
   connect_bd_net -net mig_aclk_1 [get_bd_pins clk_wiz_0/clk_25] [get_bd_pins northbridge/aclk] [get_bd_pins northbridge/clk_cpu] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins cpu_reset_gen25/slowest_sync_clk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk] [get_bd_pins debug_module_wrapper_0/aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins cpu_reset_gen25/ext_reset_in]
-  connect_bd_net -net reset_ext_1 [get_bd_ports ext_reset] [get_bd_pins util_vector_logic_2/Op1]
+  connect_bd_net -net reset_ext_1 [get_bd_ports sys_rst] [get_bd_pins util_vector_logic_2/Op1]
   connect_bd_net -net sdcard_quad_spi_axi_ip2intc_irpt [get_bd_pins sdcard_quad_spi_axi/ip2intc_irpt] [get_bd_pins ariane_peripherals_0/spi_irq_i]
   connect_bd_net -net sin_0_1 [get_bd_ports uart_rxd] [get_bd_pins axi_uart16550_0/sin]
   connect_bd_net -net spi_miso_1 [get_bd_ports spi_miso] [get_bd_pins sdcard_quad_spi_axi/io1_i]

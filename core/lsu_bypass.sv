@@ -60,9 +60,8 @@ module lsu_bypass
   logic write_pointer_n, write_pointer_q;
   logic [1:0] status_cnt_n, status_cnt_q;
 
-  logic empty;
-  assign empty   = (status_cnt_q == 0);
-  assign ready_o = empty;
+  logic empty_n, empty_q;
+  assign ready_o = empty_q;
 
   always_comb begin
     automatic logic [1:0] status_cnt;
@@ -116,11 +115,12 @@ module lsu_bypass
     read_pointer_n  = read_pointer;
     write_pointer_n = write_pointer;
     status_cnt_n    = status_cnt;
+    empty_n         = (status_cnt == 0);
   end
 
   // output assignment
   always_comb begin : output_assignments
-    if (empty) begin
+    if (empty_q) begin
       lsu_ctrl_o = lsu_req_i;
     end else begin
       lsu_ctrl_o = mem_q[read_pointer_q];
@@ -134,11 +134,13 @@ module lsu_bypass
       status_cnt_q    <= '0;
       write_pointer_q <= '0;
       read_pointer_q  <= '0;
+      empty_q         <= '1;
     end else begin
       mem_q           <= mem_n;
       status_cnt_q    <= status_cnt_n;
       write_pointer_q <= write_pointer_n;
       read_pointer_q  <= read_pointer_n;
+      empty_q         <= empty_n;
     end
   end
 endmodule

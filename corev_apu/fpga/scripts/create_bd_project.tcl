@@ -121,12 +121,8 @@ set_property include_dirs { \
 set_property source_mgmt_mode All [current_project]
 update_compile_order -fileset sources_1
 
-set_property STEPS.SYNTH_DESIGN.ARGS.RETIMING true [get_runs synth_1]
-
 open_bd_design { "$origin_dir/corev_apu/fpga/ariane.srcs/sources_1/bd/SoC/SoC.bd" }
-
 generate_target all [get_files "$origin_dir/corev_apu/fpga/ariane.srcs/sources_1/bd/SoC/SoC.bd"]
-
 save_bd_design
 close_bd_design SoC
 
@@ -136,17 +132,20 @@ add_files -fileset $cstr -norecurse [file normalize "$origin_dir/corev_apu/fpga/
 generate_target all [get_files  "$origin_dir/corev_apu/fpga/ariane.srcs/sources_1/bd/SoC/SoC.bd"]
 export_ip_user_files -of_objects [get_files "$origin_dir/corev_apu/fpga/ariane.srcs/sources_1/bd/SoC/SoC.bd"] -no_script -sync -force
 create_ip_run [get_files -of_objects [get_fileset sources_1] "$origin_dir/corev_apu/fpga/ariane.srcs/sources_1/bd/SoC/SoC.bd"]
-launch_runs [get_runs "*_synth_1"] -jobs $cores
-wait_on_runs [get_runs "*_synth_1"]
+
+# Set for timing optimized implementation
+set_property "steps.synth_design.args.global_retiming" "on" [get_runs synth_1]
+#set_property "steps.place_design.args.directive" "ExtraPostPlacementOpt" [get_runs impl_1]
+#set_property "steps.route_design.args.directive" "Explore" [get_runs impl_1]
+#set_property "steps.phys_opt_design.args.directive" "AlternateFlowWithRetiming" [get_runs impl_1]
+
+launch_runs [get_runs synth_1] -jobs $cores
+wait_on_runs [get_runs synth_1]
 
 # Launch synthesis
 launch_runs synth_1 -jobs $cores
 wait_on_run synth_1
 open_run synth_1
-
-# Set for RuntimeOptimized implementation
-set_property "steps.place_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
-set_property "steps.route_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
 
 launch_runs impl_1
 wait_on_run impl_1

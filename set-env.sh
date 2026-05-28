@@ -8,7 +8,7 @@ export RISCV_GCC=/opt/xpack/riscv-none-elf-gcc/bin/riscv-none-elf-gcc
 export RISCV_OBJCOPY=/opt/xpack/riscv-none-elf-gcc/bin/riscv-none-elf-objcopy
 export CV_SW_TOOLCHAIN=/opt/riscv/riscv32-corev-elf-gcc
 export CORE_V_VERIF=${SCRIPT_DIR}/verif/core-v-verif
-export CVA6_REPO_DIR=${PWD}
+export CVA6_REPO_DIR=${SCRIPT_DIR}
 
 export XLEN=64
 export BOARD=zcu104

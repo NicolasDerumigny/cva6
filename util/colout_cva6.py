@@ -1,6 +1,7 @@
 def theme(context):
     return context,[
         [ ".*ERROR.*", "red", "bold" ],
+        [ ".*Incomplete TANDEM YAML report.*", "red", "bold" ],
         [ ".*\\[FAILED\\].*", "red", "bold" ],
         [ ".*[0-9]*[1-9]+[0-9]* FAILED.*", "red", "bold" ],
         [ ".*WARNING.*", "yellow", "bold" ],

@@ -267,7 +267,7 @@ module shared_fpu
     // ---------------------------------------------------------
     always_comb begin
       // Default outputs
-      internal_flush_i     = flush_i[0] | flush_i[1];  // Global flush to FPU
+      internal_flush_i     = flush_i[0] | flush_i[1];  // Global flush for scoreboard correctness
       internal_fpu_valid_i = '0;
       internal_fpu_fmt_i   = '0;
       internal_fpu_rm_i    = '0;
@@ -307,38 +307,55 @@ module shared_fpu
       end else begin
 
         // ==================================================================
-        // FLUSH HANDLING: Highest Priority
+        // FLUSH HANDLING: Global flush with cross-core victimization
         // ==================================================================
         if (flush_detected) begin
-          if (flushing_core == 1'b0) begin
-            // Core 0 initiated flush
-            // - Core 0's entries (except COMPLETED): mark INVALID (killed)
-            // - Core 1's ISSUED entries: mark RESCHEDULED (victim, needs replay)
-            for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
+          // Handle simultaneous flush from both cores (no victims, kill everything)
+          if (flush_i[0] && flush_i[1]) begin
+            for (int i = 0; i < BUFFER_SIZE; i++) begin
               if (payload_buffer[i].state != COMPLETED) begin
-                payload_buffer[i].state <= INVALID;  // Kill all non-completed from flushing core
+                payload_buffer[i].state <= INVALID;  // Kill all non-completed from both cores
               end
+            end
+          end else if (flushing_core == 1'b0) begin
+            // Core 0 initiated flush (Core 1 not flushing)
+            // - Core 0's VALID/ISSUED entries: mark INVALID (new transactions after flush point)
+            // - Core 0's RESCHEDULED entries: STAY RESCHEDULED (old victims still need completion!)
+            // - Core 1's ISSUED entries: mark RESCHEDULED (newly victimized)
+            // - Core 1's RESCHEDULED entries: STAY RESCHEDULED (immune to cross-core flush!)
+            // - Core 1's VALID entries: unchanged (not yet granted, not victimized)
+            for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
+              if (payload_buffer[i].state != COMPLETED && payload_buffer[i].state != RESCHEDULED) begin
+                payload_buffer[i].state <= INVALID;  // Kill only VALID/ISSUED from Core 0
+              end
+              // RESCHEDULED entries remain RESCHEDULED - scoreboard still expects them!
             end
             for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
               if (payload_buffer[i].state == ISSUED) begin
-                payload_buffer[i].state <= RESCHEDULED;  // Victim, needs replay
-                // fpu_valid_i remains set (transaction is still valid)
+                payload_buffer[i].state <= RESCHEDULED;  // Victimize Core 1's executing transaction
               end
+              // CRITICAL: RESCHEDULED entries remain RESCHEDULED (immune to Core 0's flush)
+              // VALID entries remain VALID (not yet executing, not victimized)
             end
           end else begin
-            // Core 1 initiated flush
-            // - Core 1's entries (except COMPLETED): mark INVALID (killed)
-            // - Core 0's ISSUED entries: mark RESCHEDULED (victim, needs replay)
+            // Core 1 initiated flush (Core 0 not flushing)
+            // - Core 1's VALID/ISSUED entries: mark INVALID (new transactions after flush point)
+            // - Core 1's RESCHEDULED entries: STAY RESCHEDULED (old victims still need completion!)
+            // - Core 0's ISSUED entries: mark RESCHEDULED (newly victimized)
+            // - Core 0's RESCHEDULED entries: STAY RESCHEDULED (immune to cross-core flush!)
+            // - Core 0's VALID entries: unchanged (not yet granted, not victimized)
             for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
-              if (payload_buffer[i].state != COMPLETED) begin
-                payload_buffer[i].state <= INVALID;  // Kill all non-completed from flushing core
+              if (payload_buffer[i].state != COMPLETED && payload_buffer[i].state != RESCHEDULED) begin
+                payload_buffer[i].state <= INVALID;  // Kill only VALID/ISSUED from Core 1
               end
+              // RESCHEDULED entries remain RESCHEDULED - scoreboard still expects them!
             end
             for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
               if (payload_buffer[i].state == ISSUED) begin
-                payload_buffer[i].state <= RESCHEDULED;  // Victim, needs replay
-                // fpu_valid_i remains set (transaction is still valid)
+                payload_buffer[i].state <= RESCHEDULED;  // Victimize Core 0's executing transaction
               end
+              // CRITICAL: RESCHEDULED entries remain RESCHEDULED (immune to Core 1's flush)
+              // VALID entries remain VALID (not yet executing, not victimized)
             end
           end
         end

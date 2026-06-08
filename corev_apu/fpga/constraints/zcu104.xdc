@@ -42,25 +42,11 @@ set_property -dict {PACKAGE_PIN F23 IOSTANDARD LVDS} [get_ports clk_125_clk_p]
 set_property -dict {PACKAGE_PIN E23 IOSTANDARD LVDS} [get_ports clk_125_clk_n]
 
 # Port a - MDIO
-set_property -dict {PACKAGE_PIN A13 IOSTANDARD LVCMOS18} [get_ports mdio_mdio_io]
-set_property -dict {PACKAGE_PIN A12 IOSTANDARD LVCMOS18} [get_ports mdio_mdc]
 
 # Port a - Other
 set_property -dict {PACKAGE_PIN E17 IOSTANDARD LVCMOS18} [get_ports int_n]
 set_property -dict {PACKAGE_PIN D16 IOSTANDARD LVCMOS18} [get_ports eth_rst]
 # Port a - RGMII
-set_property -dict {PACKAGE_PIN F17 IOSTANDARD LVCMOS18} [get_ports rgmii_rxc]
-set_property -dict {PACKAGE_PIN J15 IOSTANDARD LVCMOS18} [get_ports rgmii_rx_ctl]
-set_property -dict {PACKAGE_PIN L20 IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[0]}]
-set_property -dict {PACKAGE_PIN K20 IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[1]}]
-set_property -dict {PACKAGE_PIN K19 IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[2]}]
-set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS18} [get_ports {rgmii_rd[3]}]
-set_property -dict {PACKAGE_PIN L16 IOSTANDARD LVCMOS18 SLEW FAST} [get_ports rgmii_txc]
-set_property -dict {PACKAGE_PIN J16 IOSTANDARD LVCMOS18 SLEW FAST} [get_ports rgmii_tx_ctl]
-set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[0]}]
-set_property -dict {PACKAGE_PIN G16 IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[1]}]
-set_property -dict {PACKAGE_PIN H19 IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[2]}]
-set_property -dict {PACKAGE_PIN G19 IOSTANDARD LVCMOS18 SLEW FAST} [get_ports {rgmii_td[3]}]
 
 # Port a - board led (input)
 set_property -dict {PACKAGE_PIN E18 IOSTANDARD LVCMOS18} [get_ports led_0_a]
@@ -1621,6 +1607,123 @@ set_property -dict {PACKAGE_PIN G8 IOSTANDARD LVCMOS33} [get_ports spi_ss]
 #Other net   PACKAGE_PIN AD23     - VCCINT_VCU                Bank 999 - VCCINT_VCU
 #Other net   PACKAGE_PIN AD24     - VCCINT_VCU                Bank 999 - VCCINT_VCU
 
+
+####################################################################################
+# Constraints from file : 'SoC_ddr4_0_0_board.xdc'
+####################################################################################
+
+# mdio_clk is not synchronous to the core clock
+## MDIO output (FPGA → ADIN1300)
+# tSU = 10 ns, tH = 10 ns
+## MDIO input (ADIN1300 → FPGA)
+# tDV_min = 0 ns, tDV_max = 60 ns
+
+####################################################################################
+# Constraints from file : 'bd_ed3c_eth_buf_0.xdc'
+####################################################################################
+
+create_pblock Core_1
+add_cells_to_pblock [get_pblocks Core_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/csr_regfile_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/gen_perf_counter.perf_counters_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/i_frontend} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/id_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/issue_stage_i/i_issue_read_operands} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6_icache}]]
+resize_pblock [get_pblocks Core_1] -add {SLICE_X65Y0:SLICE_X111Y149}
+resize_pblock [get_pblocks Core_1] -add {BUFG_GT_X0Y0:BUFG_GT_X0Y47}
+resize_pblock [get_pblocks Core_1] -add {BUFG_GT_SYNC_X0Y0:BUFG_GT_SYNC_X0Y29}
+resize_pblock [get_pblocks Core_1] -add {DSP48E2_X7Y0:DSP48E2_X13Y59}
+resize_pblock [get_pblocks Core_1] -add {RAMB18_X2Y0:RAMB18_X4Y59}
+resize_pblock [get_pblocks Core_1] -add {RAMB36_X2Y0:RAMB36_X4Y29}
+create_pblock Core_0
+add_cells_to_pblock [get_pblocks Core_0] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/csr_regfile_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/gen_perf_counter.perf_counters_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/i_frontend} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/id_stage_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/issue_stage_i/i_issue_read_operands} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6_icache}]]
+resize_pblock [get_pblocks Core_0] -add {SLICE_X65Y210:SLICE_X111Y359}
+resize_pblock [get_pblocks Core_0] -add {BUFG_GT_X0Y96:BUFG_GT_X0Y143}
+resize_pblock [get_pblocks Core_0] -add {BUFG_GT_SYNC_X0Y60:BUFG_GT_SYNC_X0Y89}
+resize_pblock [get_pblocks Core_0] -add {DSP48E2_X7Y84:DSP48E2_X13Y143}
+resize_pblock [get_pblocks Core_0] -add {RAMB18_X2Y84:RAMB18_X4Y143}
+resize_pblock [get_pblocks Core_0] -add {RAMB36_X2Y42:RAMB36_X4Y71}
+
+create_pblock Cache_and_mem
+add_cells_to_pblock [get_pblocks Cache_and_mem] [get_cells -quiet [list SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_cache_hpd.i_cva6_hpdcache_subsystem]]
+resize_pblock [get_pblocks Cache_and_mem] -add {SLICE_X47Y299:SLICE_X111Y60}
+resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_GT_X0Y24:BUFG_GT_X0Y119}
+resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_GT_SYNC_X0Y15:BUFG_GT_SYNC_X0Y74}
+resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_PS_X0Y24:BUFG_PS_X0Y95}
+resize_pblock [get_pblocks Cache_and_mem] -add {DSP48E2_X3Y24:DSP48E2_X13Y119}
+resize_pblock [get_pblocks Cache_and_mem] -add {RAMB18_X1Y24:RAMB18_X4Y119}
+resize_pblock [get_pblocks Cache_and_mem] -add {RAMB36_X1Y12:RAMB36_X4Y59}
+resize_pblock [get_pblocks Cache_and_mem] -add {URAM288_X0Y16:URAM288_X0Y79}
+
+
+create_pblock DDR
+add_cells_to_pblock [get_pblocks DDR] [get_cells -quiet [list SoC_i/ddr4_0 SoC_i/northbridge/axi_clock_converter_0 SoC_i/northbridge/axi_riscv_amos_wrapp_0 {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[0].i_axi_mux}]]
+resize_pblock [get_pblocks DDR] -add {SLICE_X66Y60:SLICE_X88Y258}
+resize_pblock [get_pblocks DDR] -add {DSP48E2_X7Y24:DSP48E2_X11Y101}
+resize_pblock [get_pblocks DDR] -add {RAMB18_X2Y24:RAMB18_X2Y101}
+resize_pblock [get_pblocks DDR] -add {RAMB36_X2Y12:RAMB36_X2Y50}
+
+
+create_pblock Interconnect_low_speed
+add_cells_to_pblock [get_pblocks Interconnect_low_speed] [get_cells -quiet [list \
+          SoC_i/ariane_peripherals_0 \
+          SoC_i/axi_bootrom_control \
+          SoC_i/axi_gpio_0 \
+          SoC_i/axi_jtag_0 \
+          SoC_i/axi_uart16550_0 \
+          SoC_i/bootrom_wrapper_0 \
+          SoC_i/clint_0 \
+          SoC_i/cpu_debug \
+          SoC_i/cpu_reset_gen \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[1].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[2].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[3].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[4].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[5].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[6].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[7].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[8].i_axi_mux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_ar_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_aw_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_demux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_err_slv} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_ar_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_aw_decode} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_demux} \
+          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_err_slv} \
+          SoC_i/northbridge/gpio_axi_dwidth_converter \
+          SoC_i/northbridge/gpio_axi_protocol_convert \
+          SoC_i/northbridge/sdcard_axi_dwidth_converter \
+          SoC_i/northbridge/uart_axi_dwidth_converter \
+          SoC_i/northbridge/uart_axi_protocol_convert \
+          SoC_i/proc_sys_reset_0 \
+          SoC_i/ps8_0_axi_periph \
+          SoC_i/sdcard_quad_spi_axi \
+          SoC_i/util_vector_logic_0 \
+          SoC_i/xlconcat_0 \
+          SoC_i/zynq_ultra_ps_e_0]]
+resize_pblock [get_pblocks Interconnect_low_speed] -add {SLICE_X0Y240:SLICE_X88Y359}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {DSP48E2_X0Y96:DSP48E2_X11Y143}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {RAMB18_X0Y96:RAMB18_X2Y143}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {RAMB36_X0Y48:RAMB36_X2Y71}
+resize_pblock [get_pblocks Interconnect_low_speed] -add {URAM288_X0Y64:URAM288_X0Y95}
+create_pblock lsu_1
+add_cells_to_pblock [get_pblocks lsu_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/i_load_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/i_store_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/lsu_bypass_i}]]
+resize_pblock [get_pblocks lsu_1] -add {SLICE_X66Y33:SLICE_X111Y119}
+resize_pblock [get_pblocks lsu_1] -add {DSP48E2_X7Y14:DSP48E2_X13Y47}
+resize_pblock [get_pblocks lsu_1] -add {RAMB18_X2Y14:RAMB18_X4Y47}
+resize_pblock [get_pblocks lsu_1] -add {RAMB36_X2Y7:RAMB36_X4Y23}
+set_property PARENT Core_1 [get_pblocks lsu_1]
+create_pblock lsu_0
+add_cells_to_pblock [get_pblocks lsu_0] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/i_load_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/i_store_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/lsu_bypass_i}]]
+resize_pblock [get_pblocks lsu_0] -add {SLICE_X67Y180:SLICE_X111Y299}
+resize_pblock [get_pblocks lsu_0] -add {DSP48E2_X7Y72:DSP48E2_X13Y119}
+resize_pblock [get_pblocks lsu_0] -add {RAMB18_X2Y72:RAMB18_X4Y119}
+resize_pblock [get_pblocks lsu_0] -add {RAMB36_X2Y36:RAMB36_X4Y59}
+set_property PARENT Core_0 [get_pblocks lsu_0]
+
+
+
+
+
+
+
+
 set_property PACKAGE_PIN AC13 [get_ports {c0_ddr4_dq[32]}]
 set_property PACKAGE_PIN AB13 [get_ports {c0_ddr4_dq[33]}]
 set_property PACKAGE_PIN AF12 [get_ports {c0_ddr4_dq[34]}]
@@ -1745,17 +1848,15 @@ set_property PACKAGE_PIN AL16 [get_ports {c0_ddr4_ba[1]}]
 set_false_path -from [get_ports uart2_pl_rxd]
 set_false_path -to [get_ports uart2_pl_txd]
 set_false_path -from [get_ports sys_rst]
-set_property PULLTYPE PULLUP [get_ports mdio_mdio_io]
-create_clock -period 400.000 -name mdio_clk [get_ports mdio_mdc]
 set_false_path -to [get_ports eth_rst]
 set_false_path -to [get_ports led_al_c_c2m]
 set_false_path -to [get_ports led_al_a_c2m]
-set_output_delay -clock mmcm_clkout1 -max 5.000 [get_ports spi_mosi]
-set_output_delay -clock mmcm_clkout1 -min -1.000 [get_ports spi_mosi]
-set_output_delay -clock mmcm_clkout1 -max 5.000 [get_ports spi_clk_o]
-set_output_delay -clock mmcm_clkout1 -min -1.000 [get_ports spi_clk_o]
-set_input_delay -clock mmcm_clkout1 -max 7.000 [get_ports spi_miso]
-set_input_delay -clock mmcm_clkout1 -min 3.000 [get_ports spi_miso]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -max 5.000 [get_ports spi_mosi]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -min -1.000 [get_ports spi_mosi]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -max 5.000 [get_ports spi_clk_o]
+set_output_delay -clock clk_spi_SoC_clk_wiz_2_0 -min -1.000 [get_ports spi_clk_o]
+set_input_delay -clock clk_spi_SoC_clk_wiz_2_0 -max 7.000 [get_ports spi_miso]
+set_input_delay -clock clk_spi_SoC_clk_wiz_2_0 -min 3.000 [get_ports spi_miso]
 set_false_path -to [get_ports spi_ss]
 set_false_path -from [get_ports int_n]
 set_false_path -to [get_ports led_4bits_tri_o]
@@ -1878,103 +1979,33 @@ set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_ba[0]}]
 set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_ba[1]}]
 
 ####################################################################################
-# Constraints from file : 'bd_ed3c_eth_buf_0.xdc'
+# Constraints from file : 'SoC_axi_clock_converter_0_0_clocks.xdc'
 ####################################################################################
 
-create_pblock Core_1
-add_cells_to_pblock [get_pblocks Core_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6_icache}]]
-resize_pblock [get_pblocks Core_1] -add {SLICE_X48Y0:SLICE_X111Y149}
-resize_pblock [get_pblocks Core_1] -add {BUFG_GT_X0Y0:BUFG_GT_X0Y47}
-resize_pblock [get_pblocks Core_1] -add {BUFG_GT_SYNC_X0Y0:BUFG_GT_SYNC_X0Y29}
-resize_pblock [get_pblocks Core_1] -add {BUFG_PS_X0Y0:BUFG_PS_X0Y71}
-resize_pblock [get_pblocks Core_1] -add {DSP48E2_X3Y0:DSP48E2_X13Y59}
-resize_pblock [get_pblocks Core_1] -add {RAMB18_X1Y0:RAMB18_X4Y59}
-resize_pblock [get_pblocks Core_1] -add {RAMB36_X1Y0:RAMB36_X4Y29}
-resize_pblock [get_pblocks Core_1] -add {URAM288_X0Y0:URAM288_X0Y39}
-create_pblock Core_0
-add_cells_to_pblock [get_pblocks Core_0] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6_icache}]]
-resize_pblock [get_pblocks Core_0] -add {SLICE_X47Y359:SLICE_X111Y210}
-resize_pblock [get_pblocks Core_0] -add {BUFG_GT_X0Y96:BUFG_GT_X0Y143}
-resize_pblock [get_pblocks Core_0] -add {BUFG_GT_SYNC_X0Y60:BUFG_GT_SYNC_X0Y89}
-resize_pblock [get_pblocks Core_0] -add {DSP48E2_X3Y84:DSP48E2_X13Y143}
-resize_pblock [get_pblocks Core_0] -add {RAMB18_X1Y84:RAMB18_X4Y143}
-resize_pblock [get_pblocks Core_0] -add {RAMB36_X1Y42:RAMB36_X4Y71}
-resize_pblock [get_pblocks Core_0] -add {URAM288_X0Y56:URAM288_X0Y95}
-
-create_pblock Cache_and_mem
-add_cells_to_pblock [get_pblocks Cache_and_mem] [get_cells -quiet [list SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_cache_hpd.i_cva6_hpdcache_subsystem]]
-resize_pblock [get_pblocks Cache_and_mem] -add {SLICE_X47Y299:SLICE_X111Y60}
-resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_GT_X0Y24:BUFG_GT_X0Y119}
-resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_GT_SYNC_X0Y15:BUFG_GT_SYNC_X0Y74}
-resize_pblock [get_pblocks Cache_and_mem] -add {BUFG_PS_X0Y24:BUFG_PS_X0Y95}
-resize_pblock [get_pblocks Cache_and_mem] -add {DSP48E2_X3Y24:DSP48E2_X13Y119}
-resize_pblock [get_pblocks Cache_and_mem] -add {RAMB18_X1Y24:RAMB18_X4Y119}
-resize_pblock [get_pblocks Cache_and_mem] -add {RAMB36_X1Y12:RAMB36_X4Y59}
-resize_pblock [get_pblocks Cache_and_mem] -add {URAM288_X0Y16:URAM288_X0Y79}
-
-
-create_pblock DDR
-add_cells_to_pblock [get_pblocks DDR] [get_cells -quiet [list SoC_i/ddr4_0 SoC_i/northbridge/axi_clock_converter_0 SoC_i/northbridge/axi_riscv_amos_wrapp_0]]
-resize_pblock [get_pblocks DDR] -add {SLICE_X66Y60:SLICE_X88Y239}
-resize_pblock [get_pblocks DDR] -add {DSP48E2_X7Y24:DSP48E2_X11Y95}
-resize_pblock [get_pblocks DDR] -add {RAMB18_X2Y24:RAMB18_X2Y95}
-resize_pblock [get_pblocks DDR] -add {RAMB36_X2Y12:RAMB36_X2Y47}
-
-
-create_pblock Interconnect_low_speed
-add_cells_to_pblock [get_pblocks Interconnect_low_speed] [get_cells -quiet [list \
-          SoC_i/ariane_peripherals_0 \
-          SoC_i/axi_bootrom_control \
-          SoC_i/axi_eth_led_gpio \
-          SoC_i/axi_gpio_0 \
-          SoC_i/axi_jtag_0 \
-          SoC_i/axi_uart16550_0 \
-          SoC_i/bootrom_wrapper_0 \
-          SoC_i/clint_0 \
-          SoC_i/cpu_debug \
-          SoC_i/cpu_reset_gen \
-          SoC_i/irqconcat \
-          SoC_i/northbridge/Ethernet_Subsystem \
-          SoC_i/northbridge/axi_xbar_interface_v_0 \
-          SoC_i/northbridge/eth_led_axi_protocol_convert \
-          SoC_i/northbridge/gpio_axi_dwidth_converter \
-          SoC_i/northbridge/gpio_axi_dwidth_converter1 \
-          SoC_i/northbridge/gpio_axi_protocol_convert \
-          SoC_i/northbridge/sdcard_axi_dwidth_converter \
-          SoC_i/northbridge/uart_axi_dwidth_converter \
-          SoC_i/northbridge/uart_axi_protocol_convert \
-          SoC_i/proc_sys_reset_0 \
-          SoC_i/ps8_0_axi_periph \
-          SoC_i/sdcard_quad_spi_axi \
-          SoC_i/util_vector_logic_0 \
-          SoC_i/util_vector_logic_1 \
-          SoC_i/xlconcat_0 \
-          SoC_i/xlslice_0 \
-          SoC_i/xlslice_1 \
-          SoC_i/zynq_ultra_ps_e_0]]
-resize_pblock [get_pblocks Interconnect_low_speed] -add {SLICE_X0Y240:SLICE_X88Y359}
-resize_pblock [get_pblocks Interconnect_low_speed] -add {DSP48E2_X0Y96:DSP48E2_X11Y143}
-resize_pblock [get_pblocks Interconnect_low_speed] -add {RAMB18_X0Y96:RAMB18_X2Y143}
-resize_pblock [get_pblocks Interconnect_low_speed] -add {RAMB36_X0Y48:RAMB36_X2Y71}
-resize_pblock [get_pblocks Interconnect_low_speed] -add {URAM288_X0Y64:URAM288_X0Y95}
-create_pblock lsu_1
-add_cells_to_pblock [get_pblocks lsu_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/i_load_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/i_store_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/ex_stage_i/lsu_i/lsu_bypass_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/issue_stage_i/i_scoreboard}]]
-resize_pblock [get_pblocks lsu_1] -add {SLICE_X66Y33:SLICE_X111Y119}
-resize_pblock [get_pblocks lsu_1] -add {DSP48E2_X7Y14:DSP48E2_X13Y47}
-resize_pblock [get_pblocks lsu_1] -add {RAMB18_X2Y14:RAMB18_X4Y47}
-resize_pblock [get_pblocks lsu_1] -add {RAMB36_X2Y7:RAMB36_X4Y23}
-set_property PARENT Core_1 [get_pblocks lsu_1]
-create_pblock lsu_0
-add_cells_to_pblock [get_pblocks lsu_0] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/i_load_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/i_store_unit} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i/lsu_bypass_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/issue_stage_i/i_scoreboard}]]
-resize_pblock [get_pblocks lsu_0] -add {SLICE_X67Y180:SLICE_X111Y268}
-resize_pblock [get_pblocks lsu_0] -add {DSP48E2_X7Y72:DSP48E2_X13Y105}
-resize_pblock [get_pblocks lsu_0] -add {RAMB18_X2Y72:RAMB18_X4Y105}
-resize_pblock [get_pblocks lsu_0] -add {RAMB36_X2Y36:RAMB36_X4Y52}
-set_property PARENT Core_0 [get_pblocks lsu_0]
+create_pblock Shared_FPU
+add_cells_to_pblock [get_pblocks Shared_FPU] [get_cells -quiet [list SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_shared_fpu.shared_i]]
+resize_pblock [get_pblocks Shared_FPU] -add {SLICE_X47Y240:SLICE_X65Y359}
+resize_pblock [get_pblocks Shared_FPU] -add {DSP48E2_X3Y96:DSP48E2_X6Y143}
+resize_pblock [get_pblocks Shared_FPU] -add {RAMB18_X1Y96:RAMB18_X1Y143}
+resize_pblock [get_pblocks Shared_FPU] -add {RAMB36_X1Y48:RAMB36_X1Y71}
+resize_pblock [get_pblocks Shared_FPU] -add {URAM288_X0Y64:URAM288_X0Y95}
+resize_pblock [get_pblocks Shared_FPU] -add {CLOCKREGION_X1Y0:CLOCKREGION_X1Y3}
 
 
 
-
+create_pblock pblock_i_scoreboard
+add_cells_to_pblock [get_pblocks pblock_i_scoreboard] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/issue_stage_i/i_scoreboard}]]
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {SLICE_X66Y180:SLICE_X111Y210}
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {DSP48E2_X7Y72:DSP48E2_X13Y83}
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {RAMB18_X2Y72:RAMB18_X4Y83}
+resize_pblock [get_pblocks pblock_i_scoreboard] -add {RAMB36_X2Y36:RAMB36_X4Y41}
+set_property PARENT Cache_and_mem [get_pblocks pblock_i_scoreboard_1]
+create_pblock pblock_i_scoreboard_1
+add_cells_to_pblock [get_pblocks pblock_i_scoreboard_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/issue_stage_i/i_scoreboard}]]
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {SLICE_X66Y119:SLICE_X111Y149}
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {DSP48E2_X7Y48:DSP48E2_X13Y59}
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {RAMB18_X2Y48:RAMB18_X4Y59}
+resize_pblock [get_pblocks pblock_i_scoreboard_1] -add {RAMB36_X2Y24:RAMB36_X4Y29}
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]

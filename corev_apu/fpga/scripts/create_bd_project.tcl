@@ -127,6 +127,7 @@ save_bd_design
 close_bd_design SoC
 
 add_files -fileset $cstr -norecurse [file normalize "$origin_dir/corev_apu/fpga/constraints/$board.xdc"]
+set_property used_in_synthesis false [get_files "$origin_dir/corev_apu/fpga/constraints/$board.xdc"]
 
 # Run OOC module synthesis
 generate_target all [get_files  "$origin_dir/corev_apu/fpga/ariane.srcs/sources_1/bd/SoC/SoC.bd"]

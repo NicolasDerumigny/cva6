@@ -110,6 +110,7 @@ module fpu_multicore_wrap
     logic [IFMTBITS-1:0] fpu_ifmt_d, fpu_ifmt_q, fpu_ifmt;
     logic [2:0] fpu_rm_d, fpu_rm_q, fpu_rm;
     logic fpu_vec_op_d, fpu_vec_op_q, fpu_vec_op;
+    logic fpu_ready_d, fpu_ready_q;
 
     logic [CVA6Cfg.TRANS_ID_BITS:0] fpu_tag_d, fpu_tag_q, fpu_tag;
 
@@ -429,9 +430,11 @@ module fpu_multicore_wrap
     // Upstream protocol inversion: InValid depends on InReady
     //---------------------------------------------------------
 
+    assign fpu_ready_o = fpu_ready_q;
+
     always_comb begin : p_inputFSM
       // Default Values
-      fpu_ready_o  = 1'b0;
+      fpu_ready_d  = 1'b0;
       fpu_in_valid = 1'b0;
       hold_inputs  = 1'b0;  // hold register disabled
       use_hold     = 1'b0;  // inputs go directly to unit
@@ -441,11 +444,11 @@ module fpu_multicore_wrap
       unique case (state_q)
         // Default state, ready for instructions
         READY: begin
-          fpu_ready_o  = 1'b1;  // Act as if FPU ready
+          fpu_ready_d  = 1'b1;  // Act as if FPU ready
           fpu_in_valid = fpu_valid_i;  // Forward input valid to FPU
           // There is a transaction but the FPU can't handle it
           if (fpu_valid_i & ~fpu_in_ready) begin
-            fpu_ready_o = 1'b0;  // No token given to Issue
+            fpu_ready_d = 1'b0;  // No token given to Issue
             hold_inputs = 1'b1;  // save inputs to the holding register
             state_d     = STALL;  // stall future incoming requests
           end
@@ -456,7 +459,7 @@ module fpu_multicore_wrap
           use_hold     = 1'b1;  // the data comes from the hold reg
           // Wait until it's consumed
           if (fpu_in_ready) begin
-            fpu_ready_o = 1'b1;  // Give a token to issue
+            fpu_ready_d = 1'b1;  // Give a token to issue
             state_d     = READY;  // accept future requests
           end
         end
@@ -486,10 +489,12 @@ module fpu_multicore_wrap
         fpu_rm_q     <= '0;
         fpu_vec_op_q <= '0;
         fpu_tag_q    <= '0;
+        fpu_ready_q  <= '0;
       end else begin
         state_q <= state_d;
+        fpu_ready_q <= fpu_ready_d;
         // Hold register is [TRIGGERED] by FSM
-        if (hold_inputs) begin
+        if (hold_inputs & fpu_ready_q) begin
           operand_a_q  <= operand_a_d;
           operand_b_q  <= operand_b_d;
           operand_c_q  <= operand_c_d;

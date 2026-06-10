@@ -165,8 +165,8 @@ module shared_fpu
     // ---------------------------------------------------------
     // ID Masks and Input Preparation
     // ---------------------------------------------------------
-    localparam int BUFFER_SIZE = 2 ** (CVA6Cfg.TRANS_ID_BITS + 1);
-    localparam int ENTRIES_PER_CORE = 2 ** CVA6Cfg.TRANS_ID_BITS;
+    localparam int BUFFER_SIZE = 1 << (CVA6Cfg.TRANS_ID_BITS + 1);
+    localparam int ENTRIES_PER_CORE = 1 << CVA6Cfg.TRANS_ID_BITS;
     localparam int CORE_1_BASE_INDEX = ENTRIES_PER_CORE;
 
     localparam logic [CVA6Cfg.TRANS_ID_BITS:0] ID_MASK_CORE_0 = '0;

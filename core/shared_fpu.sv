@@ -16,7 +16,6 @@ module shared_fpu
     input logic     [NrHarts-1:0][                     2:0] fpu_rm_i,
     input logic     [NrHarts-1:0][                     2:0] fpu_frm_i,
     input logic     [NrHarts-1:0][                     6:0] fpu_prec_i,
-    // input logic     [CVA6Cfg.XLEN-1:0]                           hart_id_i,
 
     output logic [NrHarts-1:0][CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id_o,
     output logic [NrHarts-1:0][CVA6Cfg.XLEN-1:0] result_o,
@@ -181,84 +180,124 @@ module shared_fpu
       valid_inputs[1] = fpu_valid_i[1][0];
     end
 
+    // // ---------------------------------------------------------
+    // // Two-Tier Arbitration: Request Vectors
+    // // ---------------------------------------------------------
+    // logic [BUFFER_SIZE-1:0] req_hi;  // High-priority: rescheduled transactions
+    // logic [BUFFER_SIZE-1:0] req_lo;  // Normal-priority: new valid transactions
+
+    // always_comb begin
+    //   for (int i = 0; i < BUFFER_SIZE; i++) begin
+    //     // High-priority: rescheduled transactions (flushed by other core, need replay)
+    //     req_hi[i] = (payload_buffer[i].state == RESCHEDULED);
+
+    //     // Normal-priority: new valid transactions ready to be issued
+    //     req_lo[i] = (payload_buffer[i].state == VALID);
+    //   end
+    // end
+
+    // // ---------------------------------------------------------
+    // // Tier 1: Fixed Priority Encoder for Rescheduled (High-Priority)
+    // // ---------------------------------------------------------
+    // logic                           any_req_hi;
+    // logic [        BUFFER_SIZE-1:0] grant_hi;
+    // logic [CVA6Cfg.TRANS_ID_BITS:0] grant_hi_index;
+
+    // always_comb begin
+    //   any_req_hi     = |req_hi;
+    //   grant_hi       = '0;
+    //   grant_hi_index = '0;
+
+    //   // LSB-first priority encoder
+    //   // for (int i = 0; i < BUFFER_SIZE; i++) begin
+    //   //   if (req_hi[i]) begin
+    //   //     grant_hi[i]    = 1'b1;
+    //   //     grant_hi_index = i[CVA6Cfg.TRANS_ID_BITS:0];
+    //   //     break;  // Exit on first match (LSB has priority)
+    //   //   end
+    //   // end
+
+    //   for (int i = 0; i < BUFFER_SIZE; i++) begin
+    //     int idx = (rr_pointer + i) % BUFFER_SIZE;  // Reuse rr_pointer for fairness
+    //     if (req_hi[idx]) begin
+    //       grant_hi[idx]  = 1'b1;
+    //       grant_hi_index = idx[CVA6Cfg.TRANS_ID_BITS:0];
+    //       break;
+    //     end
+    //   end
+
+    // end
+
+    // // ---------------------------------------------------------
+    // // Tier 2: Masked Round-Robin Arbiter for Normal Transactions
+    // // ---------------------------------------------------------
+    // logic [CVA6Cfg.TRANS_ID_BITS:0] rr_pointer;  // Round-robin pointer
+    // logic                           any_req_lo;
+    // logic [        BUFFER_SIZE-1:0] grant_lo;
+    // logic [CVA6Cfg.TRANS_ID_BITS:0] grant_lo_index;
+
+    // always_comb begin
+    //   any_req_lo     = |req_lo;
+    //   grant_lo       = '0;
+    //   grant_lo_index = '0;
+
+    //   // First pass: Search from pointer onwards (circular priority)
+    //   for (int i = 0; i < BUFFER_SIZE; i++) begin
+    //     int idx = (rr_pointer + i) % BUFFER_SIZE;
+    //     if (req_lo[idx]) begin
+    //       grant_lo[idx]  = 1'b1;
+    //       grant_lo_index = idx[CVA6Cfg.TRANS_ID_BITS:0];
+    //       break;
+    //     end
+    //   end
+    // end
+
+    // // ---------------------------------------------------------
+    // // Final Mux: High-Priority Overrides Normal Priority
+    // // ---------------------------------------------------------
+    // logic                           replay_valid;
+    // logic [CVA6Cfg.TRANS_ID_BITS:0] replay_index;
+
+    // always_comb begin
+    //   if (any_req_hi) begin
+    //     replay_valid = 1'b1;
+    //     replay_index = grant_hi_index;
+    //   end else if (any_req_lo) begin
+    //     replay_valid = 1'b1;
+    //     replay_index = grant_lo_index;
+    //   end else begin
+    //     replay_valid = 1'b0;
+    //     replay_index = '0;
+    //   end
+    // end
+
     // ---------------------------------------------------------
-    // Two-Tier Arbitration: Request Vectors
+    // Single-Tier Round-Robin Arbiter
     // ---------------------------------------------------------
-    logic [BUFFER_SIZE-1:0] req_hi;  // High-priority: rescheduled transactions
-    logic [BUFFER_SIZE-1:0] req_lo;  // Normal-priority: new valid transactions
-
-    always_comb begin
-      for (int i = 0; i < BUFFER_SIZE; i++) begin
-        // High-priority: rescheduled transactions (flushed by other core, need replay)
-        req_hi[i] = (payload_buffer[i].state == RESCHEDULED);
-
-        // Normal-priority: new valid transactions ready to be issued
-        req_lo[i] = (payload_buffer[i].state == VALID);
-      end
-    end
-
-    // ---------------------------------------------------------
-    // Tier 1: Fixed Priority Encoder for Rescheduled (High-Priority)
-    // ---------------------------------------------------------
-    logic                           any_req_hi;
-    logic [        BUFFER_SIZE-1:0] grant_hi;
-    logic [CVA6Cfg.TRANS_ID_BITS:0] grant_hi_index;
-
-    always_comb begin
-      any_req_hi     = |req_hi;
-      grant_hi       = '0;
-      grant_hi_index = '0;
-
-      // LSB-first priority encoder
-      for (int i = 0; i < BUFFER_SIZE; i++) begin
-        if (req_hi[i]) begin
-          grant_hi[i]    = 1'b1;
-          grant_hi_index = i[CVA6Cfg.TRANS_ID_BITS:0];
-          break;  // Exit on first match (LSB has priority)
-        end
-      end
-    end
-
-    // ---------------------------------------------------------
-    // Tier 2: Masked Round-Robin Arbiter for Normal Transactions
-    // ---------------------------------------------------------
-    logic [CVA6Cfg.TRANS_ID_BITS:0] rr_pointer;  // Round-robin pointer
-    logic                           any_req_lo;
-    logic [        BUFFER_SIZE-1:0] grant_lo;
-    logic [CVA6Cfg.TRANS_ID_BITS:0] grant_lo_index;
-
-    always_comb begin
-      any_req_lo     = |req_lo;
-      grant_lo       = '0;
-      grant_lo_index = '0;
-
-      // First pass: Search from pointer onwards (circular priority)
-      for (int i = 0; i < BUFFER_SIZE; i++) begin
-        int idx = (rr_pointer + i) % BUFFER_SIZE;
-        if (req_lo[idx]) begin
-          grant_lo[idx]  = 1'b1;
-          grant_lo_index = idx[CVA6Cfg.TRANS_ID_BITS:0];
-          break;
-        end
-      end
-    end
-
-    // ---------------------------------------------------------
-    // Final Mux: High-Priority Overrides Normal Priority
-    // ---------------------------------------------------------
+    logic [        BUFFER_SIZE-1:0] req_valid;
+    logic [CVA6Cfg.TRANS_ID_BITS:0] rr_pointer;
     logic                           replay_valid;
     logic [CVA6Cfg.TRANS_ID_BITS:0] replay_index;
 
+    // 1. Map all VALID states to request vector
     always_comb begin
-      if (any_req_hi) begin
-        replay_valid = 1'b1;
-        replay_index = grant_hi_index;
-      end else if (any_req_lo) begin
-        replay_valid = 1'b1;
-        replay_index = grant_lo_index;
-      end else begin
-        replay_valid = 1'b0;
-        replay_index = '0;
+      for (int i = 0; i < BUFFER_SIZE; i++) begin
+        req_valid[i] = (payload_buffer[i].state == VALID);
+      end
+    end
+
+    // 2. Circular priority search
+    always_comb begin
+      replay_valid = 1'b0;
+      replay_index = '0;
+
+      for (int i = 0; i < BUFFER_SIZE; i++) begin
+        int idx = (rr_pointer + i) % BUFFER_SIZE;
+        if (req_valid[idx]) begin
+          replay_valid = 1'b1;
+          replay_index = idx[CVA6Cfg.TRANS_ID_BITS:0];
+          break;
+        end
       end
     end
 
@@ -267,7 +306,8 @@ module shared_fpu
     // ---------------------------------------------------------
     always_comb begin
       // Default outputs
-      internal_flush_i     = flush_i[0] | flush_i[1];  // Global flush for scoreboard correctness
+      // internal_flush_i     = flush_i[0] | flush_i[1];  // Global flush for scoreboard correctness
+      internal_flush_i     = 1'b0;
       internal_fpu_valid_i = '0;
       internal_fpu_fmt_i   = '0;
       internal_fpu_rm_i    = '0;
@@ -286,6 +326,7 @@ module shared_fpu
       end
     end
 
+
     // ---------------------------------------------------------
     // Flush Handling State Machine
     // ---------------------------------------------------------
@@ -298,6 +339,37 @@ module shared_fpu
     end
 
     // ---------------------------------------------------------
+    // FLUSH COLLISION AVOIDANCE MASKS
+    // ---------------------------------------------------------
+    logic masked_valid_in_0;
+    logic masked_valid_in_1;
+    logic masked_replay_valid;
+
+    always_comb begin
+      // PREVENT INTRA-CORE COLLISION: Do not accept a new instruction if that core is flushing
+      masked_valid_in_0   = valid_inputs[0] & ~flush_i[0];
+      masked_valid_in_1   = valid_inputs[1] & ~flush_i[1];
+
+      // PREVENT CROSS-CORE COLLISION: Do not arbitrate/grant a transaction if its core is being flushed
+      // masked_replay_valid = replay_valid;
+      // if (replay_valid) begin
+      //   // If the granted index belongs to Core 0, and Core 0 is flushing, kill the grant
+      //   if ((replay_index < ENTRIES_PER_CORE) && flush_i[0]) begin
+      //     masked_replay_valid = 1'b0;
+      //   end
+      //   // If the granted index belongs to Core 1, and Core 1 is flushing, kill the grant
+      //   if ((replay_index >= CORE_1_BASE_INDEX) && flush_i[1]) begin
+      //     masked_replay_valid = 1'b0;
+      //   end
+      // end
+
+      // A global flush kills the shared FPU pipeline. Do not issue to it this cycle.
+      masked_replay_valid = replay_valid & ~flush_detected;
+
+    end
+
+
+    // ---------------------------------------------------------
     // Sequential Logic: Buffer Updates, Issue, Replay, Flush
     // ---------------------------------------------------------
     always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -306,56 +378,73 @@ module shared_fpu
         rr_pointer     <= '0;
       end else begin
 
+        // // ==================================================================
+        // // FLUSH HANDLING: Global flush with cross-core victimization
+        // // ==================================================================
+        // if (flush_detected) begin
+        //   if (flush_i[0] && flush_i[1]) begin
+        //     // Both cores flush. Unconditionally kill all non-completed transactions.
+        //     for (int i = 0; i < BUFFER_SIZE; i++) begin
+        //       if (payload_buffer[i].state != COMPLETED) begin
+        //         payload_buffer[i].state <= INVALID;
+        //       end
+        //     end
+        //   end else if (flushing_core == 1'b0) begin
+        //     // ---------------------------------------------------------
+        //     // CORE 0 FLUSHES
+        //     // ---------------------------------------------------------
+        //     // 1. Kill ALL of Core 0's transactions (even RESCHEDULED ones)
+        //     for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
+        //       if (payload_buffer[i].state != COMPLETED) begin
+        //         payload_buffer[i].state <= INVALID;
+        //       end
+        //     end
+        //     // 2. Victimize Core 1 (Only interrupt what is currently ISSUED)
+        //     for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
+        //       if (payload_buffer[i].state == ISSUED) begin
+        //         payload_buffer[i].state <= RESCHEDULED;
+        //       end
+        //     end
+        //   end else begin
+        //     // ---------------------------------------------------------
+        //     // CORE 1 FLUSHES
+        //     // ---------------------------------------------------------
+        //     // 1. Kill ALL of Core 1's transactions (even RESCHEDULED ones)
+        //     for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
+        //       if (payload_buffer[i].state != COMPLETED) begin
+        //         payload_buffer[i].state <= INVALID;
+        //       end
+        //     end
+        //     // 2. Victimize Core 0 (Only interrupt what is currently ISSUED)
+        //     for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
+        //       if (payload_buffer[i].state == ISSUED) begin
+        //         payload_buffer[i].state <= RESCHEDULED;
+        //       end
+        //     end
+        //   end
+        // end
+
         // ==================================================================
-        // FLUSH HANDLING: Global flush with cross-core victimization
+        // FLUSH HANDLING: Independent Core Filtering (No Victimization)
         // ==================================================================
         if (flush_detected) begin
-          // Handle simultaneous flush from both cores (no victims, kill everything)
-          if (flush_i[0] && flush_i[1]) begin
-            for (int i = 0; i < BUFFER_SIZE; i++) begin
+          // If Core 0 flushes, delete ALL of Core 0's pending transactions.
+          // Core 1 is completely untouched.
+          if (flush_i[0]) begin
+            for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
               if (payload_buffer[i].state != COMPLETED) begin
-                payload_buffer[i].state <= INVALID;  // Kill all non-completed from both cores
+                payload_buffer[i].state <= INVALID;
               end
             end
-          end else if (flushing_core == 1'b0) begin
-            // Core 0 initiated flush (Core 1 not flushing)
-            // - Core 0's VALID/ISSUED entries: mark INVALID (new transactions after flush point)
-            // - Core 0's RESCHEDULED entries: STAY RESCHEDULED (old victims still need completion!)
-            // - Core 1's ISSUED entries: mark RESCHEDULED (newly victimized)
-            // - Core 1's RESCHEDULED entries: STAY RESCHEDULED (immune to cross-core flush!)
-            // - Core 1's VALID entries: unchanged (not yet granted, not victimized)
-            for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
-              if (payload_buffer[i].state != COMPLETED && payload_buffer[i].state != RESCHEDULED) begin
-                payload_buffer[i].state <= INVALID;  // Kill only VALID/ISSUED from Core 0
-              end
-              // RESCHEDULED entries remain RESCHEDULED - scoreboard still expects them!
-            end
+          end
+
+          // If Core 1 flushes, delete ALL of Core 1's pending transactions.
+          // Core 0 is completely untouched.
+          if (flush_i[1]) begin
             for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
-              if (payload_buffer[i].state == ISSUED) begin
-                payload_buffer[i].state <= RESCHEDULED;  // Victimize Core 1's executing transaction
+              if (payload_buffer[i].state != COMPLETED) begin
+                payload_buffer[i].state <= INVALID;
               end
-              // CRITICAL: RESCHEDULED entries remain RESCHEDULED (immune to Core 0's flush)
-              // VALID entries remain VALID (not yet executing, not victimized)
-            end
-          end else begin
-            // Core 1 initiated flush (Core 0 not flushing)
-            // - Core 1's VALID/ISSUED entries: mark INVALID (new transactions after flush point)
-            // - Core 1's RESCHEDULED entries: STAY RESCHEDULED (old victims still need completion!)
-            // - Core 0's ISSUED entries: mark RESCHEDULED (newly victimized)
-            // - Core 0's RESCHEDULED entries: STAY RESCHEDULED (immune to cross-core flush!)
-            // - Core 0's VALID entries: unchanged (not yet granted, not victimized)
-            for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
-              if (payload_buffer[i].state != COMPLETED && payload_buffer[i].state != RESCHEDULED) begin
-                payload_buffer[i].state <= INVALID;  // Kill only VALID/ISSUED from Core 1
-              end
-              // RESCHEDULED entries remain RESCHEDULED - scoreboard still expects them!
-            end
-            for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
-              if (payload_buffer[i].state == ISSUED) begin
-                payload_buffer[i].state <= RESCHEDULED;  // Victimize Core 0's executing transaction
-              end
-              // CRITICAL: RESCHEDULED entries remain RESCHEDULED (immune to Core 1's flush)
-              // VALID entries remain VALID (not yet executing, not victimized)
             end
           end
         end
@@ -363,7 +452,10 @@ module shared_fpu
         // ==================================================================
         // COMPLETION HANDLING: Mark buffer entry as COMPLETED
         // ==================================================================
-        if (fpu_valid_mod) begin
+        // if (fpu_valid_mod) begin
+        //   payload_buffer[fpu_trans_id_mod].state <= COMPLETED;
+        // end
+        if (fpu_valid_mod && payload_buffer[fpu_trans_id_mod].state == ISSUED) begin
           payload_buffer[fpu_trans_id_mod].state <= COMPLETED;
         end
 
@@ -371,7 +463,8 @@ module shared_fpu
         // ISSUE HANDLING: Write new transaction to buffer when handshake completes
         // ==================================================================
         // Write to buffer only when valid handshake occurs (cores can always write to their buffer entries)
-        if (valid_inputs[0]) begin
+        // if (valid_inputs[0]) begin
+        if (masked_valid_in_0) begin
           // Core 0 issued a transaction - store with Core ID bit
           payload_buffer[ID_MASK_CORE_0|fu_data_i[0].trans_id].fpu_valid_i <= fpu_valid_i[0];
           payload_buffer[ID_MASK_CORE_0|fu_data_i[0].trans_id].fpu_fmt_i <= fpu_fmt_i[0];
@@ -387,7 +480,8 @@ module shared_fpu
           payload_buffer[ID_MASK_CORE_0|fu_data_i[0].trans_id].state <= VALID;
         end
 
-        if (valid_inputs[1]) begin
+        // if (valid_inputs[1]) begin
+        if (masked_valid_in_1) begin
           // Core 1 issued a transaction - store with Core ID bit
           payload_buffer[ID_MASK_CORE_1|fu_data_i[1].trans_id].fpu_valid_i <= fpu_valid_i[1];
           payload_buffer[ID_MASK_CORE_1|fu_data_i[1].trans_id].fpu_fmt_i <= fpu_fmt_i[1];
@@ -403,262 +497,35 @@ module shared_fpu
           payload_buffer[ID_MASK_CORE_1|fu_data_i[1].trans_id].state <= VALID;
         end
 
+        // // ==================================================================
+        // // ARBITRATION: Grant transaction to FPU (VALID -> ISSUED)
+        // // ==================================================================
+        // // When arbiter grants a transaction and FPU accepts it
+        // // if (replay_valid && internal_fpu_ready_o) begin
+        // if (masked_replay_valid && internal_fpu_ready_o) begin
+        //   payload_buffer[replay_index].state <= ISSUED;
+
+        //   // Update round-robin pointer only for normal-priority grants
+        //   if (~any_req_hi) begin
+        //     rr_pointer <= (replay_index + 1'b1) % BUFFER_SIZE;
+        //   end
+        // end
+
         // ==================================================================
         // ARBITRATION: Grant transaction to FPU (VALID -> ISSUED)
         // ==================================================================
         // When arbiter grants a transaction and FPU accepts it
-        if (replay_valid && internal_fpu_ready_o) begin
+        if (masked_replay_valid && internal_fpu_ready_o) begin
           payload_buffer[replay_index].state <= ISSUED;
 
-          // Update round-robin pointer only for normal-priority grants
-          if (~any_req_hi) begin
-            rr_pointer <= (replay_index + 1'b1) % BUFFER_SIZE;
-          end
+          // CRITICAL FIX: Always advance the pointer to prevent thread starvation
+          // under heavy OpenMP synchronization / continuous cross-flushing.
+          rr_pointer <= (replay_index + 1'b1) % BUFFER_SIZE;
         end
+
       end
     end
 
-    // fu_data_sf_t                           fpu_ready_data_port_0;
-    // fu_data_sf_t                           fpu_ready_data_port_1;
-    // fu_data_sf_t                           fpu_data_mod;
-    // logic        [CVA6Cfg.TRANS_ID_BITS:0] id_mask_port_0 = '0;
-    // logic        [CVA6Cfg.TRANS_ID_BITS:0] id_mask_port_1 = (1'b1 << CVA6Cfg.TRANS_ID_BITS);
-    // logic                                  next_core;
-    // logic                                  current_core;
-    // logic        [            NrHarts-1:0] valid_inputs;
-
-    // typedef enum logic [1:0] {
-    //   EMPTY,
-    //   WAIT_DOWNSTREAM,
-    //   DRAIN_BUFFER
-    // } buffer_state_t;
-
-    // buffer_state_t                            arb_buff_status;
-    // logic                                     arb_buff_flush_i;
-    // logic          [CVA6Cfg.NrIssuePorts-1:0] arb_buff_fpu_valid_i;
-    // fu_data_sf_t                              arb_buff_fu_data_i;
-    // logic          [                     1:0] arb_buff_fpu_fmt_i;
-    // logic          [                     2:0] arb_buff_fpu_rm_i;
-    // logic          [                     2:0] arb_buff_fpu_frm_i;
-    // logic          [                     6:0] arb_buff_fpu_prec_i;
-    // logic          [             NrHarts-1:0] arb_ready_out;
-
-    // always_comb begin
-    //   fpu_ready_data_port_0.fu        = fu_data_i[0].fu;
-    //   fpu_ready_data_port_0.operation = fu_data_i[0].operation;
-    //   fpu_ready_data_port_0.operand_a = fu_data_i[0].operand_a;
-    //   fpu_ready_data_port_0.operand_b = fu_data_i[0].operand_b;
-    //   fpu_ready_data_port_0.imm       = fu_data_i[0].imm;
-    //   fpu_ready_data_port_0.trans_id  = id_mask_port_0 | fu_data_i[0].trans_id;
-
-    //   fpu_ready_data_port_1.fu        = fu_data_i[1].fu;
-    //   fpu_ready_data_port_1.operation = fu_data_i[1].operation;
-    //   fpu_ready_data_port_1.operand_a = fu_data_i[1].operand_a;
-    //   fpu_ready_data_port_1.operand_b = fu_data_i[1].operand_b;
-    //   fpu_ready_data_port_1.imm       = fu_data_i[1].imm;
-    //   fpu_ready_data_port_1.trans_id  = id_mask_port_1 | fu_data_i[1].trans_id;
-
-    //   valid_inputs[0]                 = fpu_valid_i[0][0];
-    //   valid_inputs[1]                 = fpu_valid_i[1][0];
-    // end
-
-    // always_comb begin
-    //   next_core            = current_core;
-    //   arb_ready_out        = 2'b11;
-    //   internal_flush_i     = flush_i[0] | flush_i[1];
-    //   // internal_flush_i     = '0;
-
-    //   internal_fpu_valid_i = '0;
-    //   fpu_data_mod         = '0;
-    //   internal_fpu_fmt_i   = '0;
-    //   internal_fpu_rm_i    = '0;
-    //   internal_fpu_frm_i   = '0;
-    //   internal_fpu_prec_i  = '0;
-
-    //   case (arb_buff_status)
-    //     WAIT_DOWNSTREAM: begin
-    //       case (valid_inputs)
-    //         2'b01: begin
-    //           internal_flush_i     = flush_i[0];
-    //           internal_fpu_valid_i = fpu_valid_i[0];
-    //           internal_fpu_fmt_i   = fpu_fmt_i[0];
-    //           internal_fpu_rm_i    = fpu_rm_i[0];
-    //           internal_fpu_frm_i   = fpu_frm_i[0];
-    //           internal_fpu_prec_i  = fpu_prec_i[0];
-    //           fpu_data_mod         = fpu_ready_data_port_0;
-    //           arb_ready_out[1]     = 1'b0;
-    //         end
-    //         2'b10: begin
-    //           internal_flush_i     = flush_i[1];
-    //           internal_fpu_valid_i = fpu_valid_i[1];
-    //           internal_fpu_fmt_i   = fpu_fmt_i[1];
-    //           internal_fpu_rm_i    = fpu_rm_i[1];
-    //           internal_fpu_frm_i   = fpu_frm_i[1];
-    //           internal_fpu_prec_i  = fpu_prec_i[1];
-    //           fpu_data_mod         = fpu_ready_data_port_1;
-    //           arb_ready_out[0]     = 1'b0;
-    //         end
-    //         2'b11: begin
-    //           if (current_core) begin
-    //             internal_flush_i     = flush_i[0];
-    //             internal_fpu_valid_i = fpu_valid_i[0];
-    //             fpu_data_mod         = fpu_ready_data_port_0;
-    //             internal_fpu_fmt_i   = fpu_fmt_i[0];
-    //             internal_fpu_rm_i    = fpu_rm_i[0];
-    //             internal_fpu_frm_i   = fpu_frm_i[0];
-    //             internal_fpu_prec_i  = fpu_prec_i[0];
-    //             arb_ready_out[1]     = 1'b0;
-    //             arb_ready_out[0]     = 1'b0;
-    //           end else begin
-    //             internal_flush_i     = flush_i[1];
-    //             internal_fpu_valid_i = fpu_valid_i[1];
-    //             fpu_data_mod         = fpu_ready_data_port_1;
-    //             internal_fpu_fmt_i   = fpu_fmt_i[1];
-    //             internal_fpu_rm_i    = fpu_rm_i[1];
-    //             internal_fpu_frm_i   = fpu_frm_i[1];
-    //             internal_fpu_prec_i  = fpu_prec_i[1];
-    //             arb_ready_out[0]     = 1'b0;
-    //             arb_ready_out[1]     = 1'b0;
-    //           end
-    //         end
-    //         default: begin
-    //           arb_ready_out = '0;
-    //         end
-    //       endcase
-    //     end
-    //     DRAIN_BUFFER: begin
-    //       internal_flush_i     = arb_buff_flush_i;
-    //       internal_fpu_valid_i = arb_buff_fpu_valid_i;
-    //       fpu_data_mod         = arb_buff_fu_data_i;
-    //       internal_fpu_fmt_i   = arb_buff_fpu_fmt_i;
-    //       internal_fpu_rm_i    = arb_buff_fpu_rm_i;
-    //       internal_fpu_frm_i   = arb_buff_fpu_frm_i;
-    //       internal_fpu_prec_i  = arb_buff_fpu_prec_i;
-    //       arb_ready_out        = '0;
-    //     end
-    //     default: begin
-    //       case (valid_inputs)
-    //         2'b01: begin
-    //           internal_flush_i     = flush_i[0];
-    //           internal_fpu_valid_i = fpu_valid_i[0];
-    //           internal_fpu_fmt_i   = fpu_fmt_i[0];
-    //           internal_fpu_rm_i    = fpu_rm_i[0];
-    //           internal_fpu_frm_i   = fpu_frm_i[0];
-    //           internal_fpu_prec_i  = fpu_prec_i[0];
-    //           fpu_data_mod         = fpu_ready_data_port_0;
-    //         end
-    //         2'b10: begin
-    //           internal_flush_i     = flush_i[1];
-    //           internal_fpu_valid_i = fpu_valid_i[1];
-    //           internal_fpu_fmt_i   = fpu_fmt_i[1];
-    //           internal_fpu_rm_i    = fpu_rm_i[1];
-    //           internal_fpu_frm_i   = fpu_frm_i[1];
-    //           internal_fpu_prec_i  = fpu_prec_i[1];
-    //           fpu_data_mod         = fpu_ready_data_port_1;
-    //         end
-    //         2'b11: begin
-    //           if (current_core) begin
-    //             internal_flush_i     = flush_i[0];
-    //             internal_fpu_valid_i = fpu_valid_i[0];
-    //             fpu_data_mod         = fpu_ready_data_port_0;
-    //             internal_fpu_fmt_i   = fpu_fmt_i[0];
-    //             internal_fpu_rm_i    = fpu_rm_i[0];
-    //             internal_fpu_frm_i   = fpu_frm_i[0];
-    //             internal_fpu_prec_i  = fpu_prec_i[0];
-    //             arb_ready_out[1]     = 1'b0;
-    //             arb_ready_out[0]     = 1'b0;
-    //           end else begin
-    //             internal_flush_i     = flush_i[1];
-    //             internal_fpu_valid_i = fpu_valid_i[1];
-    //             fpu_data_mod         = fpu_ready_data_port_1;
-    //             internal_fpu_fmt_i   = fpu_fmt_i[1];
-    //             internal_fpu_rm_i    = fpu_rm_i[1];
-    //             internal_fpu_frm_i   = fpu_frm_i[1];
-    //             internal_fpu_prec_i  = fpu_prec_i[1];
-    //             arb_ready_out[0]     = 1'b0;
-    //             arb_ready_out[1]     = 1'b0;
-    //           end
-    //           next_core = ~current_core;
-    //         end
-    //         default: begin
-    //         end
-    //       endcase
-    //     end
-    //   endcase
-
-    // end
-
-
-    // // ---------------------------------------------------------
-    // // Arbiter State Register
-    // // ---------------------------------------------------------
-    // always_ff @(posedge clk_i or negedge rst_ni) begin
-    //   if (~rst_ni) begin
-    //     current_core         <= 1'b0;
-    //     arb_buff_status      <= EMPTY;
-    //     arb_buff_flush_i     <= '0;
-    //     arb_buff_fpu_valid_i <= '0;
-    //     arb_buff_fu_data_i   <= '0;
-    //     arb_buff_fpu_fmt_i   <= '0;
-    //     arb_buff_fpu_rm_i    <= '0;
-    //     arb_buff_fpu_frm_i   <= '0;
-    //     arb_buff_fpu_prec_i  <= '0;
-    //   end else begin
-    //     current_core <= next_core;
-
-    //     case (arb_buff_status)
-    //       EMPTY: begin
-    //         if (valid_inputs == 2'b11) begin
-    //           if (current_core) begin
-    //             arb_buff_flush_i     <= flush_i[1];
-    //             arb_buff_fpu_valid_i <= fpu_valid_i[1];
-    //             arb_buff_fu_data_i   <= fpu_ready_data_port_1;
-    //             arb_buff_fpu_fmt_i   <= fpu_fmt_i[1];
-    //             arb_buff_fpu_rm_i    <= fpu_rm_i[1];
-    //             arb_buff_fpu_frm_i   <= fpu_frm_i[1];
-    //             arb_buff_fpu_prec_i  <= fpu_prec_i[1];
-    //           end else begin
-    //             arb_buff_flush_i     <= flush_i[0];
-    //             arb_buff_fpu_valid_i <= fpu_valid_i[0];
-    //             arb_buff_fu_data_i   <= fpu_ready_data_port_0;
-    //             arb_buff_fpu_fmt_i   <= fpu_fmt_i[0];
-    //             arb_buff_fpu_rm_i    <= fpu_rm_i[0];
-    //             arb_buff_fpu_frm_i   <= fpu_frm_i[0];
-    //             arb_buff_fpu_prec_i  <= fpu_prec_i[0];
-    //           end
-    //           arb_buff_status <= internal_fpu_ready_o ? DRAIN_BUFFER : WAIT_DOWNSTREAM;
-    //         end
-    //       end
-    //       WAIT_DOWNSTREAM: begin
-    //         if (internal_fpu_ready_o) begin
-    //           arb_buff_status <= DRAIN_BUFFER;
-    //         end
-    //       end
-    //       DRAIN_BUFFER: begin
-    //         if (internal_fpu_ready_o) begin
-    //           arb_buff_status      <= EMPTY;
-    //           arb_buff_flush_i     <= '0;
-    //           arb_buff_fpu_valid_i <= '0;
-    //           arb_buff_fu_data_i   <= '0;
-    //           arb_buff_fpu_fmt_i   <= '0;
-    //           arb_buff_fpu_rm_i    <= '0;
-    //           arb_buff_fpu_frm_i   <= '0;
-    //           arb_buff_fpu_prec_i  <= '0;
-    //         end
-    //       end
-    //       default: begin
-    //         arb_buff_status      <= EMPTY;
-    //         arb_buff_flush_i     <= '0;
-    //         arb_buff_fpu_valid_i <= '0;
-    //         arb_buff_fu_data_i   <= '0;
-    //         arb_buff_fpu_fmt_i   <= '0;
-    //         arb_buff_fpu_rm_i    <= '0;
-    //         arb_buff_fpu_frm_i   <= '0;
-    //         arb_buff_fpu_prec_i  <= '0;
-    //       end
-    //     endcase
-    //   end
-    // end
     // ---------------------------------------------------------
     // Shared FPU Instantiation
     // ---------------------------------------------------------
@@ -707,7 +574,7 @@ module shared_fpu
     end
 
     // ---------------------------------------------------------
-    // 1-Cycle Output Pipeline Buffer
+    // 1-Cycle Output Pipeline Buffer (FIXED FOR GHOST WRITES)
     // ---------------------------------------------------------
     logic                                   buf_valid;
     logic       [CVA6Cfg.TRANS_ID_BITS-1:0] buf_trans_id;
@@ -727,15 +594,20 @@ module shared_fpu
         buf_result     <= '0;
         buf_exception  <= '0;
       end else begin
-        // Shift valid state into the buffer
-        buf_valid <= internal_fpu_valid_o;
-
-        // Only update the payload registers when valid
-        if (internal_fpu_valid_o) begin
+        // GATING LOGIC: Only latch the valid output if the core that owns it is NOT flushing this cycle.
+        // If the core is flushing, we drop the result immediately so it doesn't ghost-write to the scoreboard next cycle.
+        // if (internal_fpu_valid_o && ~flush_i[current_trans_core]) begin
+        if (internal_fpu_valid_o &&
+            ~flush_i[current_trans_core] &&
+            (payload_buffer[fpu_trans_id_mod].state == ISSUED)) begin
+          buf_valid      <= 1'b1;
           buf_trans_id   <= fpu_trans_id_mod[CVA6Cfg.TRANS_ID_BITS-1:0];
           buf_trans_core <= current_trans_core;
           buf_result     <= internal_result_o;
           buf_exception  <= internal_fpu_exception_o;
+        end else begin
+          // Clear the buffer if nothing is valid, OR if the valid data was just flushed
+          buf_valid <= 1'b0;
         end
       end
     end
@@ -757,21 +629,26 @@ module shared_fpu
 
       // 3. Cycle T Routing: Early Valid
       // Triggered by the internal FPU's actual valid signal
-      if (internal_fpu_valid_o) begin
+      // if (internal_fpu_valid_o) begin
+      //   if (~current_trans_core) fpu_early_valid_o[0] = 1'b1;
+      //   else fpu_early_valid_o[1] = 1'b1;
+      // end
+      if (internal_fpu_valid_o && (payload_buffer[fpu_trans_id_mod].state == ISSUED)) begin
         if (~current_trans_core) fpu_early_valid_o[0] = 1'b1;
         else fpu_early_valid_o[1] = 1'b1;
       end
-
       // 4. Cycle T+1 Routing: Payload and Valid
       // Triggered by the pipeline buffer
       if (buf_valid) begin
         if (~buf_trans_core) begin
-          fpu_valid_o[0]     = 1'b1;
+          // fpu_valid_o[0]     = 1'b1;
+          fpu_valid_o[0]     = 1'b1 & ~flush_i[0];
           fpu_trans_id_o[0]  = buf_trans_id;
           result_o[0]        = buf_result;
           fpu_exception_o[0] = buf_exception;
         end else begin
-          fpu_valid_o[1]     = 1'b1;
+          // fpu_valid_o[1]     = 1'b1;
+          fpu_valid_o[1]     = 1'b1 & ~flush_i[1];
           fpu_trans_id_o[1]  = buf_trans_id;
           result_o[1]        = buf_result;
           fpu_exception_o[1] = buf_exception;

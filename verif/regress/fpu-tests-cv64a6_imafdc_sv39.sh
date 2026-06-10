@@ -11,18 +11,18 @@
 
 # where are the tools
 if ! [ -n "$RISCV" ]; then
-  echo "Error: RISCV variable undefined"
-  return
+	echo "Error: RISCV variable undefined"
+	return
 fi
 
 #if ! [ -n "$DV_SIMULATORS" ]; then
 # Only tested (working?) with Verilator
-  DV_SIMULATORS=veri-testharness
+DV_SIMULATORS=veri-testharness
 #fi
 
 # install the required tools
 if [[ "$DV_SIMULATORS" == *"veri-testharness"* ]]; then
-  source ./verif/regress/install-verilator.sh
+	source ./verif/regress/install-verilator.sh
 fi
 source ./verif/regress/install-spike.sh
 
@@ -37,7 +37,7 @@ source ./verif/sim/setup-env.sh
 echo "$SPIKE_INSTALL_DIR$"
 
 if ! [ -n "$UVM_VERBOSITY" ]; then
-    export UVM_VERBOSITY=UVM_NONE
+	export UVM_VERBOSITY=UVM_NONE
 fi
 
 export DV_OPTS="$DV_OPTS --issrun_opts=+debug_disable=1+UVM_VERBOSITY=$UVM_VERBOSITY"

@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+/* #include <pthread.h> */
 
 #include "util.h"
 #include "applu.h"
@@ -706,56 +707,5 @@ int main(int argc, char *arg[]) {
   }
 
   setbv();
-
-  // Wait for both cores to complete
-  /* __sync_synchronize(); */
-  /* while (!core0_completed || !core1_completed) { */
-  /*   asm volatile("nop"); */
-  /* } */
-
-  // ===== VERIFICATION =====
-  /* if (core_id == 0) { */
-  /*   verify_core0_results(); */
-
-  /*   printf("\n"); */
-  /*   printf("============================================================\n");
-   */
-  /*   printf("   FINAL TEST SUMMARY\n"); */
-  /*   printf("============================================================\n");
-   */
-  /*   printf("Core 0: Issued %d FPU operations\n", */
-  /*          CORE0_ITERATIONS * FPU_OPS_PER_BATCH); */
-  /*   printf("Core 1: Executed %d flush-inducing loops\n", CORE1_FLUSH_LOOPS);
-   */
-  /*   printf("Total errors: %d\n", errors); */
-
-  /*   if (errors == 0) { */
-  /*     printf("\n✓✓✓ TEST PASSED ✓✓✓\n"); */
-  /*     printf("Reschedule/invalid mechanism working correctly!\n"); */
-  /*     printf("- Multiple Core 0 ops successfully rescheduled after
-   * flushes\n"); */
-  /*     printf("- Scoreboard handled many simultaneous RESCHEDULED entries\n");
-   */
-  /*     printf("- High-priority replay path functioning under load\n"); */
-  /*     printf("- Results correctly routed despite multiple reschedules\n"); */
-  /*     printf("============================================================\n");
-   */
-  /*     return 0; */
-  /*   } else { */
-  /*     printf("\n✗✗✗ TEST FAILED ✗✗✗\n"); */
-  /*     printf("Reschedule/invalid mechanism has bugs!\n"); */
-  /*     printf("Possible causes:\n"); */
-  /*     printf("- RESCHEDULED entries not immune to subsequent flushes\n"); */
-  /*     printf("- Scoreboard can't handle multiple simultaneous
-   * reschedules\n"); */
-  /*     printf("- High-priority replay arbiter not working under load\n"); */
-  /*     printf("- Result routing errors through reschedule path\n"); */
-  /*     printf("- Transaction ID corruption during reschedule\n"); */
-  /*     printf("============================================================\n");
-   */
-  /*     return 1; */
-  /*   } */
-  /* } */
-
   return 0;
 }

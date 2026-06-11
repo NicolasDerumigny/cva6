@@ -9,10 +9,12 @@ export RISCV_OBJCOPY=/opt/xpack/riscv-none-elf-gcc/bin/riscv-none-elf-objcopy
 export CV_SW_TOOLCHAIN=/opt/riscv/riscv32-corev-elf-gcc
 export CORE_V_VERIF=${SCRIPT_DIR}/verif/core-v-verif
 export CVA6_REPO_DIR=${SCRIPT_DIR}
+export HPDCACHE_DIR=${SCRIPT_DIR}/core/cache_subsystem/hpdcache
 
 export XLEN=64
 export BOARD=zcu104
 export target=cv64a6_imafdch_sv39
+export TARGET_CFG=${target}
 export PLATFORM=PLAT_XILINX
 
 export NUM_JOBS=$(nproc)

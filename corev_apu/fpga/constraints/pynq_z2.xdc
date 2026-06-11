@@ -5,27 +5,37 @@
 # Controlled by PS (AXI-mapped)
 
 ## Clock
-set_property -dict {PACKAGE_PIN H16  IOSTANDARD LVCMOS33} [get_ports sys_clock ];
+set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports sys_clock]
 
 ## Reset -> btn0
-set_property -dict {PACKAGE_PIN D19  IOSTANDARD LVCMOS33} [get_ports ext_reset ];
+set_property -dict {PACKAGE_PIN D19 IOSTANDARD LVCMOS33} [get_ports sys_rst]
+set_false_path -from [get_ports sys_rst]
 
 ## UART (on PMOD A, lower connector)
 # Not needed
 #set_property -dict {PACKAGE_PIN U18  IOSTANDARD LVCMOS33} [get_ports uart_ctsn  ] # ~CTS -> ~RTS JA3_P
-set_property -dict {PACKAGE_PIN U19  IOSTANDARD LVCMOS33} [get_ports uart_txd   ]; # module RXD -> FPGA TXD  JA3_N
-set_property -dict {PACKAGE_PIN W18  IOSTANDARD LVCMOS33} [get_ports uart_rxd   ]; # module TXD -> FPGA RXD  JA4_P
+set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS33} [get_ports uart_txd]
+set_property -dict {PACKAGE_PIN W18 IOSTANDARD LVCMOS33} [get_ports uart_rxd]
 # Also not needed
 #set_property -dict {PACKAGE_PIN W19   IOSTANDARD LVCMOS33} [get_ports uart_rtsn  ] # ~RTS -> ~CTS JA4_N
+set_false_path -from [get_ports uart_rxd]
+set_false_path -to [get_ports uart_txd]
 
 ## SD card
 # SPI mode,
 # Wired on PMODB
 # Requires an adapter https://digilent.com/shop/pmod-microsd-microsd-card-slot/
-set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports spi_clk_o ]; # Adapter Pin 4 -> JB2_N
-set_property -dict {PACKAGE_PIN T11 IOSTANDARD LVCMOS33} [get_ports spi_miso ] ; # Adapter Pin 3 -> JB2_P
-set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS33} [get_ports spi_mosi ] ; # Adapter Pin 2 -> JB1_N
-set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss ]   ; # Adapter Pin 1 -> JB1_P
+set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports spi_clk_o]
+set_property -dict {PACKAGE_PIN T11 IOSTANDARD LVCMOS33} [get_ports spi_miso]
+set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS33} [get_ports spi_mosi]
+set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss]
+set_input_delay -clock clk_sd_SoC_clk_wiz_0_0 -max 16.000 [get_ports spi_miso]
+set_input_delay -clock clk_sd_SoC_clk_wiz_0_0 -min 7.000 [get_ports spi_miso]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -max 4.000 [get_ports spi_mosi]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -min -2.000 [get_ports spi_mosi]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -max 4.000 [get_ports spi_clk_o]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -min -2.000 [get_ports spi_clk_o]
+set_false_path -to [get_ports spi_ss]
 
 ### Switches
 #set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports {sws_2bits_tri_i[0]}]
@@ -232,3 +242,19 @@ set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss ]   ;
 #set_property -dict { PACKAGE_PIN F20   IOSTANDARD LVCMOS33 } [get_ports { rpi_gpio_tri_io[17] }];
 #set_property -dict { PACKAGE_PIN W9    IOSTANDARD LVCMOS33 } [get_ports { rpi_gpio_tri_io[18] }];
 #set_property -dict { PACKAGE_PIN V7    IOSTANDARD LVCMOS33 } [get_ports { rpi_gpio_tri_io[19] }];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

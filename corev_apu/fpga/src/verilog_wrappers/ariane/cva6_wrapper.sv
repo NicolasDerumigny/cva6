@@ -11,7 +11,8 @@ module cva6_wrapper #(
     parameter unsigned AXI_ID_WIDTH   = 4,
     parameter unsigned AXI_USER_WIDTH = 1,
     parameter unsigned AXI_CUT_BYPASS = 1,
-    parameter unsigned NR_CORES       = 1
+    parameter unsigned NR_CORES       = 1,
+    parameter unsigned SHARE_FPU      = 0
 ) (
     input logic aclk,
     input logic aresetn,
@@ -60,7 +61,8 @@ module cva6_wrapper #(
       .rvfi_probes_instr_t(rvfi_probes_instr_t),
       .rvfi_probes_csr_t(rvfi_probes_csr_t),
       .rvfi_probes_t(rvfi_probes_t),
-      .NrHarts(NR_CORES)
+      .NrHarts(NR_CORES),
+      .SharedFPU(SHARE_FPU)
   ) i_ariane (
       .clk_i        (aclk),
       .rst_ni       (aresetn),

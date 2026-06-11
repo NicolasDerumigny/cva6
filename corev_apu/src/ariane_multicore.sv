@@ -49,7 +49,8 @@ module ariane_multicore
     parameter type axi_w_chan_t = ariane_axi::w_chan_t,
     parameter type noc_req_t = ariane_axi::req_t,
     parameter type noc_resp_t = ariane_axi::resp_t,
-    parameter unsigned NrHarts = 1
+    parameter unsigned NrHarts = 1,
+    parameter unsigned SharedFPU = 0
 ) (
     input logic clk_i,
     input logic rst_ni,
@@ -97,7 +98,8 @@ module ariane_multicore
       .x_result_t(x_result_t),
       .cvxif_req_t(cvxif_req_t),
       .cvxif_resp_t(cvxif_resp_t),
-      .NrHarts(NrHarts)
+      .NrHarts(NrHarts),
+      .SharedFPU(SharedFPU)
   ) i_cva6 (
       .clk_i        (clk_i),
       .rst_ni       (rst_ni),

@@ -51,7 +51,7 @@ module cva6_multicore
     parameter int unsigned AxiDataWidth = CVA6Cfg.AxiDataWidth,
     parameter int unsigned AxiIdWidth = CVA6Cfg.AxiIdWidth,
     parameter int unsigned NrHarts = 0,
-    parameter int unsigned SharedFPU = 1,
+    parameter int unsigned SharedFPU = 0,
 
     // ----- Cache types -----
     // cache request ports
@@ -126,6 +126,16 @@ module cva6_multicore
       logic [CVA6Cfg.DcacheIdWidth-1:0]     data_rid;
       logic [CVA6Cfg.XLEN-1:0]              data_rdata;
       logic [CVA6Cfg.DCACHE_USER_WIDTH-1:0] data_ruser;
+    },
+
+    // FPU types
+    localparam type fu_data_t = struct packed {
+      fu_t                              fu;
+      fu_op                             operation;
+      logic [CVA6Cfg.XLEN-1:0]          operand_a;
+      logic [CVA6Cfg.XLEN-1:0]          operand_b;
+      logic [CVA6Cfg.XLEN-1:0]          imm;
+      logic [CVA6Cfg.TRANS_ID_BITS-1:0] trans_id;
     },
 
     // AXI types

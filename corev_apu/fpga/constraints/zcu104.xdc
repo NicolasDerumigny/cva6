@@ -1894,7 +1894,7 @@ set_property IOSTANDARD SSTL12_DCI [get_ports {c0_ddr4_ba[1]}]
 ####################################################################################
 
 create_pblock Core_1
-add_cells_to_pblock [get_pblocks Core_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6_icache}]]
+add_cells_to_pblock [get_pblocks Core_1] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6}]]
 resize_pblock [get_pblocks Core_1] -add {SLICE_X48Y0:SLICE_X111Y149}
 resize_pblock [get_pblocks Core_1] -add {BUFG_GT_X0Y0:BUFG_GT_X0Y47}
 resize_pblock [get_pblocks Core_1] -add {BUFG_GT_SYNC_X0Y0:BUFG_GT_SYNC_X0Y29}
@@ -1926,7 +1926,7 @@ resize_pblock [get_pblocks Cache_and_mem] -add {URAM288_X0Y16:URAM288_X0Y79}
 
 
 create_pblock DDR
-add_cells_to_pblock [get_pblocks DDR] [get_cells -quiet [list SoC_i/ddr4_0 SoC_i/northbridge/axi_clock_converter_0 SoC_i/northbridge/axi_riscv_amos_wrapp_0 {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[0].i_axi_mux}]]
+add_cells_to_pblock [get_pblocks DDR] [get_cells -quiet [list SoC_i/ddr4_0 SoC_i/northbridge/axi_clock_converter_0 SoC_i/northbridge/axi_riscv_amos_wrapp_0]]
 resize_pblock [get_pblocks DDR] -add {SLICE_X66Y60:SLICE_X88Y239}
 resize_pblock [get_pblocks DDR] -add {DSP48E2_X7Y24:DSP48E2_X11Y95}
 resize_pblock [get_pblocks DDR] -add {RAMB18_X2Y24:RAMB18_X2Y95}
@@ -1937,46 +1937,16 @@ create_pblock Interconnect_low_speed
 add_cells_to_pblock [get_pblocks Interconnect_low_speed] [get_cells -quiet [list \
           SoC_i/ariane_peripherals_0 \
           SoC_i/axi_bootrom_control \
-          SoC_i/axi_eth_led_gpio \
           SoC_i/axi_gpio_0 \
           SoC_i/axi_jtag_0 \
           SoC_i/axi_uart16550_0 \
           SoC_i/bootrom_wrapper_0 \
           SoC_i/clint_0 \
+          SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_shared_fpu.shared_i \
           SoC_i/cpu_debug \
           SoC_i/cpu_reset_gen \
-          SoC_i/irqconcat \
-          SoC_i/northbridge/Ethernet_Subsystem \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[10].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[11].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[1].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[2].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[3].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[4].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[5].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[6].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[7].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[8].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_mst_port_mux[9].i_axi_mux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_ar_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_aw_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_demux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[0].i_axi_err_slv} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_ar_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_aw_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_demux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[1].i_axi_err_slv} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[2].i_axi_ar_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[2].i_axi_aw_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[2].i_axi_demux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[2].i_axi_err_slv} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[3].i_axi_ar_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[3].i_axi_aw_decode} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[3].i_axi_demux} \
-          {SoC_i/northbridge/axi_xbar_interface_v_0/inst/i_xbar_interface_wrapper/i_axi_xbar_intf/i_xbar/gen_slv_port_demux[3].i_axi_err_slv} \
-          SoC_i/northbridge/eth_led_axi_protocol_convert \
+          SoC_i/northbridge/axi_xbar_interface_v_0 \
           SoC_i/northbridge/gpio_axi_dwidth_converter \
-          SoC_i/northbridge/gpio_axi_dwidth_converter1 \
           SoC_i/northbridge/gpio_axi_protocol_convert \
           SoC_i/northbridge/sdcard_axi_dwidth_converter \
           SoC_i/northbridge/uart_axi_dwidth_converter \
@@ -1985,10 +1955,7 @@ add_cells_to_pblock [get_pblocks Interconnect_low_speed] [get_cells -quiet [list
           SoC_i/ps8_0_axi_periph \
           SoC_i/sdcard_quad_spi_axi \
           SoC_i/util_vector_logic_0 \
-          SoC_i/util_vector_logic_1 \
           SoC_i/xlconcat_0 \
-          SoC_i/xlslice_0 \
-          SoC_i/xlslice_1 \
           SoC_i/zynq_ultra_ps_e_0]]
 resize_pblock [get_pblocks Interconnect_low_speed] -add {SLICE_X0Y240:SLICE_X88Y359}
 resize_pblock [get_pblocks Interconnect_low_speed] -add {DSP48E2_X0Y96:DSP48E2_X11Y143}
@@ -2015,6 +1982,16 @@ set_property PARENT Core_0 [get_pblocks lsu_0]
 
 
 
+
+
+
+
+create_pblock CSR_perf_counters
+add_cells_to_pblock [get_pblocks CSR_perf_counters] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/csr_regfile_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6/gen_perf_counter.perf_counters_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[1].i_cva6_icache}]]
+resize_pblock [get_pblocks CSR_perf_counters] -add {SLICE_X66Y59:SLICE_X111Y149}
+resize_pblock [get_pblocks CSR_perf_counters] -add {DSP48E2_X7Y24:DSP48E2_X13Y59}
+resize_pblock [get_pblocks CSR_perf_counters] -add {RAMB18_X2Y24:RAMB18_X4Y59}
+resize_pblock [get_pblocks CSR_perf_counters] -add {RAMB36_X2Y12:RAMB36_X4Y29}
 
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]

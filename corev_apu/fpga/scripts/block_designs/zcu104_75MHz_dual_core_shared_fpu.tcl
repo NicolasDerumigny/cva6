@@ -139,7 +139,6 @@ if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:axi_quad_spi:3.2\
-xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:zynq_ultra_ps_e:3.5\
 xilinx.com:ip:xlconstant:1.1\
@@ -147,7 +146,9 @@ xilinx.com:ip:ddr4:2.2\
 xilinx.com:ip:axi_jtag:1.0\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:axi_uart16550:2.0\
+xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:util_vector_logic:2.0\
+xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:axi_clock_converter:2.1\
 xilinx.com:ip:axi_protocol_converter:2.1\
 xilinx.com:ip:axi_dwidth_converter:2.1\
@@ -292,15 +293,13 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   create_bd_pin -dir I -type clk aclk
   create_bd_pin -dir I -from 5 -to 0 cpu_atop_in
   create_bd_pin -dir I -type rst aresetn
-  create_bd_pin -dir I -type rst cpu_peripheral_aresetn
   create_bd_pin -dir I -type clk ddr_clk
-  create_bd_pin -dir I -type rst ddr_aresetn
-  create_bd_pin -dir O -from 0 -to 0 -type rst eth_rst
   create_bd_pin -dir I -from 5 -to 0 debug_module_atop
   create_bd_pin -dir O -from 5 -to 0 m_axi_debug_awatop
   create_bd_pin -dir O -from 5 -to 0 m_axi_clint_awatop
   create_bd_pin -dir O -from 5 -to 0 m_axi_timer_awatop
   create_bd_pin -dir O -from 5 -to 0 m_axi_plic_awatop
+  create_bd_pin -dir I -type rst ddr_aresetn
 
   # Create instance: axi_xbar_interface_v_0, and set properties
   set block_name axi_xbar_interface_verilog
@@ -356,7 +355,7 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   connect_bd_intf_net -intf_net DEBUG_MODULE_AXI_1 [get_bd_intf_pins DEBUG_MODULE_AXI] [get_bd_intf_pins axi_xbar_interface_v_0/s_axi_debug]
   connect_bd_intf_net -intf_net axi_clock_converter_0_M_AXI [get_bd_intf_pins DDR_AXI] [get_bd_intf_pins axi_clock_converter_0/M_AXI]
   connect_bd_intf_net -intf_net axi_dwidth_converter_0_M_AXI [get_bd_intf_pins SDCARD_AXI] [get_bd_intf_pins sdcard_axi_dwidth_converter/M_AXI]
-  connect_bd_intf_net -intf_net axi_riscv_amos_wrapp_0_m_axi_out [get_bd_intf_pins axi_riscv_amos_wrapp_0/m_axi_out] [get_bd_intf_pins axi_clock_converter_0/S_AXI]
+  connect_bd_intf_net -intf_net axi_riscv_amos_wrapp_0_m_axi_out [get_bd_intf_pins axi_clock_converter_0/S_AXI] [get_bd_intf_pins axi_riscv_amos_wrapp_0/m_axi_out]
   connect_bd_intf_net -intf_net axi_xbar_interface_v_0_m_axi_bootrom [get_bd_intf_pins BOOTROM_AXI] [get_bd_intf_pins axi_xbar_interface_v_0/m_axi_bootrom]
   connect_bd_intf_net -intf_net axi_xbar_interface_v_0_m_axi_clint [get_bd_intf_pins CLINT_AXI] [get_bd_intf_pins axi_xbar_interface_v_0/m_axi_clint]
   connect_bd_intf_net -intf_net axi_xbar_interface_v_0_m_axi_debug [get_bd_intf_pins DEBUG_AXI] [get_bd_intf_pins axi_xbar_interface_v_0/m_axi_debug]
@@ -371,13 +370,13 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   connect_bd_intf_net -intf_net uart_axi_protocol_convert_M_AXI [get_bd_intf_pins uart_axi_dwidth_converter/S_AXI] [get_bd_intf_pins uart_axi_protocol_convert/M_AXI]
 
   # Create port connections
-  connect_bd_net -net aresetn_1 [get_bd_pins aresetn] [get_bd_pins axi_clock_converter_0/s_axi_aresetn] [get_bd_pins gpio_axi_protocol_convert/aresetn] [get_bd_pins uart_axi_protocol_convert/aresetn] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins uart_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins axi_xbar_interface_v_0/aresetn] [get_bd_pins axi_riscv_amos_wrapp_0/aresetn]
+  connect_bd_net -net aresetn_1 [get_bd_pins aresetn] [get_bd_pins axi_clock_converter_0/s_axi_aresetn] [get_bd_pins gpio_axi_protocol_convert/aresetn] [get_bd_pins uart_axi_protocol_convert/aresetn] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins uart_axi_dwidth_converter/s_axi_aresetn] [get_bd_pins axi_xbar_interface_v_0/aresetn] [get_bd_pins axi_riscv_amos_wrapp_0/aresetn] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aresetn]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_clint_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_clint_awatop] [get_bd_pins m_axi_clint_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_debug_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_debug_awatop] [get_bd_pins m_axi_debug_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_plic_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_plic_awatop] [get_bd_pins m_axi_plic_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_ram_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_ram_awatop] [get_bd_pins axi_riscv_amos_wrapp_0/s_axi_in_awatop]
   connect_bd_net -net axi_xbar_interface_v_0_m_axi_timer_awatop [get_bd_pins axi_xbar_interface_v_0/m_axi_timer_awatop] [get_bd_pins m_axi_timer_awatop]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_clock_converter_0/s_axi_aclk] [get_bd_pins uart_axi_protocol_convert/aclk] [get_bd_pins gpio_axi_protocol_convert/aclk] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aclk] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aclk] [get_bd_pins uart_axi_dwidth_converter/s_axi_aclk] [get_bd_pins axi_xbar_interface_v_0/aclk] [get_bd_pins axi_riscv_amos_wrapp_0/CLK]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_clock_converter_0/s_axi_aclk] [get_bd_pins uart_axi_protocol_convert/aclk] [get_bd_pins gpio_axi_protocol_convert/aclk] [get_bd_pins gpio_axi_dwidth_converter/s_axi_aclk] [get_bd_pins uart_axi_dwidth_converter/s_axi_aclk] [get_bd_pins axi_xbar_interface_v_0/aclk] [get_bd_pins axi_riscv_amos_wrapp_0/CLK] [get_bd_pins sdcard_axi_dwidth_converter/s_axi_aclk]
   connect_bd_net -net cpu_atop_in_1 [get_bd_pins cpu_atop_in] [get_bd_pins axi_xbar_interface_v_0/s_axi_cpu_awatop]
   connect_bd_net -net ddr_aresetn_1 [get_bd_pins ddr_aresetn] [get_bd_pins axi_clock_converter_0/m_axi_aresetn]
   connect_bd_net -net ddr_clk_1 [get_bd_pins ddr_clk] [get_bd_pins axi_clock_converter_0/m_axi_aclk]
@@ -436,6 +435,16 @@ proc create_root_design { parentCell } {
 
   set mdio [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 mdio ]
 
+  set ref_clk_125 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ref_clk_125 ]
+  set_property -dict [ list \
+   CONFIG.FREQ_HZ {125000000} \
+   ] $ref_clk_125
+
+  set clk_125 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 clk_125 ]
+  set_property -dict [ list \
+   CONFIG.FREQ_HZ {125000000} \
+   ] $clk_125
+
 
   # Create ports
   set spi_clk_o [ create_bd_port -dir O -type clk spi_clk_o ]
@@ -443,6 +452,8 @@ proc create_root_design { parentCell } {
   set spi_mosi [ create_bd_port -dir O -type data spi_mosi ]
   set spi_miso [ create_bd_port -dir I -type data spi_miso ]
   set led_0_a [ create_bd_port -dir I led_0_a ]
+  set led_al_c_c2m [ create_bd_port -dir O -from 0 -to 0 led_al_c_c2m ]
+  set led_al_a_c2m [ create_bd_port -dir O -from 0 -to 0 -type data led_al_a_c2m ]
   set link_st [ create_bd_port -dir I link_st ]
   set int_n [ create_bd_port -dir I int_n ]
   set eth_rst [ create_bd_port -dir O -from 0 -to 0 -type rst eth_rst ]
@@ -463,6 +474,7 @@ proc create_root_design { parentCell } {
   set_property -dict [list \
     CONFIG.C_FAMILY {kintex7} \
     CONFIG.C_FIFO_DEPTH {256} \
+    CONFIG.C_NUM_TRANSFER_BITS {8} \
     CONFIG.C_SCK_RATIO {2} \
     CONFIG.C_SPI_MODE {0} \
     CONFIG.C_SUB_FAMILY {kintex7} \
@@ -503,15 +515,6 @@ proc create_root_design { parentCell } {
   ] $ariane_peripherals_0
 
 
-  # Create instance: irqconcat, and set properties
-  set irqconcat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 irqconcat ]
-  set_property -dict [list \
-    CONFIG.IN3_WIDTH {20} \
-    CONFIG.IN5_WIDTH {18} \
-    CONFIG.NUM_PORTS {4} \
-  ] $irqconcat
-
-
   # Create instance: cpu_0, and set properties
   set block_name cva6_wrapper_verilog
   set block_cell_name cpu_0
@@ -527,6 +530,7 @@ proc create_root_design { parentCell } {
     CONFIG.AXI_ID_WIDTH {4} \
     CONFIG.AXI_USER_WIDTH {0} \
     CONFIG.NR_CORES {2} \
+    CONFIG.SHARE_FPU {1} \
   ] $cpu_0
 
 
@@ -879,8 +883,9 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
    write_ddr4_file_SoC_ddr4_0_0 $str_ddr4_file_path
 
   set_property -dict [list \
-    CONFIG.ADDN_UI_CLKOUT1_FREQ_HZ {50} \
-    CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {75} \
+    CONFIG.ADDN_UI_CLKOUT1_FREQ_HZ {None} \
+    CONFIG.ADDN_UI_CLKOUT2_FREQ_HZ {None} \
+    CONFIG.ADDN_UI_CLKOUT3_FREQ_HZ {None} \
     CONFIG.C0.DDR4_AxiDataWidth {64} \
     CONFIG.C0.DDR4_CasLatency {20} \
     CONFIG.C0.DDR4_CasWriteLatency {16} \
@@ -894,7 +899,8 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
     CONFIG.C0.DDR4_isCustom {true} \
     CONFIG.C0_CLOCK_BOARD_INTERFACE {clk_300mhz} \
     CONFIG.C0_DDR4_BOARD_INTERFACE {Custom} \
-    CONFIG.RESET_BOARD_INTERFACE {reset} \
+    CONFIG.RESET_BOARD_INTERFACE {Custom} \
+    CONFIG.System_Clock {Differential} \
   ] $ddr4_0
 
 
@@ -942,7 +948,7 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   set xlconstant_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_3 ]
   set_property -dict [list \
     CONFIG.CONST_VAL {0} \
-    CONFIG.CONST_WIDTH {20} \
+    CONFIG.CONST_WIDTH {23} \
   ] $xlconstant_3
 
 
@@ -954,12 +960,29 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   ] $util_vector_logic_0
 
 
-  # Create instance: util_vector_logic_1, and set properties
-  set util_vector_logic_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_1 ]
+  # Create instance: clk_wiz_2, and set properties
+  set clk_wiz_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_2 ]
   set_property -dict [list \
-    CONFIG.C_OPERATION {not} \
-    CONFIG.C_SIZE {1} \
-  ] $util_vector_logic_1
+    CONFIG.CLKIN1_JITTER_PS {80.0} \
+    CONFIG.CLKOUT1_JITTER {185.448} \
+    CONFIG.CLKOUT1_PHASE_ERROR {222.305} \
+    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {75} \
+    CONFIG.CLKOUT2_JITTER {196.543} \
+    CONFIG.CLKOUT2_PHASE_ERROR {222.305} \
+    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {50} \
+    CONFIG.CLKOUT2_USED {true} \
+    CONFIG.CLK_OUT1_PORT {clk_core} \
+    CONFIG.CLK_OUT2_PORT {clk_spi} \
+    CONFIG.MMCM_CLKFBOUT_MULT_F {48.000} \
+    CONFIG.MMCM_CLKIN1_PERIOD {8.000} \
+    CONFIG.MMCM_CLKOUT0_DIVIDE_F {16.000} \
+    CONFIG.MMCM_CLKOUT1_DIVIDE {24} \
+    CONFIG.MMCM_DIVCLK_DIVIDE {5} \
+    CONFIG.NUM_OUT_CLKS {2} \
+    CONFIG.PRIM_SOURCE {Differential_clock_capable_pin} \
+    CONFIG.USE_LOCKED {false} \
+    CONFIG.USE_RESET {false} \
+  ] $clk_wiz_2
 
 
   # Create interface connections
@@ -969,6 +992,7 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   connect_bd_intf_net -intf_net axi_interconnect_0_M09_AXI [get_bd_intf_pins northbridge/PLIC_AXI] [get_bd_intf_pins ariane_peripherals_0/s_axi_plic]
   connect_bd_intf_net -intf_net axi_interconnect_0_M10_AXI [get_bd_intf_pins northbridge/TIMER_AXI] [get_bd_intf_pins ariane_peripherals_0/s_axi_timer]
   connect_bd_intf_net -intf_net axi_uart16550_0_UART [get_bd_intf_ports uart2_pl] [get_bd_intf_pins axi_uart16550_0/UART]
+  connect_bd_intf_net -intf_net clk_125_1 [get_bd_intf_ports clk_125] [get_bd_intf_pins clk_wiz_2/CLK_IN1_D]
   connect_bd_intf_net -intf_net clk_300mhz_1 [get_bd_intf_ports clk_300mhz] [get_bd_intf_pins ddr4_0/C0_SYS_CLK]
   connect_bd_intf_net -intf_net cpu_0_m_axi_cpu [get_bd_intf_pins cpu_0/m_axi_cpu] [get_bd_intf_pins northbridge/CPU_AXI]
   connect_bd_intf_net -intf_net cpu_debug_m_axi_dmi_jtag [get_bd_intf_pins cpu_debug/m_axi_dmi_jtag] [get_bd_intf_pins northbridge/DEBUG_MODULE_AXI]
@@ -996,36 +1020,34 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   connect_bd_net -net bootrom_wrapper_0_rdata_o [get_bd_pins bootrom_wrapper_0/rdata_o] [get_bd_pins axi_bootrom_control/bram_rddata_a]
   connect_bd_net -net clint_0_ipi_o [get_bd_pins clint_0/ipi_o] [get_bd_pins cpu_0/ipi_in]
   connect_bd_net -net clint_0_timer_irq_o [get_bd_pins clint_0/timer_irq_o] [get_bd_pins cpu_0/timer_irq_i]
+  connect_bd_net -net clk_wiz_2_clk_spi [get_bd_pins clk_wiz_2/clk_spi] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk]
   connect_bd_net -net cpu_0_m_axi_cpu_awatop [get_bd_pins cpu_0/m_axi_cpu_awatop] [get_bd_pins northbridge/cpu_atop_in]
   connect_bd_net -net cpu_debug_debug_req_irq [get_bd_pins cpu_debug/debug_req_irq] [get_bd_pins cpu_0/debug_req_irq]
   connect_bd_net -net cpu_debug_jtag_tdo [get_bd_pins cpu_debug/jtag_tdo] [get_bd_pins axi_jtag_0/tdo]
   connect_bd_net -net cpu_debug_m_axi_dmi_jtag_awatop [get_bd_pins cpu_debug/m_axi_dmi_jtag_awatop] [get_bd_pins northbridge/debug_module_atop]
   connect_bd_net -net cpu_debug_ndmreset [get_bd_pins cpu_debug/ndmreset] [get_bd_pins util_vector_logic_0/Op2]
   connect_bd_net -net cpu_interconnect_aresetn_1 [get_bd_pins cpu_reset_gen/interconnect_aresetn] [get_bd_pins northbridge/aresetn] [get_bd_pins ps8_0_axi_periph/ARESETN] [get_bd_pins ps8_0_axi_periph/S00_ARESETN] [get_bd_pins ps8_0_axi_periph/M00_ARESETN] [get_bd_pins axi_jtag_0/s_axi_aresetn] [get_bd_pins cpu_debug/aresetn]
-  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen/peripheral_aresetn] [get_bd_pins northbridge/cpu_peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins northbridge/ddr_aresetn] [get_bd_pins ddr4_0/c0_ddr4_aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins cpu_0/aresetn] [get_bd_pins ariane_peripherals_0/aresetn]
-  connect_bd_net -net ddr4_0_addn_ui_clkout1 [get_bd_pins ddr4_0/addn_ui_clkout1] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk]
+  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen/peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins ariane_peripherals_0/aresetn] [get_bd_pins cpu_0/aresetn]
   connect_bd_net -net ddr4_0_c0_ddr4_ui_clk [get_bd_pins ddr4_0/c0_ddr4_ui_clk] [get_bd_pins northbridge/ddr_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
   connect_bd_net -net ext_reset_1 [get_bd_ports sys_rst] [get_bd_pins util_vector_logic_0/Op1]
-  connect_bd_net -net int_n_1 [get_bd_ports int_n] [get_bd_pins util_vector_logic_1/Op1]
-  connect_bd_net -net irqconcat_dout [get_bd_pins irqconcat/dout] [get_bd_pins ariane_peripherals_0/irq_i]
   connect_bd_net -net led_0_a_1 [get_bd_ports led_0_a] [get_bd_ports led_ar_c_c2m]
-  connect_bd_net -net mig_aclk_1 [get_bd_pins ddr4_0/addn_ui_clkout2] [get_bd_pins northbridge/aclk] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins cpu_reset_gen/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk] [get_bd_pins cpu_debug/aclk] [get_bd_pins ariane_peripherals_0/aclk]
-  connect_bd_net -net northbridge_eth_rst [get_bd_pins northbridge/eth_rst] [get_bd_ports eth_rst]
+  connect_bd_net -net mig_aclk_1 [get_bd_pins clk_wiz_2/clk_core] [get_bd_pins northbridge/aclk] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins cpu_reset_gen/slowest_sync_clk] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_fpd_aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_debug/aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins cpu_0/aclk]
   connect_bd_net -net northbridge_m_axi_clint_awatop [get_bd_pins northbridge/m_axi_clint_awatop] [get_bd_pins clint_0/s_axi_clint_awatop]
   connect_bd_net -net northbridge_m_axi_debug_awatop [get_bd_pins northbridge/m_axi_debug_awatop] [get_bd_pins cpu_debug/s_axi_dmi_jtag_awatop]
   connect_bd_net -net northbridge_m_axi_plic_awatop [get_bd_pins northbridge/m_axi_plic_awatop] [get_bd_pins ariane_peripherals_0/s_axi_plic_awatop]
   connect_bd_net -net northbridge_m_axi_timer_awatop [get_bd_pins northbridge/m_axi_timer_awatop] [get_bd_pins ariane_peripherals_0/s_axi_timer_awatop]
+  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins proc_sys_reset_0/interconnect_aresetn] [get_bd_pins northbridge/ddr_aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins ddr4_0/c0_ddr4_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins ddr4_0/sys_rst]
   connect_bd_net -net rst_ps8_0_200M_peripheral_aresetn [get_bd_pins ddr4_0/c0_ddr4_ui_clk_sync_rst] [get_bd_pins cpu_reset_gen/aux_reset_in]
   connect_bd_net -net sdcard_quad_spi_axi_ip2intc_irpt [get_bd_pins sdcard_quad_spi_axi/ip2intc_irpt] [get_bd_pins ariane_peripherals_0/spi_irq_i]
   connect_bd_net -net spi_miso_1 [get_bd_ports spi_miso] [get_bd_pins sdcard_quad_spi_axi/io1_i]
   connect_bd_net -net util_vector_logic_0_Res [get_bd_pins util_vector_logic_0/Res] [get_bd_pins cpu_reset_gen/ext_reset_in]
-  connect_bd_net -net util_vector_logic_1_Res [get_bd_pins util_vector_logic_1/Res] [get_bd_pins irqconcat/In2]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins xlconcat_0/dout] [get_bd_pins bootrom_wrapper_0/addr_i]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_uart16550_0/freeze] [get_bd_pins ariane_peripherals_0/eth_irq_i]
   connect_bd_net -net xlconstant_1_dout [get_bd_pins xlconstant_1/dout] [get_bd_pins cpu_debug/jtag_trst_n]
-  connect_bd_net -net xlconstant_2_dout [get_bd_pins xlconstant_2/dout] [get_bd_ports led_ar_a_c2m]
-  connect_bd_net -net xlconstant_3_dout [get_bd_pins xlconstant_3/dout] [get_bd_pins irqconcat/In3]
+  connect_bd_net -net xlconstant_2_dout [get_bd_pins xlconstant_2/dout] [get_bd_ports led_ar_a_c2m] [get_bd_ports led_al_a_c2m] [get_bd_ports led_al_c_c2m]
+  connect_bd_net -net xlconstant_3_dout [get_bd_pins xlconstant_3/dout] [get_bd_pins ariane_peripherals_0/irq_i]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0] [get_bd_pins proc_sys_reset_0/ext_reset_in]
 
   # Create address segments

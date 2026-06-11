@@ -71,4 +71,4 @@ verdiRestore.tcl
 verible.filelist
 *.pb
 *.traces
-.vimrc
+corev_apu/fpga/NA

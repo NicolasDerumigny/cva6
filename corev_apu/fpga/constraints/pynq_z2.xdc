@@ -5,27 +5,37 @@
 # Controlled by PS (AXI-mapped)
 
 ## Clock
-set_property -dict {PACKAGE_PIN H16  IOSTANDARD LVCMOS33} [get_ports sys_clock ];
+set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports sys_clock]
 
 ## Reset -> btn0
-set_property -dict {PACKAGE_PIN D19  IOSTANDARD LVCMOS33} [get_ports ext_reset ];
+set_property -dict {PACKAGE_PIN D19 IOSTANDARD LVCMOS33} [get_ports sys_rst]
+set_false_path -from [get_ports sys_rst]
 
 ## UART (on PMOD A, lower connector)
 # Not needed
 #set_property -dict {PACKAGE_PIN U18  IOSTANDARD LVCMOS33} [get_ports uart_ctsn  ] # ~CTS -> ~RTS JA3_P
-set_property -dict {PACKAGE_PIN U19  IOSTANDARD LVCMOS33} [get_ports uart_txd   ]; # module RXD -> FPGA TXD  JA3_N
-set_property -dict {PACKAGE_PIN W18  IOSTANDARD LVCMOS33} [get_ports uart_rxd   ]; # module TXD -> FPGA RXD  JA4_P
+set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS33} [get_ports uart_txd]
+set_property -dict {PACKAGE_PIN W18 IOSTANDARD LVCMOS33} [get_ports uart_rxd]
 # Also not needed
 #set_property -dict {PACKAGE_PIN W19   IOSTANDARD LVCMOS33} [get_ports uart_rtsn  ] # ~RTS -> ~CTS JA4_N
+set_false_path -from [get_ports uart_rxd]
+set_false_path -to [get_ports uart_txd]
 
 ## SD card
 # SPI mode,
 # Wired on PMODB
 # Requires an adapter https://digilent.com/shop/pmod-microsd-microsd-card-slot/
-set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports spi_clk_o ]; # Adapter Pin 4 -> JB2_N
-set_property -dict {PACKAGE_PIN T11 IOSTANDARD LVCMOS33} [get_ports spi_miso ] ; # Adapter Pin 3 -> JB2_P
-set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS33} [get_ports spi_mosi ] ; # Adapter Pin 2 -> JB1_N
-set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss ]   ; # Adapter Pin 1 -> JB1_P
+set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports spi_clk_o]
+set_property -dict {PACKAGE_PIN T11 IOSTANDARD LVCMOS33} [get_ports spi_miso]
+set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS33} [get_ports spi_mosi]
+set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss]
+set_input_delay -clock clk_sd_SoC_clk_wiz_0_0 -max 16.000 [get_ports spi_miso]
+set_input_delay -clock clk_sd_SoC_clk_wiz_0_0 -min 7.000 [get_ports spi_miso]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -max 4.000 [get_ports spi_mosi]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -min -2.000 [get_ports spi_mosi]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -max 4.000 [get_ports spi_clk_o]
+set_output_delay -clock clk_sd_SoC_clk_wiz_0_0 -min -2.000 [get_ports spi_clk_o]
+set_false_path -to [get_ports spi_ss]
 
 ### Switches
 #set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports {sws_2bits_tri_i[0]}]
@@ -232,3 +242,127 @@ set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports spi_ss ]   ;
 #set_property -dict { PACKAGE_PIN F20   IOSTANDARD LVCMOS33 } [get_ports { rpi_gpio_tri_io[17] }];
 #set_property -dict { PACKAGE_PIN W9    IOSTANDARD LVCMOS33 } [get_ports { rpi_gpio_tri_io[18] }];
 #set_property -dict { PACKAGE_PIN V7    IOSTANDARD LVCMOS33 } [get_ports { rpi_gpio_tri_io[19] }];
+
+create_pblock Ex
+add_cells_to_pblock [get_pblocks Ex] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/csr_buffer_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/fpu_gen.fpu_i} {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/i_mult}]]
+resize_pblock [get_pblocks Ex] -add {SLICE_X26Y50:SLICE_X67Y149}
+resize_pblock [get_pblocks Ex] -add {DSP48_X2Y20:DSP48_X2Y59}
+resize_pblock [get_pblocks Ex] -add {RAMB18_X2Y20:RAMB18_X3Y59}
+resize_pblock [get_pblocks Ex] -add {RAMB36_X2Y10:RAMB36_X3Y29}
+create_pblock LSU
+add_cells_to_pblock [get_pblocks LSU] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/lsu_i}]]
+resize_pblock [get_pblocks LSU] -add {SLICE_X26Y25:SLICE_X67Y62}
+resize_pblock [get_pblocks LSU] -add {DSP48_X2Y10:DSP48_X2Y23}
+resize_pblock [get_pblocks LSU] -add {RAMB18_X2Y10:RAMB18_X3Y23}
+resize_pblock [get_pblocks LSU] -add {RAMB36_X2Y5:RAMB36_X3Y11}
+
+create_pblock Cache
+add_cells_to_pblock [get_pblocks Cache] [get_cells -quiet [list \
+          SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_cache_wt.i_multicore_wt_cache_subsystem \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/VCC} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[0]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[10]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[11]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[12]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[13]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[14]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[15]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[1]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[2]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[3]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[4]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[5]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[6]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[7]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[8]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/asid_to_be_flushed_reg[9]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/current_instruction_is_sfence_vma_reg} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[0]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[10]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[11]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[12]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[13]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[14]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[15]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[16]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[17]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[18]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[19]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[1]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[20]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[21]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[22]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[23]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[24]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[25]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[26]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[27]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[28]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[29]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[2]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[30]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[31]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[32]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[33]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[34]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[35]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[36]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[37]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[38]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[39]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[3]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[40]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[41]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[42]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[43]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[44]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[45]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[46]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[47]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[48]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[49]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[4]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[50]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[51]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[52]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[53]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[54]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[55]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[56]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[57]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[58]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[59]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[5]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[60]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[61]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[62]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[63]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[6]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[7]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[8]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/ex_stage_i/vaddr_to_be_flushed_reg[9]} \
+          {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6_icache}]]
+resize_pblock [get_pblocks Cache] -add {SLICE_X0Y0:SLICE_X53Y49}
+resize_pblock [get_pblocks Cache] -add {DSP48_X0Y0:DSP48_X2Y19}
+resize_pblock [get_pblocks Cache] -add {RAMB18_X0Y0:RAMB18_X2Y19}
+resize_pblock [get_pblocks Cache] -add {RAMB36_X0Y0:RAMB36_X2Y9}
+
+
+
+create_pblock ariane_periphs
+add_cells_to_pblock [get_pblocks ariane_periphs] [get_cells -quiet [list SoC_i/ariane_peripherals_0]]
+resize_pblock [get_pblocks ariane_periphs] -add {SLICE_X54Y0:SLICE_X73Y24}
+
+
+create_pblock Issue_stage
+add_cells_to_pblock [get_pblocks Issue_stage] [get_cells -quiet [list {SoC_i/cpu_0/inst/i_cva6_wrapper/i_ariane/i_cva6/gen_one_core[0].i_cva6/issue_stage_i}]]
+resize_pblock [get_pblocks Issue_stage] -add {SLICE_X74Y25:SLICE_X113Y93}
+resize_pblock [get_pblocks Issue_stage] -add {DSP48_X3Y10:DSP48_X4Y35}
+resize_pblock [get_pblocks Issue_stage] -add {RAMB18_X4Y10:RAMB18_X5Y35}
+resize_pblock [get_pblocks Issue_stage] -add {RAMB36_X4Y5:RAMB36_X5Y17}
+
+
+
+
+
+

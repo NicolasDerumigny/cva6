@@ -44,7 +44,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 # source SoC_script.tcl
 
 
-# The design that will be created by this Tcl script contains the following
+# The design that will be created by this Tcl script contains the following 
 # module references:
 # bootrom_wrapper, ariane_peripherals_wrapper_verilog, cva6_wrapper_verilog, clint_wrapper_verilog, ram_offset_to_zero, debug_module_wrapper_verilog, axi_riscv_atomics_wrapper_verilog
 
@@ -102,7 +102,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES:
+   # USE CASES: 
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -136,7 +136,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\
+   set list_check_ips "\ 
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:axi_quad_spi:3.2\
 xilinx.com:ip:xlconstant:1.1\
@@ -171,7 +171,7 @@ xilinx.com:ip:axi_jtag:1.0\
 ##################################################################
 set bCheckModules 1
 if { $bCheckModules == 1 } {
-   set list_check_mods "\
+   set list_check_mods "\ 
 bootrom_wrapper\
 ariane_peripherals_wrapper_verilog\
 cva6_wrapper_verilog\
@@ -264,12 +264,11 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
 
 
   # Create pins
-  create_bd_pin -dir I -type clk aclk
+  create_bd_pin -dir I -type clk periphs_clk
   create_bd_pin -dir I -from 5 -to 0 cpu_atop_in
   create_bd_pin -dir I -type clk clk_cpu
   create_bd_pin -dir I -type rst aresetn
-  create_bd_pin -dir I -type clk ddr_clk
-  create_bd_pin -dir I -type rst ddr_aresetn
+  create_bd_pin -dir I -type rst cpu_aresetn
 
   # Create instance: axi_interconnect_0, and set properties
   set axi_interconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_0 ]
@@ -314,12 +313,11 @@ proc create_hier_cell_northbridge { parentCell nameHier } {
   connect_bd_intf_net -intf_net axi_riscv_atomics_wrapper_0_m_axi_out [get_bd_intf_pins axi_riscv_atomics_wrapper_0/m_axi_out] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
 
   # Create port connections
-  connect_bd_net -net M00_ACLK_1 [get_bd_pins ddr_clk] [get_bd_pins axi_interconnect_0/M00_ACLK]
-  connect_bd_net -net M00_ARESETN_1 [get_bd_pins ddr_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN]
-  connect_bd_net -net S02_ARESETN_2 [get_bd_pins aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/M04_ARESETN] [get_bd_pins axi_interconnect_0/M05_ARESETN] [get_bd_pins axi_interconnect_0/M06_ARESETN] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_0/M07_ARESETN]
-  connect_bd_net -net aclk1_1 [get_bd_pins clk_cpu] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/M07_ACLK]
+  connect_bd_net -net S00_ARESETN_1 [get_bd_pins cpu_aresetn] [get_bd_pins axi_riscv_atomics_wrapper_0/aresetn] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_0/M07_ARESETN]
+  connect_bd_net -net S02_ARESETN_2 [get_bd_pins aresetn] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/M04_ARESETN] [get_bd_pins axi_interconnect_0/M05_ARESETN] [get_bd_pins axi_interconnect_0/M06_ARESETN] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/M00_ARESETN]
+  connect_bd_net -net aclk1_1 [get_bd_pins clk_cpu] [get_bd_pins axi_riscv_atomics_wrapper_0/CLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/M07_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK]
   connect_bd_net -net axi_riscv_atomics_wrapper_0_m_axi_out_awatop [get_bd_pins cpu_atop_in] [get_bd_pins axi_riscv_atomics_wrapper_0/s_axi_in_awatop]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK] [get_bd_pins axi_interconnect_0/M05_ACLK] [get_bd_pins axi_interconnect_0/M06_ACLK]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins periphs_clk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/M04_ACLK] [get_bd_pins axi_interconnect_0/M05_ACLK] [get_bd_pins axi_interconnect_0/M06_ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -409,7 +407,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-
+  
   # Create instance: ariane_peripherals_0, and set properties
   set block_name ariane_peripherals_wrapper_verilog
   set block_cell_name ariane_peripherals_0
@@ -422,7 +420,7 @@ proc create_root_design { parentCell } {
    }
     set_property -dict [list \
     CONFIG.AXI_DATA_WIDTH {64} \
-    CONFIG.AXI_ID_WIDTH {14} \
+    CONFIG.AXI_ID_WIDTH {6} \
   ] $ariane_peripherals_0
 
 
@@ -457,14 +455,14 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property CONFIG.AXI_ID_WIDTH {14} $clint_0
+    set_property CONFIG.AXI_ID_WIDTH {6} $clint_0
 
 
   # Create instance: northbridge
   create_hier_cell_northbridge [current_bd_instance .] northbridge
 
-  # Create instance: cpu_reset_gen25, and set properties
-  set cpu_reset_gen25 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 cpu_reset_gen25 ]
+  # Create instance: cpu_reset_gen_core, and set properties
+  set cpu_reset_gen_core [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 cpu_reset_gen_core ]
 
   # Create instance: axi_uart16550_0, and set properties
   set axi_uart16550_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550:2.0 axi_uart16550_0 ]
@@ -492,7 +490,7 @@ proc create_root_design { parentCell } {
     CONFIG.PCW_ACT_DCI_PERIPHERAL_FREQMHZ {10.096154} \
     CONFIG.PCW_ACT_ENET0_PERIPHERAL_FREQMHZ {125.000000} \
     CONFIG.PCW_ACT_ENET1_PERIPHERAL_FREQMHZ {10.000000} \
-    CONFIG.PCW_ACT_FPGA0_PERIPHERAL_FREQMHZ {50.000000} \
+    CONFIG.PCW_ACT_FPGA0_PERIPHERAL_FREQMHZ {10.000000} \
     CONFIG.PCW_ACT_FPGA1_PERIPHERAL_FREQMHZ {10.000000} \
     CONFIG.PCW_ACT_FPGA2_PERIPHERAL_FREQMHZ {10.000000} \
     CONFIG.PCW_ACT_FPGA3_PERIPHERAL_FREQMHZ {10.000000} \
@@ -522,7 +520,7 @@ proc create_root_design { parentCell } {
     CONFIG.PCW_CAN1_PERIPHERAL_ENABLE {0} \
     CONFIG.PCW_CAN_PERIPHERAL_CLKSRC {IO PLL} \
     CONFIG.PCW_CAN_PERIPHERAL_VALID {0} \
-    CONFIG.PCW_CLK0_FREQ {50000000} \
+    CONFIG.PCW_CLK0_FREQ {10000000} \
     CONFIG.PCW_CLK1_FREQ {10000000} \
     CONFIG.PCW_CLK2_FREQ {10000000} \
     CONFIG.PCW_CLK3_FREQ {10000000} \
@@ -555,7 +553,7 @@ proc create_root_design { parentCell } {
     CONFIG.PCW_EN_4K_TIMER {0} \
     CONFIG.PCW_EN_CAN0 {0} \
     CONFIG.PCW_EN_CAN1 {0} \
-    CONFIG.PCW_EN_CLK0_PORT {1} \
+    CONFIG.PCW_EN_CLK0_PORT {0} \
     CONFIG.PCW_EN_CLK1_PORT {0} \
     CONFIG.PCW_EN_CLK2_PORT {0} \
     CONFIG.PCW_EN_CLK3_PORT {0} \
@@ -621,12 +619,10 @@ proc create_root_design { parentCell } {
     CONFIG.PCW_FCLK1_PERIPHERAL_CLKSRC {IO PLL} \
     CONFIG.PCW_FCLK2_PERIPHERAL_CLKSRC {IO PLL} \
     CONFIG.PCW_FCLK3_PERIPHERAL_CLKSRC {IO PLL} \
-    CONFIG.PCW_FCLK_CLK0_BUF {TRUE} \
     CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {50} \
     CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {50} \
     CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {50} \
     CONFIG.PCW_FPGA3_PERIPHERAL_FREQMHZ {50} \
-    CONFIG.PCW_FPGA_FCLK0_ENABLE {1} \
     CONFIG.PCW_GPIO_BASEADDR {0xE000A000} \
     CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {0} \
     CONFIG.PCW_GPIO_HIGHADDR {0xE000AFFF} \
@@ -1077,8 +1073,8 @@ proc create_root_design { parentCell } {
     CONFIG.CLKOUT6_DRIVES {BUFGCE} \
     CONFIG.CLKOUT7_DRIVES {BUFGCE} \
     CONFIG.CLK_IN1_BOARD_INTERFACE {Custom} \
-    CONFIG.CLK_OUT1_PORT {clk_25} \
-    CONFIG.CLK_OUT2_PORT {clk_50} \
+    CONFIG.CLK_OUT1_PORT {clk_core} \
+    CONFIG.CLK_OUT2_PORT {clk_sd} \
     CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
     CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
     CONFIG.MMCM_CLKFBOUT_MULT_F {8.000} \
@@ -1118,7 +1114,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-
+  
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
   set_property CONFIG.CONST_VAL {0} $xlconstant_0
@@ -1164,21 +1160,21 @@ proc create_root_design { parentCell } {
   connect_bd_net -net bootrom_wrapper_0_rdata_o [get_bd_pins bootrom_wrapper_0/rdata_o] [get_bd_pins axi_bootrom_control/bram_rddata_a]
   connect_bd_net -net clint_0_ipi_o [get_bd_pins clint_0/ipi_o] [get_bd_pins cpu_0/ipi_in]
   connect_bd_net -net clint_0_timer_irq_o [get_bd_pins clint_0/timer_irq_o] [get_bd_pins cpu_0/timer_irq_i]
-  connect_bd_net -net clk_wiz_0_clk_50 [get_bd_pins clk_wiz_0/clk_50] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk] [get_bd_pins ram_offset_to_zero_0/aclk] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins northbridge/ddr_clk] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins axi_mem_intercon/ACLK]
+  connect_bd_net -net clk_cpu_1 [get_bd_pins clk_wiz_0/clk_core] [get_bd_pins northbridge/clk_cpu] [get_bd_pins cpu_0/aclk] [get_bd_pins debug_module_wrapper_0/aclk] [get_bd_pins cpu_reset_gen_core/slowest_sync_clk] [get_bd_pins northbridge/periphs_clk] [get_bd_pins ram_offset_to_zero_0/aclk] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK]
+  connect_bd_net -net clk_wiz_0_clk_sd [get_bd_pins clk_wiz_0/clk_sd] [get_bd_pins sdcard_quad_spi_axi/ext_spi_clk]
   connect_bd_net -net cpu_0_m_axi_cpu_awatop [get_bd_pins cpu_0/m_axi_cpu_awatop] [get_bd_pins northbridge/cpu_atop_in]
-  connect_bd_net -net cpu_interconnect_aresetn_1 [get_bd_pins cpu_reset_gen25/interconnect_aresetn] [get_bd_pins northbridge/aresetn] [get_bd_pins debug_module_wrapper_0/aresetn] [get_bd_pins axi_jtag_0/s_axi_aresetn]
-  connect_bd_net -net cpu_reset_gen_peripheral_aresetn [get_bd_pins cpu_reset_gen25/peripheral_aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins ariane_peripherals_0/aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins cpu_0/aresetn] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins northbridge/ddr_aresetn] [get_bd_pins debug_module_wrapper_0/jtag_trst_n] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN]
+  connect_bd_net -net cpu_interconnect_aresetn_1 [get_bd_pins cpu_reset_gen_core/interconnect_aresetn] [get_bd_pins debug_module_wrapper_0/aresetn] [get_bd_pins axi_jtag_0/s_axi_aresetn] [get_bd_pins cpu_0/aresetn] [get_bd_pins northbridge/cpu_aresetn] [get_bd_pins debug_module_wrapper_0/jtag_trst_n]
+  connect_bd_net -net ddr_aresetn_1 [get_bd_pins cpu_reset_gen_core/peripheral_aresetn] [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins northbridge/aresetn] [get_bd_pins axi_bootrom_control/s_axi_aresetn] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aresetn] [get_bd_pins ariane_peripherals_0/aresetn] [get_bd_pins clint_0/aresetn] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN]
   connect_bd_net -net debug_module_wrapper_0_debug_req_irq [get_bd_pins debug_module_wrapper_0/debug_req_irq] [get_bd_pins cpu_0/debug_req_irq]
   connect_bd_net -net debug_module_wrapper_0_jtag_tdo [get_bd_pins debug_module_wrapper_0/jtag_tdo] [get_bd_pins axi_jtag_0/tdo]
-  connect_bd_net -net debug_module_wrapper_0_ndmreset [get_bd_pins debug_module_wrapper_0/ndmreset] [get_bd_pins cpu_reset_gen25/mb_debug_sys_rst]
-  connect_bd_net -net mig_aclk_1 [get_bd_pins clk_wiz_0/clk_25] [get_bd_pins northbridge/aclk] [get_bd_pins northbridge/clk_cpu] [get_bd_pins axi_bootrom_control/s_axi_aclk] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins cpu_reset_gen25/slowest_sync_clk] [get_bd_pins sdcard_quad_spi_axi/s_axi4_aclk] [get_bd_pins ariane_peripherals_0/aclk] [get_bd_pins clint_0/aclk] [get_bd_pins cpu_0/aclk] [get_bd_pins debug_module_wrapper_0/aclk] [get_bd_pins axi_jtag_0/s_axi_aclk] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK]
-  connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins cpu_reset_gen25/ext_reset_in]
+  connect_bd_net -net debug_module_wrapper_0_ndmreset [get_bd_pins debug_module_wrapper_0/ndmreset] [get_bd_pins cpu_reset_gen_core/mb_debug_sys_rst]
+  connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins cpu_reset_gen_core/ext_reset_in]
   connect_bd_net -net reset_ext_1 [get_bd_ports sys_rst] [get_bd_pins util_vector_logic_2/Op1]
   connect_bd_net -net sdcard_quad_spi_axi_ip2intc_irpt [get_bd_pins sdcard_quad_spi_axi/ip2intc_irpt] [get_bd_pins ariane_peripherals_0/spi_irq_i]
   connect_bd_net -net sin_0_1 [get_bd_ports uart_rxd] [get_bd_pins axi_uart16550_0/sin]
   connect_bd_net -net spi_miso_1 [get_bd_ports spi_miso] [get_bd_pins sdcard_quad_spi_axi/io1_i]
   connect_bd_net -net sys_clock_1 [get_bd_ports sys_clock] [get_bd_pins clk_wiz_0/clk_in1]
-  connect_bd_net -net util_vector_logic_2_Res [get_bd_pins util_vector_logic_2/Res] [get_bd_pins cpu_reset_gen25/aux_reset_in]
+  connect_bd_net -net util_vector_logic_2_Res [get_bd_pins util_vector_logic_2/Res] [get_bd_pins cpu_reset_gen_core/aux_reset_in]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins xlconcat_0/dout] [get_bd_pins bootrom_wrapper_0/addr_i]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins axi_uart16550_0/freeze] [get_bd_pins ariane_peripherals_0/eth_irq_i]
   connect_bd_net -net xlconstant_3_dout [get_bd_pins xlconstant_3/dout] [get_bd_pins ariane_peripherals_0/irq_i]
@@ -1208,6 +1204,7 @@ proc create_root_design { parentCell } {
   # Restore current instance
   current_bd_instance $oldCurInst
 
+  validate_bd_design
   save_bd_design
 }
 # End of create_root_design()
@@ -1219,6 +1216,4 @@ proc create_root_design { parentCell } {
 
 create_root_design ""
 
-
-common::send_gid_msg -ssname BD::TCL -id 2053 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 

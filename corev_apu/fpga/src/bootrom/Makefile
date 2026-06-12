@@ -78,6 +78,10 @@ else
 SED_DELETE_OPT =
 endif
 
+ifeq ($(BOARD), zcu104)
+SED_DELETE_OPT += -e "/DELETE_DUALCORE/d"
+endif
+
 #.PHONY: clean
 
 $(MAIN): $(DTB) $(OBJS_C) $(OBJS_S) linker.lds

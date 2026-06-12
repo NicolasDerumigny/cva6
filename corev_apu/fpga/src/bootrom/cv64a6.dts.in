@@ -162,3 +162,4 @@
 };
 // delete ethernet device if disabled
 /delete-node/ &eth; // DELETE_ETH
+/delete-node/ &CPU1; // DELETE_DUALCORE

@@ -38,10 +38,9 @@ module shared_fpu
 
   // fpu payload state
   typedef enum logic [2:0] {
-    COMPLETED,    // 2'b00 - Transaction finished or killed (won't trigger replay)
-    VALID,        // 2'b01 - New transaction ready to be issued to FPU
-    RESCHEDULED,  // 2'b10 - Transaction flushed by other core, needs replay
-    ISSUED,       // 2'b11 - Transaction active in FPU
+    COMPLETED,  // 2'b00 - Transaction finished or killed (won't trigger replay)
+    VALID,      // 2'b01 - New transaction ready to be issued to FPU
+    ISSUED,     // 2'b11 - Transaction active in FPU
     INVALID
   } payload_state_t;
 
@@ -144,23 +143,6 @@ module shared_fpu
     // Buffer needs 2^(TRANS_ID_BITS+1) entries for 4-bit transaction ID
     fpu_payload [(2**(CVA6Cfg.TRANS_ID_BITS+1))-1:0] payload_buffer = '0;
 
-    // =========================================================================
-    // TWO-TIER REPLAY QUEUE ARBITER WITH 4-BIT TRANSACTION ID
-    // =========================================================================
-    // ID Architecture:
-    //   trans_id[3]   = Core ID (0 = Core 0, 1 = Core 1)
-    //   trans_id[2:0] = Original CVA6 transaction ID
-    //   Buffer indices: Core 0 uses 0-7, Core 1 uses 8-15
-    //
-    // Arbitration Strategy:
-    //   Tier 1: Fixed Priority Encoder for RESCHEDULED transactions (high-priority)
-    //           - Selects lowest-indexed rescheduled entry (LSB-first)
-    //           - Ensures flushed transactions are replayed promptly
-    //   Tier 2: Masked Round-Robin Arbiter for VALID transactions (normal-priority)
-    //           - Circular pointer ensures fairness and prevents starvation
-    //           - Each transaction will eventually be serviced
-    //   Final Mux: High-priority overrides normal-priority
-    // =========================================================================
 
     // ---------------------------------------------------------
     // ID Masks and Input Preparation
@@ -179,97 +161,6 @@ module shared_fpu
       valid_inputs[0] = fpu_valid_i[0][0];
       valid_inputs[1] = fpu_valid_i[1][0];
     end
-
-    // // ---------------------------------------------------------
-    // // Two-Tier Arbitration: Request Vectors
-    // // ---------------------------------------------------------
-    // logic [BUFFER_SIZE-1:0] req_hi;  // High-priority: rescheduled transactions
-    // logic [BUFFER_SIZE-1:0] req_lo;  // Normal-priority: new valid transactions
-
-    // always_comb begin
-    //   for (int i = 0; i < BUFFER_SIZE; i++) begin
-    //     // High-priority: rescheduled transactions (flushed by other core, need replay)
-    //     req_hi[i] = (payload_buffer[i].state == RESCHEDULED);
-
-    //     // Normal-priority: new valid transactions ready to be issued
-    //     req_lo[i] = (payload_buffer[i].state == VALID);
-    //   end
-    // end
-
-    // // ---------------------------------------------------------
-    // // Tier 1: Fixed Priority Encoder for Rescheduled (High-Priority)
-    // // ---------------------------------------------------------
-    // logic                           any_req_hi;
-    // logic [        BUFFER_SIZE-1:0] grant_hi;
-    // logic [CVA6Cfg.TRANS_ID_BITS:0] grant_hi_index;
-
-    // always_comb begin
-    //   any_req_hi     = |req_hi;
-    //   grant_hi       = '0;
-    //   grant_hi_index = '0;
-
-    //   // LSB-first priority encoder
-    //   // for (int i = 0; i < BUFFER_SIZE; i++) begin
-    //   //   if (req_hi[i]) begin
-    //   //     grant_hi[i]    = 1'b1;
-    //   //     grant_hi_index = i[CVA6Cfg.TRANS_ID_BITS:0];
-    //   //     break;  // Exit on first match (LSB has priority)
-    //   //   end
-    //   // end
-
-    //   for (int i = 0; i < BUFFER_SIZE; i++) begin
-    //     int idx = (rr_pointer + i) % BUFFER_SIZE;  // Reuse rr_pointer for fairness
-    //     if (req_hi[idx]) begin
-    //       grant_hi[idx]  = 1'b1;
-    //       grant_hi_index = idx[CVA6Cfg.TRANS_ID_BITS:0];
-    //       break;
-    //     end
-    //   end
-
-    // end
-
-    // // ---------------------------------------------------------
-    // // Tier 2: Masked Round-Robin Arbiter for Normal Transactions
-    // // ---------------------------------------------------------
-    // logic [CVA6Cfg.TRANS_ID_BITS:0] rr_pointer;  // Round-robin pointer
-    // logic                           any_req_lo;
-    // logic [        BUFFER_SIZE-1:0] grant_lo;
-    // logic [CVA6Cfg.TRANS_ID_BITS:0] grant_lo_index;
-
-    // always_comb begin
-    //   any_req_lo     = |req_lo;
-    //   grant_lo       = '0;
-    //   grant_lo_index = '0;
-
-    //   // First pass: Search from pointer onwards (circular priority)
-    //   for (int i = 0; i < BUFFER_SIZE; i++) begin
-    //     int idx = (rr_pointer + i) % BUFFER_SIZE;
-    //     if (req_lo[idx]) begin
-    //       grant_lo[idx]  = 1'b1;
-    //       grant_lo_index = idx[CVA6Cfg.TRANS_ID_BITS:0];
-    //       break;
-    //     end
-    //   end
-    // end
-
-    // // ---------------------------------------------------------
-    // // Final Mux: High-Priority Overrides Normal Priority
-    // // ---------------------------------------------------------
-    // logic                           replay_valid;
-    // logic [CVA6Cfg.TRANS_ID_BITS:0] replay_index;
-
-    // always_comb begin
-    //   if (any_req_hi) begin
-    //     replay_valid = 1'b1;
-    //     replay_index = grant_hi_index;
-    //   end else if (any_req_lo) begin
-    //     replay_valid = 1'b1;
-    //     replay_index = grant_lo_index;
-    //   end else begin
-    //     replay_valid = 1'b0;
-    //     replay_index = '0;
-    //   end
-    // end
 
     // ---------------------------------------------------------
     // Single-Tier Round-Robin Arbiter
@@ -306,7 +197,6 @@ module shared_fpu
     // ---------------------------------------------------------
     always_comb begin
       // Default outputs
-      // internal_flush_i     = flush_i[0] | flush_i[1];  // Global flush for scoreboard correctness
       internal_flush_i     = 1'b0;
       internal_fpu_valid_i = '0;
       internal_fpu_fmt_i   = '0;
@@ -350,19 +240,6 @@ module shared_fpu
       masked_valid_in_0   = valid_inputs[0] & ~flush_i[0];
       masked_valid_in_1   = valid_inputs[1] & ~flush_i[1];
 
-      // PREVENT CROSS-CORE COLLISION: Do not arbitrate/grant a transaction if its core is being flushed
-      // masked_replay_valid = replay_valid;
-      // if (replay_valid) begin
-      //   // If the granted index belongs to Core 0, and Core 0 is flushing, kill the grant
-      //   if ((replay_index < ENTRIES_PER_CORE) && flush_i[0]) begin
-      //     masked_replay_valid = 1'b0;
-      //   end
-      //   // If the granted index belongs to Core 1, and Core 1 is flushing, kill the grant
-      //   if ((replay_index >= CORE_1_BASE_INDEX) && flush_i[1]) begin
-      //     masked_replay_valid = 1'b0;
-      //   end
-      // end
-
       // A global flush kills the shared FPU pipeline. Do not issue to it this cycle.
       masked_replay_valid = replay_valid & ~flush_detected;
 
@@ -377,52 +254,6 @@ module shared_fpu
         payload_buffer <= '0;
         rr_pointer     <= '0;
       end else begin
-
-        // // ==================================================================
-        // // FLUSH HANDLING: Global flush with cross-core victimization
-        // // ==================================================================
-        // if (flush_detected) begin
-        //   if (flush_i[0] && flush_i[1]) begin
-        //     // Both cores flush. Unconditionally kill all non-completed transactions.
-        //     for (int i = 0; i < BUFFER_SIZE; i++) begin
-        //       if (payload_buffer[i].state != COMPLETED) begin
-        //         payload_buffer[i].state <= INVALID;
-        //       end
-        //     end
-        //   end else if (flushing_core == 1'b0) begin
-        //     // ---------------------------------------------------------
-        //     // CORE 0 FLUSHES
-        //     // ---------------------------------------------------------
-        //     // 1. Kill ALL of Core 0's transactions (even RESCHEDULED ones)
-        //     for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
-        //       if (payload_buffer[i].state != COMPLETED) begin
-        //         payload_buffer[i].state <= INVALID;
-        //       end
-        //     end
-        //     // 2. Victimize Core 1 (Only interrupt what is currently ISSUED)
-        //     for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
-        //       if (payload_buffer[i].state == ISSUED) begin
-        //         payload_buffer[i].state <= RESCHEDULED;
-        //       end
-        //     end
-        //   end else begin
-        //     // ---------------------------------------------------------
-        //     // CORE 1 FLUSHES
-        //     // ---------------------------------------------------------
-        //     // 1. Kill ALL of Core 1's transactions (even RESCHEDULED ones)
-        //     for (int i = CORE_1_BASE_INDEX; i < BUFFER_SIZE; i++) begin
-        //       if (payload_buffer[i].state != COMPLETED) begin
-        //         payload_buffer[i].state <= INVALID;
-        //       end
-        //     end
-        //     // 2. Victimize Core 0 (Only interrupt what is currently ISSUED)
-        //     for (int i = 0; i < ENTRIES_PER_CORE; i++) begin
-        //       if (payload_buffer[i].state == ISSUED) begin
-        //         payload_buffer[i].state <= RESCHEDULED;
-        //       end
-        //     end
-        //   end
-        // end
 
         // ==================================================================
         // FLUSH HANDLING: Independent Core Filtering (No Victimization)
@@ -452,9 +283,6 @@ module shared_fpu
         // ==================================================================
         // COMPLETION HANDLING: Mark buffer entry as COMPLETED
         // ==================================================================
-        // if (fpu_valid_mod) begin
-        //   payload_buffer[fpu_trans_id_mod].state <= COMPLETED;
-        // end
         if (fpu_valid_mod && payload_buffer[fpu_trans_id_mod].state == ISSUED) begin
           payload_buffer[fpu_trans_id_mod].state <= COMPLETED;
         end
@@ -463,7 +291,6 @@ module shared_fpu
         // ISSUE HANDLING: Write new transaction to buffer when handshake completes
         // ==================================================================
         // Write to buffer only when valid handshake occurs (cores can always write to their buffer entries)
-        // if (valid_inputs[0]) begin
         if (masked_valid_in_0) begin
           // Core 0 issued a transaction - store with Core ID bit
           payload_buffer[ID_MASK_CORE_0|fu_data_i[0].trans_id].fpu_valid_i <= fpu_valid_i[0];
@@ -480,7 +307,6 @@ module shared_fpu
           payload_buffer[ID_MASK_CORE_0|fu_data_i[0].trans_id].state <= VALID;
         end
 
-        // if (valid_inputs[1]) begin
         if (masked_valid_in_1) begin
           // Core 1 issued a transaction - store with Core ID bit
           payload_buffer[ID_MASK_CORE_1|fu_data_i[1].trans_id].fpu_valid_i <= fpu_valid_i[1];
@@ -497,29 +323,12 @@ module shared_fpu
           payload_buffer[ID_MASK_CORE_1|fu_data_i[1].trans_id].state <= VALID;
         end
 
-        // // ==================================================================
-        // // ARBITRATION: Grant transaction to FPU (VALID -> ISSUED)
-        // // ==================================================================
-        // // When arbiter grants a transaction and FPU accepts it
-        // // if (replay_valid && internal_fpu_ready_o) begin
-        // if (masked_replay_valid && internal_fpu_ready_o) begin
-        //   payload_buffer[replay_index].state <= ISSUED;
-
-        //   // Update round-robin pointer only for normal-priority grants
-        //   if (~any_req_hi) begin
-        //     rr_pointer <= (replay_index + 1'b1) % BUFFER_SIZE;
-        //   end
-        // end
-
         // ==================================================================
         // ARBITRATION: Grant transaction to FPU (VALID -> ISSUED)
         // ==================================================================
         // When arbiter grants a transaction and FPU accepts it
         if (masked_replay_valid && internal_fpu_ready_o) begin
           payload_buffer[replay_index].state <= ISSUED;
-
-          // CRITICAL FIX: Always advance the pointer to prevent thread starvation
-          // under heavy OpenMP synchronization / continuous cross-flushing.
           rr_pointer <= (replay_index + 1'b1) % BUFFER_SIZE;
         end
 
@@ -594,9 +403,6 @@ module shared_fpu
         buf_result     <= '0;
         buf_exception  <= '0;
       end else begin
-        // GATING LOGIC: Only latch the valid output if the core that owns it is NOT flushing this cycle.
-        // If the core is flushing, we drop the result immediately so it doesn't ghost-write to the scoreboard next cycle.
-        // if (internal_fpu_valid_o && ~flush_i[current_trans_core]) begin
         if (internal_fpu_valid_o &&
             ~flush_i[current_trans_core] &&
             (payload_buffer[fpu_trans_id_mod].state == ISSUED)) begin
@@ -606,7 +412,6 @@ module shared_fpu
           buf_result     <= internal_result_o;
           buf_exception  <= internal_fpu_exception_o;
         end else begin
-          // Clear the buffer if nothing is valid, OR if the valid data was just flushed
           buf_valid <= 1'b0;
         end
       end
@@ -629,10 +434,6 @@ module shared_fpu
 
       // 3. Cycle T Routing: Early Valid
       // Triggered by the internal FPU's actual valid signal
-      // if (internal_fpu_valid_o) begin
-      //   if (~current_trans_core) fpu_early_valid_o[0] = 1'b1;
-      //   else fpu_early_valid_o[1] = 1'b1;
-      // end
       if (internal_fpu_valid_o && (payload_buffer[fpu_trans_id_mod].state == ISSUED)) begin
         if (~current_trans_core) fpu_early_valid_o[0] = 1'b1;
         else fpu_early_valid_o[1] = 1'b1;
@@ -641,13 +442,11 @@ module shared_fpu
       // Triggered by the pipeline buffer
       if (buf_valid) begin
         if (~buf_trans_core) begin
-          // fpu_valid_o[0]     = 1'b1;
           fpu_valid_o[0]     = 1'b1 & ~flush_i[0];
           fpu_trans_id_o[0]  = buf_trans_id;
           result_o[0]        = buf_result;
           fpu_exception_o[0] = buf_exception;
         end else begin
-          // fpu_valid_o[1]     = 1'b1;
           fpu_valid_o[1]     = 1'b1 & ~flush_i[1];
           fpu_trans_id_o[1]  = buf_trans_id;
           result_o[1]        = buf_result;

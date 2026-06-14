@@ -1,2 +1,11 @@
-core 0: pi: 0x4046eddf
-core 1: pi: 0x4046eddf
+
+
+ NAS \[1\] to Parallel barrier
+Benchmarks 3\.0 structured OpenMP C version - LU Benchmark
+
+setcoef1
+setcoef2
+setcoef3
+\[0\] to barrier
+\[0\] starting setbv
+\[1\] starting setbv

@@ -407,6 +407,8 @@ endif
 
 flist ?= core/Flist.cva6
 
+all: fpga
+
 vcs_build: $(dpi-library)/ariane_dpi.so
 	mkdir -p $(vcs-library)
 	cd $(vcs-library) &&\

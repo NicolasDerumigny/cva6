@@ -21,7 +21,7 @@ bd_boards := zcu104 pynq_z2
 ips := $(addprefix $(work-dir)/, $(ips))
 ips-target := $(join $(addsuffix /ip/, $(addprefix $(ip-dir)/, $(basename $(ips)))), $(ips))
 
-all: $(mcs)
+all: $(bit)
 
 # Generate mcs from bitstream
 $(mcs): $(bit)
@@ -31,7 +31,6 @@ ifneq ($(filter $(BOARD),$(bd_boards)),)
 $(bit): ../../$(ADD_SRC)
 	mkdir -p $(work-dir)
 	$(VIVADO) $(VIVADOFLAGS) $(VIVADO_NEWPROJECT) -source scripts/create_bd_project.tcl
-	cp ariane.runs/impl_1/ariane_xilinx* ./$(work-dir)
 
 else
 $(bit): $(ips)

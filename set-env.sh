@@ -12,7 +12,7 @@ export CVA6_REPO_DIR=${SCRIPT_DIR}
 export HPDCACHE_DIR=${SCRIPT_DIR}/core/cache_subsystem/hpdcache
 
 export XLEN=64
-export BOARD=zcu104
+export BOARD=pynq_z2
 export target=cv64a6_${BOARD}_sv39
 export TARGET_CFG=${target}
 export PLATFORM=PLAT_XILINX

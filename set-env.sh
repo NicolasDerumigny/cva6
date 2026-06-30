@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_DIR=`dirname $(readlink -f $0)`
+SCRIPT_DIR=`pwd`
 
 export PATH=${PATH}:/opt/xpack/riscv-none-elf-gcc/bin:/opt/Xilinx/Vivado/2024.1/bin
 export RISCV=/opt/xpack/riscv-none-elf-gcc

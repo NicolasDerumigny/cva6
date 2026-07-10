@@ -21,6 +21,8 @@ export NUM_JOBS=$(nproc)
 
 export DV_SIMULATORS=veri-testharness,spike
 
+# Required packages: `colout`, `pyyaml`
+# + symbolic link `ln -s ../../../../../util/colout_cva6.py venv/lib/python3.XX/site-packages/colout`
 if [ -f "${SCRIPT_DIR}/venv/bin/activate" ]; then
     source ${SCRIPT_DIR}/venv/bin/activate
 fi

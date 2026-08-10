@@ -1,0 +1,211 @@
+[
+  {
+    "id": 31439064392,
+    "source": "github-actions",
+    "simulator": "verilator",
+    "run_number": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392",
+    "head_branch": "dev/xilinx_boards",
+    "head_sha": "ce7b6f62",
+    "event": "schedule",
+    "created_at": "2026-08-10T22:37:17Z",
+    "updated_at": "2026-08-10T23:10:03Z",
+    "run_started_at": "2026-08-10T22:37:17Z",
+    "duration_seconds": 1966,
+    "total_jobs": 17,
+    "passed_jobs": 0,
+    "failed_jobs": 17,
+    "skipped_jobs": 0,
+    "jobs": [
+      {
+        "name": "RV64 Tier2 cv64a6_imafdc_sv39_hpdcache_wb / dv-riscv-arch-test",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:09:29Z",
+        "duration_seconds": 128,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747392",
+        "arch": "rv64",
+        "config": "cv64a6_imafdc_sv39_hpdcache_wb",
+        "testcase": "dv-riscv-arch-test"
+      },
+      {
+        "name": "RV64 Tier2 cv64a6_imafdc_sv39_hpdcache_wb / dv-riscv-tests-p",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:51Z",
+        "duration_seconds": 90,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747401",
+        "arch": "rv64",
+        "config": "cv64a6_imafdc_sv39_hpdcache_wb",
+        "testcase": "dv-riscv-tests-p"
+      },
+      {
+        "name": "RV64 Tier2 cv64a6_imafdc_sv39_hpdcache_wb / dv-riscv-tests-v",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:54Z",
+        "duration_seconds": 93,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747419",
+        "arch": "rv64",
+        "config": "cv64a6_imafdc_sv39_hpdcache_wb",
+        "testcase": "dv-riscv-tests-v"
+      },
+      {
+        "name": "RV64 Tier2 cv64a6_imafdc_sv39_hpdcache_wb / cv64a6_imafdc_tests",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:27Z",
+        "completed_at": "2026-08-10T23:09:47Z",
+        "duration_seconds": 140,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747426",
+        "arch": "rv64",
+        "config": "cv64a6_imafdc_sv39_hpdcache_wb",
+        "testcase": "cv64a6_imafdc_tests"
+      },
+      {
+        "name": "RV64 Tier2 cv64a6_imafdc_sv39_hpdcache_wb / dv-riscv-compliance",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:29Z",
+        "completed_at": "2026-08-10T23:10:03Z",
+        "duration_seconds": 154,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747454",
+        "arch": "rv64",
+        "config": "cv64a6_imafdc_sv39_hpdcache_wb",
+        "testcase": "dv-riscv-compliance"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / dv-riscv-compliance",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:09:06Z",
+        "duration_seconds": 105,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747530",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "dv-riscv-compliance"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / dv-riscv-tests-p",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:26Z",
+        "completed_at": "2026-08-10T23:09:39Z",
+        "duration_seconds": 133,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747534",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "dv-riscv-tests-p"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / smoke-tests-cv32a65x",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:29Z",
+        "duration_seconds": 68,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747543",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "smoke-tests-cv32a65x"
+      },
+      {
+        "name": "RV32 Tier2 cv32a60x / dv-riscv-tests-p",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:28Z",
+        "completed_at": "2026-08-10T23:09:13Z",
+        "duration_seconds": 105,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747545",
+        "arch": "rv32",
+        "config": "cv32a60x",
+        "testcase": "dv-riscv-tests-p"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / dv-riscv-arch-test",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:09:15Z",
+        "duration_seconds": 114,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747548",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "dv-riscv-arch-test"
+      },
+      {
+        "name": "RV32 Tier2 cv32a60x / cv32a6_tests",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:31Z",
+        "duration_seconds": 70,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747562",
+        "arch": "rv32",
+        "config": "cv32a60x",
+        "testcase": "cv32a6_tests"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / cv32a6_tests",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:23Z",
+        "completed_at": "2026-08-10T23:09:04Z",
+        "duration_seconds": 101,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747563",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "cv32a6_tests"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / hwconfig_tests",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:36Z",
+        "duration_seconds": 75,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747572",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "hwconfig_tests"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / coremark",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:51Z",
+        "duration_seconds": 90,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747574",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "coremark"
+      },
+      {
+        "name": "RV32 Tier2 cv32a65x / dv-csr-embedded-tests",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:21Z",
+        "completed_at": "2026-08-10T23:08:44Z",
+        "duration_seconds": 83,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747585",
+        "arch": "rv32",
+        "config": "cv32a65x",
+        "testcase": "dv-csr-embedded-tests"
+      },
+      {
+        "name": "RV32 Tier2 cv32a60x / dv-riscv-arch-test",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:23Z",
+        "completed_at": "2026-08-10T23:09:34Z",
+        "duration_seconds": 131,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747621",
+        "arch": "rv32",
+        "config": "cv32a60x",
+        "testcase": "dv-riscv-arch-test"
+      },
+      {
+        "name": "RV32 Tier2 cv32a60x / dv-riscv-compliance",
+        "conclusion": "failure",
+        "started_at": "2026-08-10T23:07:28Z",
+        "completed_at": "2026-08-10T23:09:23Z",
+        "duration_seconds": 115,
+        "html_url": "https://github.com/NicolasDerumigny/cva6/actions/runs/31439064392/job/93625747640",
+        "arch": "rv32",
+        "config": "cv32a60x",
+        "testcase": "dv-riscv-compliance"
+      }
+    ]
+  }
+]

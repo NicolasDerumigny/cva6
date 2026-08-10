@@ -165,9 +165,8 @@ module cva6_multicore_hpdcache_subsystem
     userCfg.wtEn =
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT) ||
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
-    userCfg.wbEn =
-        (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WB) ||
-        (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
+    // WB is needed for pinning
+    userCfg.wbEn = 1'b1;
     userCfg.lowLatency = 1'b1;
     userCfg.eccEn = 1'b0;  /*FIXME add additional CVA6 parameter*/
     userCfg.eccScrubberEn = 1'b0;  /*FIXME: add additional CVA6 parameter*/

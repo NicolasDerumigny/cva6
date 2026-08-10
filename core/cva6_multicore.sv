@@ -27,6 +27,8 @@ module cva6_multicore
       logic [31:0] tinst;  // transformed instruction information
       logic gva;  // signals when a guest virtual address is written to tval
       logic valid;
+      //timing of exception, timing = 0 : break immediately or timing = 1 break immediatemy AFTER (let current instruction commit but only this one)
+      logic timing;
     },
 
     // CVXIF Types
@@ -267,6 +269,9 @@ module cva6_multicore
 
       cva6_cacheless #(
           .CVA6Cfg(CVA6Cfg),
+          .rvfi_probes_instr_t(rvfi_probes_instr_t),
+          .rvfi_probes_csr_t(rvfi_probes_csr_t),
+          .rvfi_probes_t(rvfi_probes_t),
           .exception_t(exception_t),
           .icache_areq_t(icache_areq_t),
           .icache_arsp_t(icache_arsp_t),
@@ -465,29 +470,45 @@ module cva6_multicore
         .axi_b_chan_t(b_chan_t),
         .axi_r_chan_t(r_chan_t),
         .noc_req_t(noc_req_t),
-        .noc_resp_t(noc_resp_t),
-        .cmo_req_t(logic  /*FIXME*/),
-        .cmo_rsp_t(logic  /*FIXME*/)
+        .noc_resp_t(noc_resp_t)
     ) i_cva6_hpdcache_subsystem (
-        .clk_i                   (clk_i),
-        .rst_ni                  (rst_ni),
+        .clk_i (clk_i),
+        .rst_ni(rst_ni),
+
         .icache_miss_valid_i     (icache_miss_valid),
         .icache_miss_ready_o     (icache_miss_ready),
         .icache_miss_i           (icache_miss),
         .icache_miss_resp_valid_o(icache_miss_resp_valid),
         .icache_miss_resp_o      (icache_miss_resp),
-        .dcache_enable_i         (dcache_en_csr_nbdcache),
-        .dcache_flush_i          (dcache_flush_ctrl_cache),
-        .dcache_flush_ack_o      (dcache_flush_ack_cache_ctrl),
-        .dcache_miss_o           (dcache_miss_cache_perf),
-        .dcache_amo_req_i        (amo_req),
-        .dcache_amo_resp_o       (amo_resp),
-        .dcache_req_ports_i      (dcache_req_to_cache),
-        .dcache_req_ports_o      (dcache_req_from_cache),
-        .wbuffer_empty_o         (dcache_commit_wbuffer_empty),
-        .wbuffer_not_ni_o        (dcache_commit_wbuffer_not_ni),
-        .noc_req_o               (noc_req_o),
-        .noc_resp_i              (noc_resp_i)
+
+        .dcache_enable_i   (dcache_en_csr_nbdcache),
+        .dcache_flush_i    (dcache_flush_ctrl_cache),
+        .dcache_flush_ack_o(dcache_flush_ack_cache_ctrl),
+        .dcache_miss_o     (dcache_miss_cache_perf),
+
+        .dcache_amo_req_i (amo_req),
+        .dcache_amo_resp_o(amo_resp),
+
+        .dcache_req_ports_i(dcache_req_to_cache),
+        .dcache_req_ports_o(dcache_req_from_cache),
+
+        .wbuffer_empty_o (dcache_commit_wbuffer_empty),
+        .wbuffer_not_ni_o(dcache_commit_wbuffer_not_ni),
+
+        .hwpf_base_set_i    ('0  /*FIXME*/),
+        .hwpf_base_i        ('0  /*FIXME*/),
+        .hwpf_base_o        (  /*FIXME*/),
+        .hwpf_param_set_i   ('0  /*FIXME*/),
+        .hwpf_param_i       ('0  /*FIXME*/),
+        .hwpf_param_o       (  /*FIXME*/),
+        .hwpf_throttle_set_i('0  /*FIXME*/),
+        .hwpf_throttle_i    ('0  /*FIXME*/),
+        .hwpf_throttle_o    (  /*FIXME*/),
+        .hwpf_status_o      (  /*FIXME*/),
+
+
+        .noc_req_o (noc_req_o),
+        .noc_resp_i(noc_resp_i)
     );
     assign inval_ready = 1'b1;
   end

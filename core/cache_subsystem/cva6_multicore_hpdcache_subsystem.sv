@@ -75,7 +75,30 @@ module cva6_multicore_hpdcache_subsystem
     // Write buffer status to know if empty - EX_STAGE
     output logic [NrHarts-1:0] wbuffer_empty_o,
     // Write buffer status to know if not non idempotent - EX_STAGE
-    output logic [NrHarts-1:0] wbuffer_not_ni_o
+    output logic [NrHarts-1:0] wbuffer_not_ni_o,
+
+    //  Hardware memory prefetcher configuration
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    input  logic [NrHwPrefetchers-1:0]       hwpf_base_set_i,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    input  logic [NrHwPrefetchers-1:0][63:0] hwpf_base_i,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    output logic [NrHwPrefetchers-1:0][63:0] hwpf_base_o,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    input  logic [NrHwPrefetchers-1:0]       hwpf_param_set_i,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    input  logic [NrHwPrefetchers-1:0][63:0] hwpf_param_i,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    output logic [NrHwPrefetchers-1:0][63:0] hwpf_param_o,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    input  logic [NrHwPrefetchers-1:0]       hwpf_throttle_set_i,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    input  logic [NrHwPrefetchers-1:0][63:0] hwpf_throttle_i,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    output logic [NrHwPrefetchers-1:0][63:0] hwpf_throttle_o,
+    // TO_BE_COMPLETED - TO_BE_COMPLETED
+    output logic [               63:0]       hwpf_status_o
+    //  }}}
 );
   function int unsigned __minu(input int unsigned x, input int unsigned y);
     return x < y ? x : y;
@@ -88,17 +111,16 @@ module cva6_multicore_hpdcache_subsystem
   //  D$ instantiation
   //  {{{
 
+  //    Per hart:
   //    0: Page-Table Walk (PTW)
   //    1: Load unit
   //    2: Accelerator load
   //    3: Store/AMO
-  //    .
-  //    .
-  //    .
-  //    NumPorts: CMO
-  //    NumPorts + 1: Hardware Memory Prefetcher (hwpf)
-  localparam unsigned PORTS_PER_HART = NumPorts + 1;
-  localparam unsigned HPDCACHE_NREQUESTERS = (NrHarts * PORTS_PER_HART) + 1;
+
+  //    Last port:
+  //    NrHarts*NumPorts: Hardware Memory Prefetcher (hwpf) - currently not enabled
+  localparam unsigned PORTS_PER_HART = NumPorts;
+  localparam unsigned HPDCACHE_NREQUESTERS = (NrHarts * PORTS_PER_HART);  // +1; - Mem prefetcher
 
   function automatic hpdcache_pkg::hpdcache_user_cfg_t hpdcacheSetConfig();
     hpdcache_pkg::hpdcache_user_cfg_t userCfg;
@@ -107,51 +129,57 @@ module cva6_multicore_hpdcache_subsystem
     userCfg.wordWidth = CVA6Cfg.XLEN;
     userCfg.sets = CVA6Cfg.DCACHE_NUM_WORDS;
     userCfg.ways = CVA6Cfg.DCACHE_SET_ASSOC;
-    userCfg.clWords = CVA6Cfg.DCACHE_LINE_WIDTH / CVA6Cfg.XLEN;
+    userCfg.clWords = CVA6Cfg.DCACHE_LINE_WIDTH / userCfg.wordWidth;
     userCfg.reqWords = 1;
     userCfg.reqTransIdWidth = CVA6Cfg.DcacheIdWidth;
-    userCfg.reqSrcIdWidth = 4;  // Up to 16 requesters
+    userCfg.reqSrcIdWidth = 3;  // Up to 8 requesters
     userCfg.victimSel = hpdcache_pkg::HPDCACHE_VICTIM_RANDOM;
     userCfg.dataWaysPerRamWord = __minu(CVA6Cfg.DCACHE_SET_ASSOC, 128 / CVA6Cfg.XLEN);
     userCfg.dataSetsPerRam = CVA6Cfg.DCACHE_NUM_WORDS;
     userCfg.dataRamByteEnable = 1'b1;
-    userCfg.accessWords = __maxu(CVA6Cfg.AxiDataWidth / CVA6Cfg.XLEN, userCfg.reqWords);
+    userCfg.accessWords = __maxu(CVA6Cfg.AxiDataWidth / userCfg.wordWidth, userCfg.reqWords);
     userCfg.mshrSets = CVA6Cfg.NrLoadBufEntries < 16 ? 1 : CVA6Cfg.NrLoadBufEntries / 2;
     userCfg.mshrWays = CVA6Cfg.NrLoadBufEntries < 16 ? CVA6Cfg.NrLoadBufEntries : 2;
     userCfg.mshrWaysPerRamWord = CVA6Cfg.NrLoadBufEntries < 16 ? CVA6Cfg.NrLoadBufEntries : 2;
     userCfg.mshrSetsPerRam = CVA6Cfg.NrLoadBufEntries < 16 ? 1 : CVA6Cfg.NrLoadBufEntries / 2;
     userCfg.mshrRamByteEnable = 1'b1;
     userCfg.mshrUseRegbank = (CVA6Cfg.NrLoadBufEntries < 16);
+    userCfg.cbufEntries = CVA6Cfg.WtDcacheWbufDepth;
     userCfg.refillCoreRspFeedthrough = 1'b1;
-    userCfg.refillFifoDepth = 2 * (CVA6Cfg.DCACHE_LINE_WIDTH / CVA6Cfg.AxiDataWidth);
+    if (CVA6Cfg.NOCType == config_pkg::NOC_TYPE_L15_BIG_ENDIAN || CVA6Cfg.NOCType == config_pkg::NOC_TYPE_L15_LITTLE_ENDIAN) begin
+      // OpenPiton needs a larger refill FIFO to store as many invalidations as in-flight requests (plus some extra to be safe)
+      userCfg.refillFifoDepth = (userCfg.mshrSets * userCfg.mshrWays) + 10;
+    end else begin
+      userCfg.refillFifoDepth = 2 * (CVA6Cfg.DCACHE_LINE_WIDTH / CVA6Cfg.AxiDataWidth);
+    end
     userCfg.wbufDirEntries = CVA6Cfg.WtDcacheWbufDepth;
     userCfg.wbufDataEntries = CVA6Cfg.WtDcacheWbufDepth;
     userCfg.wbufWords = 1;
     userCfg.wbufTimecntWidth = 3;
     userCfg.rtabEntries = 4;
-    /*FIXME we should add additional CVA6 config parameters (flushEntries)*/
-    userCfg.flushEntries = CVA6Cfg.WtDcacheWbufDepth;
-    /*FIXME we should add additional CVA6 config parameters (flushFifoDepth)*/
-    userCfg.flushFifoDepth = CVA6Cfg.WtDcacheWbufDepth;
+    userCfg.flushEntries = CVA6Cfg.WtDcacheWbufDepth;  /*FIXME add additional CVA6 parameter*/
+    userCfg.flushFifoDepth = CVA6Cfg.WtDcacheWbufDepth;  /*FIXME add additional CVA6 parameter*/
     userCfg.memAddrWidth = CVA6Cfg.AxiAddrWidth;
     userCfg.memIdWidth = CVA6Cfg.MEM_TID_WIDTH;
     userCfg.memDataWidth = CVA6Cfg.AxiDataWidth;
     userCfg.wtEn =
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT) ||
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
-    userCfg.wbEn =
-        (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WB) ||
-        (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
+    // WB is needed for pinning
+    userCfg.wbEn = 1'b1;
+    userCfg.lowLatency = 1'b1;
+    userCfg.eccEn = 1'b0;  /*FIXME add additional CVA6 parameter*/
+    userCfg.eccScrubberEn = 1'b0;  /*FIXME: add additional CVA6 parameter*/
     return userCfg;
   endfunction
 
   localparam hpdcache_pkg::hpdcache_user_cfg_t HPDCACHE_USER_CFG = hpdcacheSetConfig();
-  localparam hpdcache_pkg::hpdcache_cfg_t HPDCACHE_CFG = hpdcache_pkg::hpdcacheBuildConfig(
+  localparam hpdcache_pkg::hpdcache_cfg_t HPDcacheCfg = hpdcache_pkg::hpdcacheBuildConfig(
       HPDCACHE_USER_CFG
   );
 
   `HPDCACHE_TYPEDEF_MEM_ATTR_T(hpdcache_mem_addr_t, hpdcache_mem_id_t, hpdcache_mem_data_t,
-                               hpdcache_mem_be_t, HPDCACHE_CFG);
+                               hpdcache_mem_be_t, HPDcacheCfg);
   `HPDCACHE_TYPEDEF_MEM_REQ_T(hpdcache_mem_req_t, hpdcache_mem_addr_t, hpdcache_mem_id_t);
   `HPDCACHE_TYPEDEF_MEM_RESP_R_T(hpdcache_mem_resp_r_t, hpdcache_mem_id_t, hpdcache_mem_data_t);
   `HPDCACHE_TYPEDEF_MEM_REQ_W_T(hpdcache_mem_req_w_t, hpdcache_mem_data_t, hpdcache_mem_be_t);
@@ -159,7 +187,7 @@ module cva6_multicore_hpdcache_subsystem
 
   `HPDCACHE_TYPEDEF_REQ_ATTR_T(hpdcache_req_offset_t, hpdcache_data_word_t, hpdcache_data_be_t,
                                hpdcache_req_data_t, hpdcache_req_be_t, hpdcache_req_sid_t,
-                               hpdcache_req_tid_t, hpdcache_tag_t, HPDCACHE_CFG);
+                               hpdcache_req_tid_t, hpdcache_tag_t, HPDcacheCfg);
   `HPDCACHE_TYPEDEF_REQ_T(hpdcache_req_t, hpdcache_req_offset_t, hpdcache_req_data_t,
                           hpdcache_req_be_t, hpdcache_req_sid_t, hpdcache_req_tid_t,
                           hpdcache_tag_t);
@@ -187,7 +215,8 @@ module cva6_multicore_hpdcache_subsystem
   endgenerate
 
 
-  typedef logic [HPDCACHE_CFG.u.wbufTimecntWidth-1:0] hpdcache_wbuf_timecnt_t;
+  typedef logic [HPDcacheCfg.u.wbufTimecntWidth-1:0] hpdcache_wbuf_timecnt_t;
+  typedef logic [HPDcacheCfg.nlineWidth-1:0] hpdcache_nline_t;
 
   logic                 dcache_read_ready;
   logic                 dcache_read_valid;
@@ -209,16 +238,17 @@ module cva6_multicore_hpdcache_subsystem
   logic                 dcache_write_resp_valid;
   hpdcache_mem_resp_w_t dcache_write_resp;
 
+  logic                 dcache_resp_read_inval;
+  hpdcache_nline_t      dcache_resp_read_inval_nline;
+
   cva6_multicore_hpdcache_wrapper #(
       .CVA6Cfg                (CVA6Cfg),
-      .HPDcacheCfg            (HPDCACHE_CFG),
+      .HPDcacheCfg            (HPDcacheCfg),
       .dcache_req_i_t         (dcache_req_i_t),
       .dcache_req_o_t         (dcache_req_o_t),
       .NrHarts                (NrHarts),
       .NumPorts               (NumPorts),
       .NrHwPrefetchers        (NrHwPrefetchers),
-      .cmo_req_t              (cmo_req_t),
-      .cmo_rsp_t              (cmo_rsp_t),
       .hpdcache_mem_addr_t    (hpdcache_mem_addr_t),
       .hpdcache_mem_id_t      (hpdcache_mem_id_t),
       .hpdcache_mem_data_t    (hpdcache_mem_data_t),
@@ -249,24 +279,22 @@ module cva6_multicore_hpdcache_subsystem
 
       .dcache_amo_req_i  (dcache_amo_req_i),
       .dcache_amo_resp_o (dcache_amo_resp_o),
-      .dcache_cmo_req_i  ('0  /*FIXME*/),
-      .dcache_cmo_resp_o (  /*FIXME*/),
       .dcache_req_ports_i(dcache_req_ports_i),
       .dcache_req_ports_o(dcache_req_ports_o),
 
       .wbuffer_empty_o (wbuffer_empty),
       .wbuffer_not_ni_o(wbuffer_not_ni),
 
-      .hwpf_base_set_i    ('0  /*FIXME*/),
-      .hwpf_base_i        ('0  /*FIXME*/),
-      .hwpf_base_o        (  /*FIXME*/),
-      .hwpf_param_set_i   ('0  /*FIXME*/),
-      .hwpf_param_i       ('0  /*FIXME*/),
-      .hwpf_param_o       (  /*FIXME*/),
-      .hwpf_throttle_set_i('0  /*FIXME*/),
-      .hwpf_throttle_i    ('0  /*FIXME*/),
-      .hwpf_throttle_o    (  /*FIXME*/),
-      .hwpf_status_o      (  /*FIXME*/),
+      .hwpf_base_set_i(hwpf_base_set_i),
+      .hwpf_base_i(hwpf_base_i),
+      .hwpf_base_o(hwpf_base_o),
+      .hwpf_param_set_i(hwpf_param_set_i),
+      .hwpf_param_i(hwpf_param_i),
+      .hwpf_param_o(hwpf_param_o),
+      .hwpf_throttle_set_i(hwpf_throttle_set_i),
+      .hwpf_throttle_i(hwpf_throttle_i),
+      .hwpf_throttle_o(hwpf_throttle_o),
+      .hwpf_status_o(hwpf_status_o),
 
       .dcache_mem_req_read_ready_i(dcache_read_ready),
       .dcache_mem_req_read_valid_o(dcache_read_valid),
@@ -275,6 +303,9 @@ module cva6_multicore_hpdcache_subsystem
       .dcache_mem_resp_read_ready_o(dcache_read_resp_ready),
       .dcache_mem_resp_read_valid_i(dcache_read_resp_valid),
       .dcache_mem_resp_read_i      (dcache_read_resp),
+
+      .dcache_mem_resp_read_inval_i(dcache_resp_read_inval),
+      .dcache_mem_resp_read_inval_nline_i(dcache_resp_read_inval_nline),
 
       .dcache_mem_req_write_ready_i(dcache_write_ready),
       .dcache_mem_req_write_valid_o(dcache_write_valid),
@@ -359,19 +390,21 @@ module cva6_multicore_hpdcache_subsystem
   );
   //  }}}
 
+  // AXI NoC doesn't support invalidations
+  assign dcache_resp_read_inval = 0;
+  assign dcache_resp_read_inval_nline = '0;
+
   //  Assertions
   //  {{{
   //  pragma translate_off
   initial begin : initial_assertions
-    assert (HPDCACHE_CFG.u.reqSrcIdWidth >= $clog2(HPDCACHE_CFG.u.nRequesters))
+    assert (HPDcacheCfg.u.reqSrcIdWidth >= $clog2(HPDcacheCfg.u.nRequesters))
     else $fatal(1, "HPDCACHE_REQ_SRC_ID_WIDTH is not wide enough");
     assert (CVA6Cfg.MEM_TID_WIDTH <= CVA6Cfg.AxiIdWidth)
     else $fatal(1, "MEM_TID_WIDTH shall be less or equal to the AxiIdWidth");
-    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(
-        HPDCACHE_CFG.u.mshrSets * HPDCACHE_CFG.u.mshrWays
-    ) + 1))
+    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(HPDcacheCfg.u.mshrSets * HPDcacheCfg.u.mshrWays) + 1))
     else $fatal(1, "MEM_TID_WIDTH shall allow to uniquely identify all D$ and I$ miss requests ");
-    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(HPDCACHE_CFG.u.wbufDirEntries) + 1))
+    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(HPDcacheCfg.u.wbufDirEntries) + 1))
     else $fatal(1, "MEM_TID_WIDTH shall allow to uniquely identify all D$ write requests ");
   end
   //  pragma translate_on

@@ -364,8 +364,8 @@ module cva6_hpdcache_subsystem
     localparam NUM_PORTS_ADAPTER = 4;
     localparam NUM_PORTS_ADAPTER_WIDTH = $clog2(NUM_PORTS_ADAPTER);
     // Adapter HPDC-L1.5 Request Ports type
-    // 0: Maximum priority 
-    // NUM_PORTS_ADAPTER - 1 : Less priority 
+    // 0: Maximum priority
+    // NUM_PORTS_ADAPTER - 1 : Less priority
     localparam [NUM_PORTS_ADAPTER_WIDTH-1:0] ICACHE_PORT = 0;
     localparam [NUM_PORTS_ADAPTER_WIDTH-1:0] DCACHE_READ_PORT = 1;
     localparam [NUM_PORTS_ADAPTER_WIDTH-1:0] DCACHE_WRITE_PORT = 2;

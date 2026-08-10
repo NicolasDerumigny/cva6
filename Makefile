@@ -93,11 +93,9 @@ else ifeq ($(BOARD), nexys_video)
 else ifeq ($(BOARD), zcu104)
 	XILINX_PART              := xczu7ev-ffvc1156-2-e
 	XILINX_BOARD             := xilinx.com:zcu104:part0:1.1
-	CLK_PERIOD_NS            := 20
 else ifeq ($(BOARD), pynq_z2)
 	XILINX_PART              := xc7z020clg400-1
 	XILINX_BOARD             := tul.com.tw:pynq-z2:part0:1.0
-	CLK_PERIOD_NS            := 40
 else
 $(error Unknown board - please specify a supported FPGA board)
 endif

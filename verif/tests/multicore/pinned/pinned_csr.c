@@ -14,12 +14,14 @@ int test_csr() {
 
     init_csr();
 
-    if (hpdcache_csr->pinned_addr_start != (uintptr_t)table) {
-        printf("Error: CSR ADDR START failed test\n");
+    if (hpdcache_csr->pinned_line_addr_start !=
+        ((uintptr_t)table >> HPDCACHE_CL_OFFSET_WIDTH)) {
+        printf("Error: CSR LINE ADDR START failed test\n");
         ret++;
     };
-    if (hpdcache_csr->pinned_addr_size != sizeof(table)) {
-        printf("Error: CSR ADDR SIZE failed test\n");
+    if (hpdcache_csr->pinned_line_addr_size !=
+        (sizeof(table) >> HPDCACHE_CL_OFFSET_WIDTH)) {
+        printf("Error: CSR LINE ADDR SIZE failed test\n");
         ret++;
     };
 

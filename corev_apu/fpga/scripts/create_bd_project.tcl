@@ -57,6 +57,7 @@ set cstr [get_filesets constrs_1]
 remove_files -fileset $obj "*ariane_xilinx.sv"
 
 add_files -fileset $obj -verbose [file normalize "$origin_dir/core/cache_subsystem/hpdcache/rtl/include/hpdcache_typedef.svh"]
+add_files -fileset $obj -verbose [file normalize "$origin_dir/core/cache_subsystem/hpdcache/rtl/include/hpdcache_pinning.svh"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/core/cvfpu/src/common_cells/include/common_cells/registers.svh"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/core/include/cvxif_types.svh"]
 add_files -fileset $obj -verbose [file normalize "$origin_dir/core/include/rvfi_types.svh"]
@@ -86,6 +87,7 @@ set file_obj [get_files -of_objects $obj [list \
     "$origin_dir/core/include/cvxif_types.svh" \
     "$origin_dir/core/include/rvfi_types.svh" \
     "$origin_dir/core/cache_subsystem/hpdcache/rtl/include/hpdcache_typedef.svh" \
+    "$origin_dir/core/cache_subsystem/hpdcache/rtl/include/hpdcache_pinning.svh" \
     "$origin_dir/corev_apu/fpga/src/verilog_wrappers/block_design_wrappers/ariane_xlnx_mapper.svh" \
 ]]
 set_property -dict { file_type {SystemVerilog} is_global_include 1} -objects $file_obj

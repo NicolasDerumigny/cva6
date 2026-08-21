@@ -21,8 +21,10 @@
            HPDCACHE_SET_WIDTH + 1))
 
 typedef struct {
-    uint64_t pinned_addr_start;
-    uint64_t pinned_addr_size;
+    //  Line address: byte address without the cacheline offset bits
+    uint64_t pinned_line_addr_start;
+    //  Region length in cachelines
+    uint64_t pinned_line_addr_size;
 } s_hpdcache_csr_t;
 
 typedef struct {
@@ -44,16 +46,18 @@ static volatile uint8_t table_unpinned[LEN] __attribute__((aligned(4096)));
 static void init_csr() {
     fence();
     s_hpdcache_csr_t *hpdcache_csr = (s_hpdcache_csr_t *)HPDCACHE_CSR_BASE;
-    hpdcache_csr->pinned_addr_start = (uintptr_t)table;
-    hpdcache_csr->pinned_addr_size = sizeof(table);
+    hpdcache_csr->pinned_line_addr_start =
+        (uintptr_t)table >> HPDCACHE_CL_OFFSET_WIDTH;
+    hpdcache_csr->pinned_line_addr_size =
+        sizeof(table) >> HPDCACHE_CL_OFFSET_WIDTH;
     fence();
 }
 
 static void reset_csr() {
     fence();
     s_hpdcache_csr_t *hpdcache_csr = (s_hpdcache_csr_t *)HPDCACHE_CSR_BASE;
-    hpdcache_csr->pinned_addr_start = 0;
-    hpdcache_csr->pinned_addr_size = 0;
+    hpdcache_csr->pinned_line_addr_start = 0;
+    hpdcache_csr->pinned_line_addr_size = 0;
     fence();
 }
 

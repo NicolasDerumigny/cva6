@@ -49,22 +49,19 @@ int test_pinned_full() {
     *unpinned_ptr = 0;
     printf("Could read/write unpinned data with full set\n");
 
-    // Read req of pinned region. Should not hang (use the uncachable path)
+    //   Launch core 1 unpinning core
+    __sync_store(&stage, 1 + __sync_load(&stage));
+
+    // Read req of pinned region with full pinned set. Hangs!
     volatile int8_t val = (int8_t)
         table[8 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
-    if (val * val < 0) { // Avoid DCE
-        printf("Negative square ?!?\n");
-    } else {
-        printf("Core 0 pinned read req was not blocked (val 0x%x)\n", val);
-    }
+    printf("Core 0 pinned read req was unblocked (val 0x%x)\n", val);
 
     volatile uint8_t *ptr1 =
         &table[9 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
     volatile uint8_t *ptr2 =
         &table[10 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
     invalidate_cacheline((void *)get_cl_addr(0, 0));
-    //   Launch core 1 unpinning core
-    __sync_store(&stage, 1 + __sync_load(&stage));
     *ptr1 = 0xff;
     *ptr2 = 0xff;
     printf("Core 0 double write req unblocked\n");
@@ -73,11 +70,7 @@ int test_pinned_full() {
     table[11 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))] = 0xa0;
     printf("Core 0 write req unblocked\n");
 
-    // Hanging until unblocked by core 1 CSR update
-    table[12 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))] = 0xa0;
-    printf("Core 0 write req unblocked\n");
-
-    // `reset_csr` is done by core 1
+    reset_csr();
     for (int i = 0; i < 5 + (1 << HPDCACHE_WAY_WIDTH); i++) {
         flush_cacheline(
             &table[i * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))]);
@@ -103,23 +96,26 @@ int unpin_core() {
     }
     // Give time for the core 0 to output its unpinning message if not blocked
     wait();
-    printf("Invalidate one pinned cacheline to unblock core 0...\n");
+    printf("Invalidate one pinned cacheline to unblock core 0 (1/3)...\n");
     wait();
     invalidate_cacheline((void *)get_cl_addr(0, 0));
 
-    // Perform `flush` unpinning for the second req
+    wait();
+
+    // Again
     while (!set_pinned_full(0)) {
     }
     wait();
-    printf("Flushing one pinned cachelines to unblock core 0...\n");
+    printf("Invalidate one pinned cacheline to unblock core 0 (2/3)...\n");
+    wait();
     invalidate_cacheline((void *)get_cl_addr(0, 0));
 
-    // Unpinning the last req with CSR configuration update.
+    // Perform `flush` unpinning for the third req
     while (!set_pinned_full(0)) {
     }
     wait();
-    printf("Reseting CSR to unblock core 0...\n");
-    reset_csr();
+    printf("Flushing one pinned cachelines to unblock core 0 (3/3)...\n");
+    invalidate_cacheline((void *)get_cl_addr(0, 0));
 
     return ret;
 }

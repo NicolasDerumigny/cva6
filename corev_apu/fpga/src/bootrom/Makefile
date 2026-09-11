@@ -25,6 +25,7 @@ CLOCK_FREQUENCY ?= 75000000 #75MHz
 HALF_CLOCK_FREQUENCY ?= 37500000 #37.5MHz
 UART_BITRATE ?= 115200
 HAS_ETHERNET ?= 0
+RISCV_EXT ?= zicbom
 else ifeq ($(BOARD), pynq_z2)
 DRAM_SIZE_64 ?= 0x10000000 #256MB
 DRAM_SIZE_64_UP ?= 0x0
@@ -115,6 +116,7 @@ $(MAIN): $(DTB) $(OBJS_C) $(OBJS_S) linker.lds
 	       -e "s/HALF_CLOCK_FREQUENCY/$(HALF_CLOCK_FREQUENCY)/g" \
 	       -e "s/CLOCK_FREQUENCY/$(CLOCK_FREQUENCY)/g" \
 	       -e "s/UART_BITRATE/$(UART_BITRATE)/g" \
+	       -e "s/RISCV_EXT/$(RISCV_EXT)/g" \
 	       $(SED_DELETE_OPT) $< > $@
 	cat $@
 

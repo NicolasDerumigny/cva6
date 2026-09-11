@@ -11,10 +11,18 @@ package build_fpga_config_pkg;
     cfg.NonIdempotentLength = 1024'({64'h8000_0000});
     cfg.NrExecuteRegionRules = unsigned'(3);
     cfg.ExecuteRegionAddrBase = 1024'({64'h8000_0000, 64'h1_0000, 64'h0});
+`ifdef ZCU104
+    cfg.ExecuteRegionLength = 1024'({64'h2_0000_0000, 64'h1_0000, 64'h1000});
+`else
     cfg.ExecuteRegionLength = 1024'({64'h4000_0000, 64'h1_0000, 64'h1000});
-    cfg.NrCachedRegionRules = unsigned'(1);
+`endif
+    cfg.NrCachedRegionRules  = unsigned'(1);
     cfg.CachedRegionAddrBase = 1024'({64'h8000_0000});
+`ifdef ZCU104
+    cfg.CachedRegionLength = 1024'({64'h2_0000_0000});
+`else
     cfg.CachedRegionLength = 1024'({64'h4000_0000});
+`endif
     return build_config_pkg::build_config(cfg);
   endfunction
 

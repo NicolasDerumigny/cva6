@@ -78,7 +78,7 @@ package cva6_config_pkg;
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
       VLEN: unsigned'(64),
-      FpgaEn: bit'(0),  // for Xilinx and Altera
+      FpgaEn: bit'(1),  // for Xilinx and Altera
       FpgaAlteraEn: bit'(0),  // for Altera (only)
       TechnoCut: bit'(0),
       SuperscalarEn: bit'(0),
@@ -138,10 +138,10 @@ package cva6_config_pkg;
       NonIdempotentLength: 1024'({64'b0, 64'b0}),
       NrExecuteRegionRules: unsigned'(3),
       ExecuteRegionAddrBase: 1024'({64'h8000_0000, 64'h1_0000, 64'h0}),
-      ExecuteRegionLength: 1024'({64'h40000000, 64'h10000, 64'h1000}),
+      ExecuteRegionLength: 1024'({64'h2_0000_0000, 64'h10000, 64'h1000}),
       NrCachedRegionRules: unsigned'(1),
       CachedRegionAddrBase: 1024'({64'h8000_0000}),
-      CachedRegionLength: 1024'({64'h40000000}),
+      CachedRegionLength: 1024'({64'h2_0000_0000}),
       MaxOutstandingStores: unsigned'(7),
       DebugEn: bit'(1),
       Sdtrig: bit'(0),

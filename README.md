@@ -4,7 +4,7 @@ This fork of the CVA6 contains several experimental changes compared to the upst
 research purposes. Main changes are:
 - Wrapping of the CoreV SoC core elements in Vivado 2021.1-compatible block design primitives (based
   initially on [this project](https://github.com/cispa/CVA6-Vivado-Project-with-Xilinx-AXI-Ethernet/)).
-- Support of the ZCU104 (@ 50 / 100 MHz) and PYNQ-Z2 (@ 25 MHz) boards
+- Support of the ZCU104 (@ 75 MHz) and PYNQ-Z2 (@ 25 MHz) boards
 - (Modified) [Linux image creation toolchain](https://github.com/NicolasDerumigny/cva6-sdk/); see
 the [FPGA implementation documentation](tutorials/fpga.md) for more details
 - Experimental dual-core, shared L1D configuration

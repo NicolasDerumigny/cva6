@@ -39,20 +39,17 @@ block design rather than in the nine IP cores of the seven-series boards
 [`flows/utils/fpga_board.py`](../../flows/utils/fpga_board.py)), and
 `vivado-fpga-build` sources that TCL to wrap the design into `FPGA_TOP`.
 
-- **ZCU104** — tested on Vivado 2024.1. The block designs live in
-  `corev_apu/fpga/scripts/block_designs/zcu104*.tcl`:
-  - `zcu104_50MHz_ethernet.tcl`: 50 MHz version with Ethernet support.
-  - `zcu104_100MHz_ethernet.tcl`: similar version, core clock at 100 MHz.
-  - `zcu104_100MHz_second_uart.tcl`: adds a second UART, useful to debug
-    I/O deadlocks inside Linux; it requires an OpenSBI `platform.c` UART
-    address change.
-  - `zcu104_100MHz_dual_core_ethernet.tcl`: experimental dual-core version
+- **ZCU104** — tested on Vivado 2024.1. The project can carry several block
+  design flavours in `corev_apu/fpga/scripts/block_designs/zcu104*.tcl`;
+  the one this fork ships is
+  - `zcu104_75MHz_dual_core_ethernet.tcl`: experimental dual-core version
     with the Xilinx AXI Ethernet. It relies on the PULP AXI interconnect
     instead of Vivado's own, which brings AXI5 atomics at the price of
     less block-design customizability.
 
-  The default one is `zcu104_100MHz_dual_core_ethernet.tcl`: to change it,
-  delete `zcu104.tcl` and symlink the desired flavour under that name.
+  To switch to a flavour of your own (single core, no Ethernet, a second
+  UART to debug I/O deadlocks inside Linux, ...), delete `zcu104.tcl` and
+  symlink your design under that name.
   The design contains a DDR4 controller wired to the SO-DIMM slot with
   [MTA8ATF1G64HZ](https://www.micron.com/products/memory/dram-modules/sodimm/part-catalog/part-detail/mta8atf1g64hz-3g2r1)
   timings, the JTAG port, the boot ROM with the zero stage bootloader, a
@@ -60,8 +57,8 @@ block design rather than in the nine IP cores of the seven-series boards
   controller on PMOD0 for the SD card (a
   [PMOD-microSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
   is needed), the AMD AXI Ethernet MAC on the first port of a
-  [CN0506 FMC module](https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html)
-  in the flavours that carry it, and GPIOs on the LEDs.
+  [CN0506 FMC module](https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html),
+  and GPIOs on the LEDs, including the Ethernet ones.
 
 - **PYNQ-Z2** — tested on Vivado 2024.1 at a degraded 25 MHz core clock
   (50 MHz on the interconnect, to keep memory and peripherals fast). The

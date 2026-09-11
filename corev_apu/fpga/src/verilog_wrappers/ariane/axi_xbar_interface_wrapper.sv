@@ -40,10 +40,10 @@ module axi_xbar_interface_wrapper #(
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
       NoSlvPorts: NrSlave,
       NoMstPorts: NrMaster,
-      MaxMstTrans: 2,  // Probably requires update
-      MaxSlvTrans: 2,  // Probably requires update
+      MaxMstTrans: 64, // Safe bet
+      MaxSlvTrans: 64, // Idem
       FallThrough: 1'b0,
-      LatencyMode: axi_pkg::CUT_ALL_PORTS,
+      LatencyMode: axi_pkg::CUT_MST_PORTS,
       AxiIdWidthSlvPorts: AXI_SLV_ID_WIDTH,
       AxiIdUsedSlvPorts: AXI_SLV_ID_WIDTH,
       UniqueIds: 1'b0,
@@ -58,7 +58,7 @@ module axi_xbar_interface_wrapper #(
     '{
         idx: 0,
         start_addr: 'h8000_0000,
-        end_addr:   'hC000_0000
+        end_addr: 'h2_8000_0000
     },
     // UART
     '{

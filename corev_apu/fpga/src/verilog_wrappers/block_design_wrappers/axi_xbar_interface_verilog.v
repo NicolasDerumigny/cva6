@@ -42,8 +42,8 @@ axi_xbar_interface_wrapper #(
 
     `AXI_INTERFACE_FORWARD(s_axi_cpu),
     `AXI_INTERFACE_FORWARD(s_axi_debug),
-    `AXI_INTERFACE_FORWARD(s_axi_eth_dma),
     `AXI_INTERFACE_FORWARD(s_axi_eth_dma_sg),
+    `AXI_INTERFACE_FORWARD(s_axi_eth_dma),
 
     `AXI_INTERFACE_FORWARD(m_axi_ram),
     `AXI_INTERFACE_FORWARD(m_axi_uart),

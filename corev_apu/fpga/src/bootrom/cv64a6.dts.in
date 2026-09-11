@@ -18,7 +18,9 @@
       reg = <0>;
       status = "okay";
       compatible = "eth, ariane", "riscv";
-      riscv,isa = "rv64imafdch";
+      riscv,isa = "rv64imafdch_RISCV_EXT";
+      riscv,cbom-block-size = <16>;
+      riscv,cboz-block-size = <16>;
       mmu-type = "riscv,sv39";
       tlb-split;
       // HLIC - hart local interrupt controller
@@ -34,7 +36,8 @@
       reg = <1>;
       status = "okay";
       compatible = "eth, ariane", "riscv";
-      riscv,isa = "rv64imafdch";
+      riscv,isa = "rv64imafdch_RISCV_EXT";
+      riscv,cbom-block-size = <16>;
       mmu-type = "riscv,sv39";
       tlb-split;
       // HLIC - hart local interrupt controller

@@ -822,7 +822,7 @@ proc create_root_design { parentCell } {
      return 1
    }
     set_property -dict [list \
-    CONFIG.AXI_SLV_ID_WIDTH {7} \
+    CONFIG.AXI_SLV_ID_WIDTH {6} \
     CONFIG.AXI_USER_WIDTH {0} \
     CONFIG.NR_CORES {2} \
   ] $cpu_debug

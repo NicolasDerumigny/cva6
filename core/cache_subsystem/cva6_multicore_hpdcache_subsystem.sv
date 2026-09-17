@@ -287,14 +287,6 @@ module cva6_multicore_hpdcache_subsystem
       .dcache_req_ports_i(dcache_req_ports_i),
       .dcache_req_ports_o(dcache_req_ports_o),
 
-      .dcache_scrub_enable_i(dcache_scrub_enable_i),
-      .dcache_scrub_period_i(dcache_scrub_period_i),
-      .dcache_scrub_cycle_o (dcache_scrub_cycle_o),
-      .dcache_dat_cor_err_o (dcache_dat_cor_err_o),
-      .dcache_dat_unc_err_o (dcache_dat_unc_err_o),
-      .dcache_dir_cor_err_o (dcache_dir_cor_err_o),
-      .dcache_dir_unc_err_o (dcache_dir_unc_err_o),
-
       .wbuffer_empty_o (wbuffer_empty_o),
       .wbuffer_not_ni_o(wbuffer_not_ni_o),
 

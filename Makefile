@@ -832,9 +832,14 @@ $(add_fpga_src): $(uart_src) $(ariane_pkg) $(filter-out $(fpga_filter), $(src_fl
 	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> $(add_fpga_src)
 	@echo read_verilog -sv {$(fpga_src)}   >> $(add_fpga_src)
 
-fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
+bitstream: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
 	@echo "[FPGA] Generate Bitstream"
 	$(MAKE) -C corev_apu/fpga BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) ADD_SRC=$(add_fpga_src)
+
+
+fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
+	@echo "[FPGA] Generate Vivado Project"
+	$(MAKE) -C corev_apu/fpga project BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) ADD_SRC=$(add_fpga_src)
 
 .PHONY: bootrom-fpga
 bootrom-fpga:

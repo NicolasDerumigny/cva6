@@ -45,6 +45,7 @@ export DV_OPTS="$DV_OPTS --issrun_opts=+debug_disable=1+UVM_VERBOSITY=$UVM_VERBO
 
 CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g ../tests/multicore/common/syscalls.c ../tests/multicore/common/crt.S -I../tests/multicore/env -I../tests/multicore/common -lgcc"
 
+./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS" "verif/tests/multicore/hello_world"
 
 cd verif/sim/
 

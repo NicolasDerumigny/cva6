@@ -195,27 +195,6 @@ module cva6_multicore_hpdcache_subsystem
   `HPDCACHE_TYPEDEF_RSP_T(hpdcache_rsp_t, hpdcache_req_data_t, hpdcache_req_sid_t,
                           hpdcache_req_tid_t);
 
-  // I/O aggregated signals
-  logic dcache_enable;
-  logic dcache_flush;
-  logic dcache_flush_ack;
-  logic dcache_miss;
-  logic wbuffer_empty;
-  logic wbuffer_not_ni;
-
-  assign dcache_enable = &dcache_enable_i;
-  assign dcache_flush  = |dcache_flush_i;
-
-  generate
-    for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_per_hart_cache_signals
-      assign dcache_flush_ack_o[HartId] = dcache_flush_ack;
-      assign dcache_miss_o[HartId] = dcache_miss;
-      assign wbuffer_empty_o[HartId] = wbuffer_empty;
-      assign wbuffer_not_ni_o[HartId] = wbuffer_not_ni;
-    end
-  endgenerate
-
-
   typedef logic [HPDcacheCfg.u.wbufTimecntWidth-1:0] hpdcache_wbuf_timecnt_t;
   typedef logic [HPDcacheCfg.nlineWidth-1:0] hpdcache_nline_t;
 
@@ -273,18 +252,18 @@ module cva6_multicore_hpdcache_subsystem
       .clk_i (clk_i),
       .rst_ni(rst_ni),
 
-      .dcache_enable_i   (dcache_enable),
-      .dcache_flush_i    (dcache_flush),
-      .dcache_flush_ack_o(dcache_flush_ack),
-      .dcache_miss_o     (dcache_miss),
+      .dcache_enable_i   (dcache_enable_i),
+      .dcache_flush_i    (dcache_flush_i),
+      .dcache_flush_ack_o(dcache_flush_ack_o),
+      .dcache_miss_o     (dcache_miss_o),
 
       .dcache_amo_req_i  (dcache_amo_req_i),
       .dcache_amo_resp_o (dcache_amo_resp_o),
       .dcache_req_ports_i(dcache_req_ports_i),
       .dcache_req_ports_o(dcache_req_ports_o),
 
-      .wbuffer_empty_o (wbuffer_empty),
-      .wbuffer_not_ni_o(wbuffer_not_ni),
+      .wbuffer_empty_o (wbuffer_empty_o),
+      .wbuffer_not_ni_o(wbuffer_not_ni_o),
 
       .hwpf_base_set_i(hwpf_base_set_i),
       .hwpf_base_i(hwpf_base_i),

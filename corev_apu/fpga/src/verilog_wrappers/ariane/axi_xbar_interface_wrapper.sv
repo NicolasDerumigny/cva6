@@ -31,9 +31,7 @@ module axi_xbar_interface_wrapper #(
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth, AXI_MST_ID_WIDTH),
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth_leds, AXI_MST_ID_WIDTH)
 );
-  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(
-      cva6_config_pkg::cva6_cfg
-  );
+  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_config_pkg::build_config(cva6_config_pkg::cva6_cfg);
   localparam NrSlave = 4;
   localparam NrMaster = 12;
 

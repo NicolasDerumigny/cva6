@@ -61,13 +61,13 @@ module cva6_multicore_hpdcache_wrapper
     //  {{{
     //    Cache management
     // Data cache enable - CSR_REGFILE
-    input  logic dcache_enable_i,
+    input  logic [NrHarts-1:0] dcache_enable_i,
     // Data cache flush - CONTROLLER
-    input  logic dcache_flush_i,
+    input  logic [NrHarts-1:0] dcache_flush_i,
     // Flush acknowledge - CONTROLLER
-    output logic dcache_flush_ack_o,
+    output logic [NrHarts-1:0] dcache_flush_ack_o,
     // Load or store miss - PERF_COUNTERS
-    output logic dcache_miss_o,
+    output logic [NrHarts-1:0] dcache_miss_o,
 
     // AMO request/response - EX_STAGE
     input  ariane_pkg::amo_req_t  [NrHarts-1:0]               dcache_amo_req_i,
@@ -76,8 +76,8 @@ module cva6_multicore_hpdcache_wrapper
     input  dcache_req_i_t         [NrHarts-1:0][NumPorts-1:0] dcache_req_ports_i,
     output dcache_req_o_t         [NrHarts-1:0][NumPorts-1:0] dcache_req_ports_o,
     // Write buffer status - EX_STAGE
-    output logic                                              wbuffer_empty_o,
-    output logic                                              wbuffer_not_ni_o,
+    output logic                  [NrHarts-1:0]               wbuffer_empty_o,
+    output logic                  [NrHarts-1:0]               wbuffer_not_ni_o,
 
     //  Hardware memory prefetcher configuration
     input  logic [NrHwPrefetchers-1:0]       hwpf_base_set_i,
@@ -140,6 +140,24 @@ module cva6_multicore_hpdcache_wrapper
 
   hwpf_stride_pkg::hwpf_stride_throttle_t [NrHwPrefetchers-1:0]      hwpf_throttle_in;
   hwpf_stride_pkg::hwpf_stride_throttle_t [NrHwPrefetchers-1:0]      hwpf_throttle_out;
+
+  // I/O aggregated signals
+  logic                                                              dcache_enable;
+  logic                                                              dcache_flush;
+  logic                                                              dcache_miss;
+  logic                                                              wbuffer_empty;
+  logic                                                              wbuffer_not_ni;
+
+  assign dcache_enable = &dcache_enable_i;
+  assign dcache_flush  = |dcache_flush_i;
+
+  generate
+    for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_per_hart_cache_signals
+      assign dcache_miss_o[HartId] = dcache_miss;
+      assign wbuffer_empty_o[HartId] = wbuffer_empty;
+      assign wbuffer_not_ni_o[HartId] = wbuffer_not_ni;
+    end
+  endgenerate
 
   generate
     for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_cva6_hpdcache_core_if_adapter
@@ -206,8 +224,8 @@ module cva6_multicore_hpdcache_wrapper
           .cva6_amo_req_i (dcache_amo_req_i[HartId]),
           .cva6_amo_resp_o(dcache_amo_resp_o[HartId]),
 
-          .cva6_dcache_flush_i    (dcache_flush_i),
-          .cva6_dcache_flush_ack_o(dcache_flush_ack_o),
+          .cva6_dcache_flush_i    (dcache_flush_i[HartId]),
+          .cva6_dcache_flush_ack_o(dcache_flush_ack_o[HartId]),
 
           .hpdcache_req_valid_o(dcache_req_valid[__idx(NumPorts-1, HartId)]),
           .hpdcache_req_ready_i(dcache_req_ready[__idx(NumPorts-1, HartId)]),
@@ -326,7 +344,7 @@ module cva6_multicore_hpdcache_wrapper
       .clk_i,
       .rst_ni,
 
-      .wbuf_flush_i(dcache_flush_i),
+      .wbuf_flush_i(dcache_flush),
 
       .core_req_valid_i(dcache_req_valid),
       .core_req_ready_o(dcache_req_ready),
@@ -378,9 +396,9 @@ module cva6_multicore_hpdcache_wrapper
       .evt_stall_refill_o     (  /* unused */),
       .evt_stall_o            (  /* unused */),
 
-      .wbuf_empty_o(wbuffer_empty_o),
+      .wbuf_empty_o(wbuffer_empty),
 
-      .cfg_enable_i                       (dcache_enable_i),
+      .cfg_enable_i                       (dcache_enable),
       .cfg_wbuf_threshold_i               (3'd2),
       .cfg_wbuf_reset_timecnt_on_write_i  (1'b1),
       .cfg_wbuf_sequential_waw_i          (1'b0),
@@ -394,7 +412,7 @@ module cva6_multicore_hpdcache_wrapper
       .cfg_scrub_restart_i                (1'b0)
   );
 
-  assign dcache_miss_o = dcache_read_miss, wbuffer_not_ni_o = wbuffer_empty_o;
+  assign dcache_miss = dcache_read_miss, wbuffer_not_ni = wbuffer_empty;
   //  }}}
 
 endmodule : cva6_multicore_hpdcache_wrapper

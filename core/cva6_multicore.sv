@@ -218,7 +218,7 @@ module cva6_multicore
 );
   localparam unsigned NUM_CACHE_PORTS = 4;
   localparam unsigned NUM_HW_PREFETCHERS = 4;
-  localparam unsigned ICACHE_RDTXID = 1 << (CVA6Cfg.MEM_TID_WIDTH - 1);
+  localparam unsigned ICACHE_RDTXID = (1 << CVA6Cfg.MEM_TID_WIDTH) - NrHarts - 1;
 
   logic [NrHarts-1:0] dcache_en_csr_nbdcache;
   logic [NrHarts-1:0] dcache_flush_ctrl_cache;
@@ -464,6 +464,7 @@ module cva6_multicore
         .dcache_req_o_t(dcache_req_o_t),
         .NrHarts(NrHarts),
         .NumPorts(NUM_CACHE_PORTS),
+        .ICacheRdtxid(ICACHE_RDTXID),
         .axi_ar_chan_t(axi_ar_chan_t),
         .axi_aw_chan_t(axi_aw_chan_t),
         .axi_w_chan_t(axi_w_chan_t),

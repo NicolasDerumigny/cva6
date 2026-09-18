@@ -12,7 +12,7 @@ module cva6_multicore_hpdcache_subsystem
     parameter unsigned NrHarts = 1,
     parameter unsigned NumPorts = 4,
     parameter unsigned NrHwPrefetchers = 4,
-    parameter unsigned ICacheRdtxid = 1 << (CVA6Cfg.MEM_TID_WIDTH - 1),
+    parameter unsigned ICacheRdtxid = (1 << CVA6Cfg.MEM_TID_WIDTH) - NrHarts - 1,
     // AXI types
     parameter type axi_ar_chan_t = logic,
     parameter type axi_aw_chan_t = logic,
@@ -382,9 +382,11 @@ module cva6_multicore_hpdcache_subsystem
     else $fatal(1, "HPDCACHE_REQ_SRC_ID_WIDTH is not wide enough");
     assert (CVA6Cfg.MEM_TID_WIDTH <= CVA6Cfg.AxiIdWidth)
     else $fatal(1, "MEM_TID_WIDTH shall be less or equal to the AxiIdWidth");
-    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(HPDcacheCfg.u.mshrSets * HPDcacheCfg.u.mshrWays) + 1))
+    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(
+        HPDcacheCfg.u.mshrSets * HPDcacheCfg.u.mshrWays
+    ) + NrHarts))
     else $fatal(1, "MEM_TID_WIDTH shall allow to uniquely identify all D$ and I$ miss requests ");
-    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(HPDcacheCfg.u.wbufDirEntries) + 1))
+    assert (CVA6Cfg.MEM_TID_WIDTH >= $clog2(HPDcacheCfg.u.wbufDirEntries))
     else $fatal(1, "MEM_TID_WIDTH shall allow to uniquely identify all D$ write requests ");
   end
   //  pragma translate_on

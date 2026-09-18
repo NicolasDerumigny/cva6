@@ -41,7 +41,6 @@ package cva6_config_pkg;
   localparam CVA6ConfigIcacheSetAssoc = 4;
   localparam CVA6ConfigIcacheLineWidth = 128;
   localparam CVA6ConfigDcacheByteSize = 16384;
-  ;
   localparam CVA6ConfigDcacheSetAssoc = 4;
   localparam CVA6ConfigDcacheLineWidth = 128;
 
@@ -103,7 +102,6 @@ package cva6_config_pkg;
       RVC: bit'(CVA6ConfigCExtEn),
       RVH: bit'(CVA6ConfigHExtEn),
       RVZCB: bit'(CVA6ConfigZcbExtEn),
-      RVZCMP: bit'(CVA6ConfigZcmpExtEn),
       RVZCMT: bit'(0),
       RVZCMP: bit'(CVA6ConfigZcmpExtEn),
       XFVec: bit'(CVA6ConfigFVecEn),
@@ -172,6 +170,8 @@ package cva6_config_pkg;
       DcacheFlushOnFence: unsigned'(CVA6ConfigDcacheFlushOnFence),
       DcacheFlushOnFenceI: unsigned'(CVA6ConfigDcacheFlushOnFenceI),
       DcacheInvalidateOnFlush: unsigned'(CVA6ConfigDcacheInvalidateOnFlush),
+      DcacheEccEnable: bit'(0),
+      DcacheEccScrubberEnable: bit'(0),
       DataUserEn: unsigned'(CVA6ConfigDataUserEn),
       WtDcacheWbufDepth: int'(CVA6ConfigWtDcacheWbufDepth),
       FetchUserWidth: unsigned'(CVA6ConfigFetchUserWidth),

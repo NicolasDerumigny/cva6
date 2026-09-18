@@ -56,13 +56,27 @@ module cva6_multicore_hpdcache_subsystem
     //  {{{
     //    Cache management
     // Data cache enable - CSR_REGFILE
-    input  logic [NrHarts-1:0] dcache_enable_i,
+    input logic [NrHarts-1:0] dcache_enable_i,
     // Data cache flush - CONTROLLER
-    input  logic [NrHarts-1:0] dcache_flush_i,
+    input logic [NrHarts-1:0] dcache_flush_i,
     // Flush acknowledge - CONTROLLER
     output logic [NrHarts-1:0] dcache_flush_ack_o,
     // Load or store miss - PERF_COUNTERS
     output logic [NrHarts-1:0] dcache_miss_o,
+    // Data cache scrubber enable - CSR_REGFILE
+    input logic [NrHarts-1:0] dcache_scrub_enable_i,
+    // Data cache scrubber period - CSR_REGFILE
+    input logic [NrHarts-1:0][5:0] dcache_scrub_period_i,
+    // Data cache scrubber cycle - CSR_REGFILE
+    output logic [NrHarts-1:0] dcache_scrub_cycle_o,
+    // Data cache data error corrected - CSR_REGFILE
+    output logic [NrHarts-1:0] dcache_dat_cor_err_o,
+    // Data cache data error detected but not corrected - CSR_REGFILE
+    output logic [NrHarts-1:0] dcache_dat_unc_err_o,
+    // Data cache tag error corrected - CSR_REGFILE
+    output logic [NrHarts-1:0] dcache_dir_cor_err_o,
+    // Data cache tag error detected but not corrected - CSR_REGFILE
+    output logic [NrHarts-1:0] dcache_dir_unc_err_o,
 
     // AMO request - EX_STAGE
     input ariane_pkg::amo_req_t [NrHarts-1:0] dcache_amo_req_i,
@@ -169,8 +183,8 @@ module cva6_multicore_hpdcache_subsystem
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WB) ||
         (CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT_WB);
     userCfg.lowLatency = 1'b1;
-    userCfg.eccEn = 1'b0;  /*FIXME add additional CVA6 parameter*/
-    userCfg.eccScrubberEn = 1'b0;  /*FIXME: add additional CVA6 parameter*/
+    userCfg.eccEn = CVA6Cfg.DcacheEccEnable;
+    userCfg.eccScrubberEn = CVA6Cfg.DcacheEccScrubberEnable;
     return userCfg;
   endfunction
 
@@ -261,6 +275,14 @@ module cva6_multicore_hpdcache_subsystem
       .dcache_amo_resp_o (dcache_amo_resp_o),
       .dcache_req_ports_i(dcache_req_ports_i),
       .dcache_req_ports_o(dcache_req_ports_o),
+
+      .dcache_scrub_enable_i(dcache_scrub_enable_i),
+      .dcache_scrub_period_i(dcache_scrub_period_i),
+      .dcache_scrub_cycle_o (dcache_scrub_cycle_o),
+      .dcache_dat_cor_err_o (dcache_dat_cor_err_o),
+      .dcache_dat_unc_err_o (dcache_dat_unc_err_o),
+      .dcache_dir_cor_err_o (dcache_dir_cor_err_o),
+      .dcache_dir_unc_err_o (dcache_dir_unc_err_o),
 
       .wbuffer_empty_o (wbuffer_empty_o),
       .wbuffer_not_ni_o(wbuffer_not_ni_o),

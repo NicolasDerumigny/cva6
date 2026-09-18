@@ -33,6 +33,7 @@ module cva6_cacheless
     // this is the struct which we will inject into the pipeline to guide the various
     // units towards the correct branch decision and resolve
     localparam type branchpredict_sbe_t = struct packed {
+      logic                    valid;            // valid control flow prediction
       cf_t                     cf;               // type of control flow prediction
       logic [CVA6Cfg.VLEN-1:0] predict_address;  // target address at which to jump, or not
     },
@@ -206,7 +207,21 @@ module cva6_cacheless
     input icache_drsp_t icache_dreq_cache_if_i,
     //  D$
     // Data cache enable
-    output logic dcache_en_csr_nbdcache_o,
+    output logic dcache_en_csr_o,
+    // Data cache scrubber enable
+    output logic dcache_scrub_en_o,
+    // Data cache scrubber period
+    output logic [5:0] dcache_scrub_period_o,
+    // Data cache scrubber cycle
+    input logic dcache_scrub_cycle_i,
+    // Data cache data error corrected
+    input logic dcache_dat_cor_err_i,
+    // Data cache data error detected but not corrected
+    input logic dcache_dat_unc_err_i,
+    // Data cache tag error corrected
+    input logic dcache_dir_cor_err_i,
+    // Data cache tag error detected but not corrected
+    input logic dcache_dir_unc_err_i,
     // Data cache flush
     output logic dcache_flush_ctrl_cache_o,
     // Data cache flush acknowledge
@@ -1138,7 +1153,14 @@ module cva6_cacheless
       .debug_mode_o                       (debug_mode),
       .single_step_o                      (single_step_csr_commit),
       .icache_en_o                        (icache_en_csr_o),
-      .dcache_en_o                        (dcache_en_csr_nbdcache_o),
+      .dcache_en_o                        (dcache_en_csr_o),
+      .dcache_scrub_en_o                  (dcache_scrub_en_o),
+      .dcache_scrub_period_o              (dcache_scrub_period_o),
+      .dcache_scrub_cycle_i               (dcache_scrub_cycle_i),
+      .dcache_dat_cor_err_i               (dcache_dat_cor_err_i),
+      .dcache_dat_unc_err_i               (dcache_dat_unc_err_i),
+      .dcache_dir_cor_err_i               (dcache_dir_cor_err_i),
+      .dcache_dir_unc_err_i               (dcache_dir_unc_err_i),
       .acc_cons_en_o                      (acc_cons_en_csr),
       .perf_addr_o                        (addr_csr_perf),
       .perf_data_o                        (data_csr_perf),

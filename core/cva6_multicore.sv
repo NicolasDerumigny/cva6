@@ -127,6 +127,7 @@ module cva6_multicore
       logic [CVA6Cfg.DcacheIdWidth-1:0]     data_rid;
       logic [CVA6Cfg.XLEN-1:0]              data_rdata;
       logic [CVA6Cfg.DCACHE_USER_WIDTH-1:0] data_ruser;
+      logic                                 data_error;
     },
 
     // AXI types
@@ -220,9 +221,17 @@ module cva6_multicore
   localparam unsigned NUM_HW_PREFETCHERS = 4;
   localparam unsigned ICACHE_RDTXID = (1 << CVA6Cfg.MEM_TID_WIDTH) - NrHarts - 1;
 
-  logic [NrHarts-1:0] dcache_en_csr_nbdcache;
+  logic [NrHarts-1:0] dcache_en_csr;
   logic [NrHarts-1:0] dcache_flush_ctrl_cache;
   logic [NrHarts-1:0] dcache_flush_ack_cache_ctrl;
+  // D$ scrubber control / ECC error feedback (shared D$, see cva6_multicore_hpdcache_subsystem)
+  logic [NrHarts-1:0] dcache_scrub_en;
+  logic [NrHarts-1:0][5:0] dcache_scrub_period;
+  logic [NrHarts-1:0] dcache_scrub_cycle;
+  logic [NrHarts-1:0] dcache_dat_cor_err;
+  logic [NrHarts-1:0] dcache_dat_unc_err;
+  logic [NrHarts-1:0] dcache_dir_cor_err;
+  logic [NrHarts-1:0] dcache_dir_unc_err;
   dcache_req_o_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_from_cache;
   dcache_req_i_t [NrHarts-1:0][NUM_CACHE_PORTS-1:0] dcache_req_to_cache;
   logic [NrHarts-1:0] dcache_commit_wbuffer_empty;
@@ -312,9 +321,16 @@ module cva6_multicore
           .icache_areq_cache_ex_i        (icache_areq_cache_ex),
           .icache_dreq_if_cache_o        (icache_dreq_if_cache),
           .icache_dreq_cache_if_i        (icache_dreq_cache_if),
-          .dcache_en_csr_nbdcache_o      (dcache_en_csr_nbdcache[HartId]),
+          .dcache_en_csr_o               (dcache_en_csr[HartId]),
           .dcache_flush_ctrl_cache_o     (dcache_flush_ctrl_cache[HartId]),
           .dcache_flush_ack_cache_ctrl_i (dcache_flush_ack_cache_ctrl[HartId]),
+          .dcache_scrub_en_o             (dcache_scrub_en[HartId]),
+          .dcache_scrub_period_o         (dcache_scrub_period[HartId]),
+          .dcache_scrub_cycle_i          (dcache_scrub_cycle[HartId]),
+          .dcache_dat_cor_err_i          (dcache_dat_cor_err[HartId]),
+          .dcache_dat_unc_err_i          (dcache_dat_unc_err[HartId]),
+          .dcache_dir_cor_err_i          (dcache_dir_cor_err[HartId]),
+          .dcache_dir_unc_err_i          (dcache_dir_unc_err[HartId]),
           .dcache_commit_wbuffer_empty_i (dcache_commit_wbuffer_empty[HartId]),
           .dcache_commit_wbuffer_not_ni_i(dcache_commit_wbuffer_not_ni[HartId]),
           .dcache_req_from_cache_i       (dcache_req_from_cache[HartId]),
@@ -428,7 +444,7 @@ module cva6_multicore
         .icache_miss_resp_valid_o(icache_miss_resp_valid),
         .icache_miss_resp_o      (icache_miss_resp),
         // D$
-        .dcache_enable_i         (dcache_en_csr_nbdcache),
+        .dcache_enable_i         (dcache_en_csr),
         .dcache_flush_i          (dcache_flush_ctrl_cache),
         .dcache_flush_ack_o      (dcache_flush_ack_cache_ctrl),
         // to commit stage
@@ -450,6 +466,12 @@ module cva6_multicore
         .inval_valid_i           (inval_valid),
         .inval_ready_o           (inval_ready)
     );
+    // The WT cache has no scrubber nor ECC error reporting
+    assign dcache_scrub_cycle = '0;
+    assign dcache_dat_cor_err = '0;
+    assign dcache_dat_unc_err = '0;
+    assign dcache_dir_cor_err = '0;
+    assign dcache_dir_unc_err = '0;
   end else if (
           CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WT ||
           CVA6Cfg.DCacheType == config_pkg::HPDCACHE_WB ||
@@ -482,10 +504,18 @@ module cva6_multicore
         .icache_miss_resp_valid_o(icache_miss_resp_valid),
         .icache_miss_resp_o      (icache_miss_resp),
 
-        .dcache_enable_i   (dcache_en_csr_nbdcache),
+        .dcache_enable_i   (dcache_en_csr),
         .dcache_flush_i    (dcache_flush_ctrl_cache),
         .dcache_flush_ack_o(dcache_flush_ack_cache_ctrl),
         .dcache_miss_o     (dcache_miss_cache_perf),
+
+        .dcache_scrub_enable_i(dcache_scrub_en),
+        .dcache_scrub_period_i(dcache_scrub_period),
+        .dcache_scrub_cycle_o (dcache_scrub_cycle),
+        .dcache_dat_cor_err_o (dcache_dat_cor_err),
+        .dcache_dat_unc_err_o (dcache_dat_unc_err),
+        .dcache_dir_cor_err_o (dcache_dir_cor_err),
+        .dcache_dir_unc_err_o (dcache_dir_unc_err),
 
         .dcache_amo_req_i (amo_req),
         .dcache_amo_resp_o(amo_resp),

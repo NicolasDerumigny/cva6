@@ -78,6 +78,20 @@ module cva6_multicore_hpdcache_wrapper
     // Write buffer status - EX_STAGE
     output logic                  [NrHarts-1:0]               wbuffer_empty_o,
     output logic                  [NrHarts-1:0]               wbuffer_not_ni_o,
+    // Data cache scrubber enable - CSR_REGFILE
+    input  logic                  [NrHarts-1:0]               dcache_scrub_enable_i,
+    // Data cache scrubber period - CSR_REGFILE
+    input  logic                  [5:0] [NrHarts-1:0]         dcache_scrub_period_i,
+    // Data cache scrub cycle - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_scrub_cycle_o,
+    // Data cache data error corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dat_cor_err_o,
+    // Data cache data error detected but not corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dat_unc_err_o,
+    // Data cache tag error corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dir_cor_err_o,
+    // Data cache tag error detected but not corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dir_unc_err_o,
 
     //  Hardware memory prefetcher configuration
     input  logic [NrHwPrefetchers-1:0]       hwpf_base_set_i,
@@ -148,6 +162,14 @@ module cva6_multicore_hpdcache_wrapper
   logic                                                              wbuffer_empty;
   logic                                                              wbuffer_not_ni;
 
+  // D$ scrubber / ECC error events (the shared D$ reports a single event bus,
+  // broadcast to all harts)
+  logic                                                              dcache_scrub_cycle;
+  logic                                                              dcache_dat_cor_err;
+  logic                                                              dcache_dat_unc_err;
+  logic                                                              dcache_dir_cor_err;
+  logic                                                              dcache_dir_unc_err;
+
   assign dcache_enable = &dcache_enable_i;
   assign dcache_flush  = |dcache_flush_i;
 
@@ -156,6 +178,11 @@ module cva6_multicore_hpdcache_wrapper
       assign dcache_miss_o[HartId] = dcache_miss;
       assign wbuffer_empty_o[HartId] = wbuffer_empty;
       assign wbuffer_not_ni_o[HartId] = wbuffer_not_ni;
+      assign dcache_scrub_cycle_o[HartId] = dcache_scrub_cycle;
+      assign dcache_dat_cor_err_o[HartId] = dcache_dat_cor_err;
+      assign dcache_dat_unc_err_o[HartId] = dcache_dat_unc_err;
+      assign dcache_dir_cor_err_o[HartId] = dcache_dir_cor_err;
+      assign dcache_dir_unc_err_o[HartId] = dcache_dir_unc_err;
     end
   endgenerate
 
@@ -381,11 +408,11 @@ module cva6_multicore_hpdcache_wrapper
 
       .evt_cache_write_miss_o (dcache_write_miss),
       .evt_cache_read_miss_o  (dcache_read_miss),
-      .evt_cache_dir_unc_err_o(  /* unused */),
-      .evt_cache_dir_cor_err_o(  /* unused */),
-      .evt_cache_dat_unc_err_o(  /* unused */),
-      .evt_cache_dat_cor_err_o(  /* unused */),
-      .evt_scrub_complete_o   (  /* unused */),
+      .evt_cache_dir_unc_err_o(dcache_dir_unc_err),
+      .evt_cache_dir_cor_err_o(dcache_dir_cor_err),
+      .evt_cache_dat_unc_err_o(dcache_dat_unc_err),
+      .evt_cache_dat_cor_err_o(dcache_dat_cor_err),
+      .evt_scrub_complete_o   (dcache_scrub_cycle),
       .evt_uncached_req_o     (  /* unused */),
       .evt_cmo_req_o          (  /* unused */),
       .evt_write_req_o        (  /* unused */),
@@ -407,8 +434,10 @@ module cva6_multicore_hpdcache_wrapper
       .cfg_error_on_cacheable_amo_i       (1'b0),
       .cfg_rtab_single_entry_i            (1'b0),
       .cfg_default_wb_i                   (1'b0),
-      .cfg_scrub_enable_i                 (1'b0),
-      .cfg_scrub_period_i                 ('0),
+      // The scrubber is shared between all harts: enable it if any hart enables
+      // it and use the period of the first hart
+      .cfg_scrub_enable_i                 (|dcache_scrub_enable_i),
+      .cfg_scrub_period_i                 (dcache_scrub_period_i[0]),
       .cfg_scrub_restart_i                (1'b0)
   );
 

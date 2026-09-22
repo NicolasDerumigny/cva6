@@ -12,9 +12,14 @@ CC=${RISCV_GCC}
 CFLAGS="${1//-mcmodel=medany/}"
 DIR="${2}"
 
-
+# Use absolute links
 CFLAGS="${CFLAGS//-I\.\.\//-I${PWD}\/verif\/}"
 CFLAGS="${CFLAGS// \.\.\// ${PWD}\/verif\/}"
+# Remove other source files
+CFLAGS="${CFLAGS// [^ ]*\.S/}"
+CFLAGS="${CFLAGS// [^ ]*\.s/}"
+CFLAGS="${CFLAGS// [^ ]*\.c/}"
+CFLAGS="${CFLAGS// [^ ]*\.cpp/}"
 
 echo "[" > "${DIR}/compile_commands.json"
 

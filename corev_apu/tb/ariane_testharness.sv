@@ -623,7 +623,7 @@ module ariane_testharness #(
   // Peripherals
   // ---------------
   logic tx, rx;
-  logic [1:0] irqs;
+  logic [NR_CORES-1:0][1:0] irqs;
 
   ariane_peripherals #(
       .AxiAddrWidth(AXI_ADDRESS_WIDTH),
@@ -636,7 +636,8 @@ module ariane_testharness #(
       .InclUART    (1'b0),
 `endif
       .InclSPI     (1'b0),
-      .InclEthernet(1'b0)
+      .InclEthernet(1'b0),
+      .NR_CORES    (NR_CORES),
   ) i_ariane_peripherals (
       .clk_i    (clk_i),
       .rst_ni   (ndmreset_n),

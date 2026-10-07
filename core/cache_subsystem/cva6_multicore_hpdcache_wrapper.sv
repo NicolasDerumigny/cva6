@@ -24,8 +24,6 @@ module cva6_multicore_hpdcache_wrapper
     parameter unsigned NumPorts = 4,
     parameter unsigned NrHwPrefetchers = 4,
 
-    parameter type cmo_req_t = logic,
-    parameter type cmo_rsp_t = logic,
     parameter type hpdcache_mem_addr_t = logic,
     parameter type hpdcache_mem_id_t = logic,
     parameter type hpdcache_mem_data_t = logic,
@@ -44,7 +42,9 @@ module cva6_multicore_hpdcache_wrapper
     parameter type hpdcache_req_t = logic,
     parameter type hpdcache_rsp_t = logic,
     parameter type hpdcache_wbuf_timecnt_t = logic,
-    parameter type hpdcache_data_be_t = logic
+    parameter type hpdcache_data_be_t = logic,
+
+    localparam type hpdcache_nline_t = logic [HPDcacheCfg.nlineWidth-1:0]
 )
 //  }}}
 
@@ -61,26 +61,37 @@ module cva6_multicore_hpdcache_wrapper
     //  {{{
     //    Cache management
     // Data cache enable - CSR_REGFILE
-    input  logic dcache_enable_i,
+    input  logic [NrHarts-1:0] dcache_enable_i,
     // Data cache flush - CONTROLLER
-    input  logic dcache_flush_i,
+    input  logic [NrHarts-1:0] dcache_flush_i,
     // Flush acknowledge - CONTROLLER
-    output logic dcache_flush_ack_o,
+    output logic [NrHarts-1:0] dcache_flush_ack_o,
     // Load or store miss - PERF_COUNTERS
-    output logic dcache_miss_o,
+    output logic [NrHarts-1:0] dcache_miss_o,
 
     // AMO request/response - EX_STAGE
     input  ariane_pkg::amo_req_t  [NrHarts-1:0]               dcache_amo_req_i,
     output ariane_pkg::amo_resp_t [NrHarts-1:0]               dcache_amo_resp_o,
-    // CMO interface request/response
-    input  cmo_req_t              [NrHarts-1:0]               dcache_cmo_req_i,
-    output cmo_rsp_t              [NrHarts-1:0]               dcache_cmo_resp_o,
     // Data cache input request/response ports - EX_STAGE
     input  dcache_req_i_t         [NrHarts-1:0][NumPorts-1:0] dcache_req_ports_i,
     output dcache_req_o_t         [NrHarts-1:0][NumPorts-1:0] dcache_req_ports_o,
     // Write buffer status - EX_STAGE
-    output logic                                              wbuffer_empty_o,
-    output logic                                              wbuffer_not_ni_o,
+    output logic                  [NrHarts-1:0]               wbuffer_empty_o,
+    output logic                  [NrHarts-1:0]               wbuffer_not_ni_o,
+    // Data cache scrubber enable - CSR_REGFILE
+    input  logic                  [NrHarts-1:0]               dcache_scrub_enable_i,
+    // Data cache scrubber period - CSR_REGFILE
+    input  logic                  [5:0] [NrHarts-1:0]         dcache_scrub_period_i,
+    // Data cache scrub cycle - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_scrub_cycle_o,
+    // Data cache data error corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dat_cor_err_o,
+    // Data cache data error detected but not corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dat_unc_err_o,
+    // Data cache tag error corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dir_cor_err_o,
+    // Data cache tag error detected but not corrected - CSR_REGFILE
+    output logic                  [NrHarts-1:0]               dcache_dir_unc_err_o,
 
     //  Hardware memory prefetcher configuration
     input  logic [NrHwPrefetchers-1:0]       hwpf_base_set_i,
@@ -102,6 +113,9 @@ module cva6_multicore_hpdcache_wrapper
     input  logic                 dcache_mem_resp_read_valid_i,
     input  hpdcache_mem_resp_r_t dcache_mem_resp_read_i,
 
+    input logic            dcache_mem_resp_read_inval_i,
+    input hpdcache_nline_t dcache_mem_resp_read_inval_nline_i,
+
     input  logic              dcache_mem_req_write_ready_i,
     output logic              dcache_mem_req_write_valid_o,
     output hpdcache_mem_req_t dcache_mem_req_write_o,
@@ -115,9 +129,7 @@ module cva6_multicore_hpdcache_wrapper
     input  hpdcache_mem_resp_w_t dcache_mem_resp_write_i
 );
 
-  // NumPorts + CMO
-  localparam unsigned PORTS_PER_HART = NumPorts + 1;
-  localparam unsigned HPDCACHE_NREQUESTERS = (NrHarts * PORTS_PER_HART) + 1;
+  localparam unsigned HPDCACHE_NREQUESTERS = HPDcacheCfg.u.nRequesters;
   function automatic int unsigned __idx(input int unsigned i, input int unsigned j);
     return i * NrHarts + j;
   endfunction
@@ -134,16 +146,45 @@ module cva6_multicore_hpdcache_wrapper
   hpdcache_rsp_t               dcache_rsp      [HPDCACHE_NREQUESTERS];
   logic dcache_read_miss, dcache_write_miss;
 
-  logic                                   [        NrHarts-1:0][2:0] snoop_valid;
-  logic                                   [        NrHarts-1:0][2:0] snoop_abort;
-  hpdcache_req_offset_t                   [        NrHarts-1:0][2:0] snoop_addr_offset;
-  hpdcache_tag_t                          [        NrHarts-1:0][2:0] snoop_addr_tag;
-  logic                                   [        NrHarts-1:0][2:0] snoop_phys_indexed;
-
-  logic                                                              dcache_cmo_req_is_prefetch;
+  logic                                   [        NrHarts-1:0][1:0] snoop_valid;
+  logic                                   [        NrHarts-1:0][1:0] snoop_abort;
+  hpdcache_req_offset_t                   [        NrHarts-1:0][1:0] snoop_addr_offset;
+  hpdcache_tag_t                          [        NrHarts-1:0][1:0] snoop_addr_tag;
+  logic                                   [        NrHarts-1:0][1:0] snoop_phys_indexed;
 
   hwpf_stride_pkg::hwpf_stride_throttle_t [NrHwPrefetchers-1:0]      hwpf_throttle_in;
   hwpf_stride_pkg::hwpf_stride_throttle_t [NrHwPrefetchers-1:0]      hwpf_throttle_out;
+
+  // I/O aggregated signals
+  logic                                                              dcache_enable;
+  logic                                                              dcache_flush;
+  logic                                                              dcache_miss;
+  logic                                                              wbuffer_empty;
+  logic                                                              wbuffer_not_ni;
+
+  // D$ scrubber / ECC error events (the shared D$ reports a single event bus,
+  // broadcast to all harts)
+  logic                                                              dcache_scrub_cycle;
+  logic                                                              dcache_dat_cor_err;
+  logic                                                              dcache_dat_unc_err;
+  logic                                                              dcache_dir_cor_err;
+  logic                                                              dcache_dir_unc_err;
+
+  assign dcache_enable = &dcache_enable_i;
+  assign dcache_flush  = |dcache_flush_i;
+
+  generate
+    for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_per_hart_cache_signals
+      assign dcache_miss_o[HartId] = dcache_miss;
+      assign wbuffer_empty_o[HartId] = wbuffer_empty;
+      assign wbuffer_not_ni_o[HartId] = wbuffer_not_ni;
+      assign dcache_scrub_cycle_o[HartId] = dcache_scrub_cycle;
+      assign dcache_dat_cor_err_o[HartId] = dcache_dat_cor_err;
+      assign dcache_dat_unc_err_o[HartId] = dcache_dat_unc_err;
+      assign dcache_dir_cor_err_o[HartId] = dcache_dir_cor_err;
+      assign dcache_dir_unc_err_o[HartId] = dcache_dir_unc_err;
+    end
+  endgenerate
 
   generate
     for (genvar HartId = 0; HartId < NrHarts; HartId++) begin : gen_cva6_hpdcache_core_if_adapter
@@ -210,8 +251,8 @@ module cva6_multicore_hpdcache_wrapper
           .cva6_amo_req_i (dcache_amo_req_i[HartId]),
           .cva6_amo_resp_o(dcache_amo_resp_o[HartId]),
 
-          .cva6_dcache_flush_i    (dcache_flush_i),
-          .cva6_dcache_flush_ack_o(dcache_flush_ack_o),
+          .cva6_dcache_flush_i    (dcache_flush_i[HartId]),
+          .cva6_dcache_flush_ack_o(dcache_flush_ack_o[HartId]),
 
           .hpdcache_req_valid_o(dcache_req_valid[__idx(NumPorts-1, HartId)]),
           .hpdcache_req_ready_i(dcache_req_ready[__idx(NumPorts-1, HartId)]),
@@ -223,37 +264,6 @@ module cva6_multicore_hpdcache_wrapper
           .hpdcache_rsp_valid_i(dcache_rsp_valid[__idx(NumPorts-1, HartId)]),
           .hpdcache_rsp_i      (dcache_rsp[__idx(NumPorts-1, HartId)])
       );
-
-`ifdef HPDCACHE_ENABLE_CMO
-      cva6_hpdcache_cmo_if_adapter #(
-          .cmo_req_t(cmo_req_t),
-          .cmo_rsp_t(cmo_rsp_t)
-      ) i_cva6_hpdcache_cmo_if_adapter (
-          .clk_i,
-          .rst_ni,
-
-          .dcache_req_sid_i(hpdcache_req_sid_t'(__idx(NumPorts, HartId))),
-
-          .cva6_cmo_req_i (dcache_cmo_req_i[HartId]),
-          .cva6_cmo_resp_o(dcache_cmo_resp_o[HartId]),
-
-          .dcache_req_valid_o(dcache_req_valid[__idx(NumPorts, HartId)]),
-          .dcache_req_ready_i(dcache_req_ready[__idx(NumPorts, HartId)]),
-          .dcache_req_o      (dcache_req[__idx(NumPorts, HartId)]),
-          .dcache_req_abort_o(dcache_req_abort[__idx(NumPorts, HartId)]),
-          .dcache_req_tag_o  (dcache_req_tag[__idx(NumPorts, HartId)]),
-          .dcache_req_pma_o  (dcache_req_pma[__idx(NumPorts, HartId)]),
-
-          .dcache_rsp_valid_i(dcache_rsp_valid[__idx(NumPorts, HartId)]),
-          .dcache_rsp_i      (dcache_rsp[__idx(NumPorts, HartId)])
-      );
-`else
-      assign dcache_req_valid[__idx(NumPorts, HartId)] = 1'b0;
-      assign dcache_req[__idx(NumPorts, HartId)] = '0;
-      assign dcache_req_abort[__idx(NumPorts, HartId)] = 1'b0;
-      assign dcache_req_tag[__idx(NumPorts, HartId)] = '0;
-      assign dcache_req_pma[__idx(NumPorts, HartId)] = '0;
-`endif
 
       //  Snoop load port
       assign snoop_valid[HartId][0] = dcache_req_valid[__idx(
@@ -276,28 +286,6 @@ module cva6_multicore_hpdcache_wrapper
       assign snoop_addr_offset[HartId][1] = dcache_req[__idx(NumPorts-1, HartId)].addr_offset;
       assign snoop_addr_tag[HartId][1] = dcache_req_tag[__idx(NumPorts-1, HartId)];
       assign snoop_phys_indexed[HartId][1] = dcache_req[__idx(NumPorts-1, HartId)].phys_indexed;
-
-`ifdef HPDCACHE_ENABLE_CMO
-      //  Snoop CMO port (in case of read prefetch accesses)
-      assign dcache_cmo_req_is_prefetch = hpdcache_pkg::is_cmo_prefetch(
-          dcache_req[NumPorts].op, dcache_req[__idx(NumPorts, HartId)].size
-      );
-      assign snoop_valid[HartId][2] = dcache_req_valid[__idx(
-          NumPorts, HartId
-      )] & dcache_req_ready[__idx(
-          NumPorts, HartId
-      )] & dcache_cmo_req_is_prefetch;
-      assign snoop_abort[HartId][2] = dcache_req_abort[__idx(NumPorts, HartId)];
-      assign snoop_addr_offset[HartId][2] = dcache_req[__idx(NumPorts, HartId)].addr_offset;
-      assign snoop_addr_tag[HartId][2] = dcache_req_tag[__idx(NumPorts, HartId)];
-      assign snoop_phys_indexed[HartId][2] = dcache_req[__idx(NumPorts, HartId)].phys_indexed;
-`else
-      assign snoop_valid[HartId][2]        = 1'b0;
-      assign snoop_abort[HartId][2]        = 1'b0;
-      assign snoop_addr_offset[HartId][2]  = '0;
-      assign snoop_addr_tag[HartId][2]     = '0;
-      assign snoop_phys_indexed[HartId][2] = 1'b0;
-`endif
     end
   endgenerate
 
@@ -308,10 +296,14 @@ module cva6_multicore_hpdcache_wrapper
     end
   endgenerate
 
+  /*
+  * Prefetcher is currently disabled
+  */
+  /*
   hwpf_stride_wrapper #(
       .HPDcacheCfg          (HPDcacheCfg),
       .NUM_HW_PREFETCH      (NrHwPrefetchers),
-      .NUM_SNOOP_PORTS      (NrHarts * 3),
+      .NUM_SNOOP_PORTS      (NrHarts * 2),
       .hpdcache_tag_t       (hpdcache_tag_t),
       .hpdcache_req_offset_t(hpdcache_req_offset_t),
       .hpdcache_req_data_t  (hpdcache_req_data_t),
@@ -352,6 +344,7 @@ module cva6_multicore_hpdcache_wrapper
       .hpdcache_rsp_valid_i(dcache_rsp_valid[HPDCACHE_NREQUESTERS-1]),
       .hpdcache_rsp_i      (dcache_rsp[HPDCACHE_NREQUESTERS-1])
   );
+  */
 
   hpdcache #(
       .HPDcacheCfg          (HPDcacheCfg),
@@ -378,7 +371,7 @@ module cva6_multicore_hpdcache_wrapper
       .clk_i,
       .rst_ni,
 
-      .wbuf_flush_i(dcache_flush_i),
+      .wbuf_flush_i(dcache_flush),
 
       .core_req_valid_i(dcache_req_valid),
       .core_req_ready_o(dcache_req_ready),
@@ -398,6 +391,9 @@ module cva6_multicore_hpdcache_wrapper
       .mem_resp_read_valid_i(dcache_mem_resp_read_valid_i),
       .mem_resp_read_i      (dcache_mem_resp_read_i),
 
+      .mem_resp_read_inval_i      (dcache_mem_resp_read_inval_i),
+      .mem_resp_read_inval_nline_i(dcache_mem_resp_read_inval_nline_i),
+
       .mem_req_write_ready_i(dcache_mem_req_write_ready_i),
       .mem_req_write_valid_o(dcache_mem_req_write_valid_o),
       .mem_req_write_o      (dcache_mem_req_write_o),
@@ -410,21 +406,26 @@ module cva6_multicore_hpdcache_wrapper
       .mem_resp_write_valid_i(dcache_mem_resp_write_valid_i),
       .mem_resp_write_i      (dcache_mem_resp_write_i),
 
-      .evt_cache_write_miss_o(dcache_write_miss),
-      .evt_cache_read_miss_o (dcache_read_miss),
-      .evt_uncached_req_o    (  /* unused */),
-      .evt_cmo_req_o         (  /* unused */),
-      .evt_write_req_o       (  /* unused */),
-      .evt_read_req_o        (  /* unused */),
-      .evt_prefetch_req_o    (  /* unused */),
-      .evt_req_on_hold_o     (  /* unused */),
-      .evt_rtab_rollback_o   (  /* unused */),
-      .evt_stall_refill_o    (  /* unused */),
-      .evt_stall_o           (  /* unused */),
+      .evt_cache_write_miss_o (dcache_write_miss),
+      .evt_cache_read_miss_o  (dcache_read_miss),
+      .evt_cache_dir_unc_err_o(dcache_dir_unc_err),
+      .evt_cache_dir_cor_err_o(dcache_dir_cor_err),
+      .evt_cache_dat_unc_err_o(dcache_dat_unc_err),
+      .evt_cache_dat_cor_err_o(dcache_dat_cor_err),
+      .evt_scrub_complete_o   (dcache_scrub_cycle),
+      .evt_uncached_req_o     (  /* unused */),
+      .evt_cmo_req_o          (  /* unused */),
+      .evt_write_req_o        (  /* unused */),
+      .evt_read_req_o         (  /* unused */),
+      .evt_prefetch_req_o     (  /* unused */),
+      .evt_req_on_hold_o      (  /* unused */),
+      .evt_rtab_rollback_o    (  /* unused */),
+      .evt_stall_refill_o     (  /* unused */),
+      .evt_stall_o            (  /* unused */),
 
-      .wbuf_empty_o(wbuffer_empty_o),
+      .wbuf_empty_o(wbuffer_empty),
 
-      .cfg_enable_i                       (dcache_enable_i),
+      .cfg_enable_i                       (dcache_enable),
       .cfg_wbuf_threshold_i               (3'd2),
       .cfg_wbuf_reset_timecnt_on_write_i  (1'b1),
       .cfg_wbuf_sequential_waw_i          (1'b0),
@@ -432,10 +433,15 @@ module cva6_multicore_hpdcache_wrapper
       .cfg_prefetch_updt_plru_i           (1'b1),
       .cfg_error_on_cacheable_amo_i       (1'b0),
       .cfg_rtab_single_entry_i            (1'b0),
-      .cfg_default_wb_i                   (1'b0)
+      .cfg_default_wb_i                   (1'b0),
+      // The scrubber is shared between all harts: enable it if any hart enables
+      // it and use the period of the first hart
+      .cfg_scrub_enable_i                 (|dcache_scrub_enable_i),
+      .cfg_scrub_period_i                 (dcache_scrub_period_i[0]),
+      .cfg_scrub_restart_i                (1'b0)
   );
 
-  assign dcache_miss_o = dcache_read_miss, wbuffer_not_ni_o = wbuffer_empty_o;
+  assign dcache_miss = dcache_read_miss, wbuffer_not_ni = wbuffer_empty;
   //  }}}
 
 endmodule : cva6_multicore_hpdcache_wrapper

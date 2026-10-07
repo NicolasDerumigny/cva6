@@ -67,8 +67,8 @@ static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1,
 
   while (__sync_load(&fromhost) == 0) {
 #ifdef __riscv_atomic
-  // Idem
-  invalidate_cacheline(&fromhost);
+    // Idem
+    invalidate_cacheline(&fromhost);
 #endif
   }
 

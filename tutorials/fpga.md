@@ -34,27 +34,22 @@ We currently provide support for the [Genesys 2 board](https://reference.digilen
 _Added in this repo_
 
 - **ZCU104**
-    Tested on Vivado 2024.1. This project contains several block designs variations in
-    `corev_apu/fpga/scripts/block_designs/zcu104*.tcl`, namely:
-    - `zcu104_50MHz_ethernet.tcl`: 50 MHz version with Ethernet support.
-    - `zcu104_100MHz_ethernet.tcl`: Similar version, with the core clock set to 100 MHz.
-    - `zcu104_100MHz_second_uart.tcl`: Adds a second UART, which can be set to contains only SBI
-      prints module OpenSBI `platform.c` UART address modification. Usefull for debugging IO deadlocks inside Linux.
-    - `zcu104_100MHz_dual_core_ethernet.tcl`: experimental 2-core version with Xilinx AXI Ethernet.
+    Tested on Vivado 2024.1. This project can contains several block designs variations in
+    `corev_apu/fpga/scripts/block_designs/zcu104*.tcl`, currently limited to:
+    - `zcu104_75MHz_dual_core_ethernet.tcl`: experimental 2-core version with Xilinx AXI Ethernet.
       Also relies on the PULP AXI Interconnect rather than Vivado's one, brigning support of AXI5
       atomics but less block design level customizability.
-    The default one is `zcu104_100MHz_dual_core_ethernet.tcl`. To change it, delete `zcu104.tcl` and
-    create a symbolic link to the desired flavour.
+    To change it to a custom one (single-core, no ethernet, etc), delete `zcu104.tcl` and create a symbolic link to your own design.
     The FPGA currently contains the following peripherals:
     - DDR4 memory controller wire to the SO-DIMM slot, using [MTA8ATF1G64HZ-compatible](https://www.micron.com/products/memory/dram-modules/sodimm/part-catalog/part-detail/mta8atf1g64hz-3g2r1) timings
     - JTAG port (see debugging section below)
     - Bootrom containing zero stage bootloader
     - UART, routed through the integrated USB-to-Quad-UART module
     - SPI controler router to the PMOD0 header for SDCard support, requires a [PMOD-micoSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
-    - (depending on version) Ethernet MAC Controller, routed to the first port of a
+    - Ethernet MAC Controller, routed to the first port of a
         [CN0506 FMC module](https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0506.html) using
         [AMD AXI Ethernet](https://www.amd.com/en/products/adaptive-socs-and-fpgas/intellectual-property/axi_ethernet.html)
-    - GPIOs connected to LEDs (including Ethernet's when applicable)
+    - GPIOs connected to LEDs (including Ethernet's)
 
 
 - **PYNQ-Z2**

@@ -6,8 +6,7 @@ module cva6_wrapper_verilog #(
     parameter AXI_ID_WIDTH   = 4,
     parameter AXI_USER_WIDTH = 1,
     parameter AXI_CUT_BYPASS = 1,
-    parameter NR_CORES       = 1,
-    parameter SHARE_FPU      = 0
+    parameter NR_CORES       = 1
 ) (
     input wire aclk,
     input wire aresetn,
@@ -29,8 +28,7 @@ module cva6_wrapper_verilog #(
       .AXI_ID_WIDTH(AXI_ID_WIDTH),
       .AXI_USER_WIDTH(AXI_USER_WIDTH),
       .AXI_CUT_BYPASS(AXI_CUT_BYPASS),
-      .NR_CORES(NR_CORES),
-      .SHARE_FPU(SHARE_FPU)
+      .NR_CORES(NR_CORES)
   ) i_cva6_wrapper (
       .aclk         (aclk),
       .aresetn      (aresetn),

@@ -17,7 +17,11 @@ package cva6_config_pkg;
 
   localparam CVA6ConfigRvfiTrace = 0;
 
-  localparam CVA6ConfigAxiIdWidth = 4;  // axi_pkg.sv
+  //  Six bits: the memory interface of the high performance data cache has
+  //  to identify the reads of its miss handler and the writes of its write
+  //  buffer, and the multicore SoC spends two bits of that on the NoC
+  //  multiplexer which tells its harts apart.
+  localparam CVA6ConfigAxiIdWidth = 6;  // axi_pkg.sv
   localparam CVA6ConfigAxiAddrWidth = 64;  // axi_pkg.sv
   localparam CVA6ConfigAxiDataWidth = 64;  // axi_pkg.sv
   localparam CVA6ConfigDataUserWidth = CVA6ConfigXlen;  // axi_pkg.sv
@@ -25,8 +29,8 @@ package cva6_config_pkg;
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
       VLEN: unsigned'(64),
-      FpgaEn: bit'(1),  // for Xilinx and Altera
-      FpgaAlteraEn: bit'(0),  // for Altera (only)
+      FpgaEn: bit'(1),  // for Xilinx and Altera,
+      FpgaAlteraEn: bit'(0),  // for Altera (only),
       TechnoCut: bit'(0),
       SuperscalarEn: bit'(0),
       ALUBypass: bit'(0),
@@ -56,10 +60,10 @@ package cva6_config_pkg;
       RVZiCond: bit'(1),
       RVZiCbom: bit'(1),
       RVZicntr: bit'(1),
-      RVZifencei: bit'(1),
-      RVZihpm: bit'(1),
-      BigEndianEn: bit'(0),
-      NrScoreboardEntries: unsigned'(8),
+      RVZifencei:  bit'(1),
+          RVZihpm: bit'(1),
+      BigEndianEn:  bit'(0),
+          NrScoreboardEntries: unsigned'(8),
       PerfCounterEn: bit'(1),
       MmuPresent: bit'(1),
       RVS: bit'(1),
@@ -85,8 +89,8 @@ package cva6_config_pkg;
       SdtrigItrigger: bit'(0),
       SdtrigNrTriggers: int'(4),
       SdtrigTriggerChaining: bit'(0),
-      SdtrigSupportedActions: 2'b01,
-      SdtrigSupportedMatch: 10'b00_0000_0001,
+      SdtrigSupportedActions: {2{2'b01}},
+      SdtrigSupportedMatch: {10{10'b00_0000_0001}},
       SdtrigSupportTextra: bit'(0),
       TvalEn: bit'(1),
       DirectVecOnly: bit'(0),
@@ -95,27 +99,26 @@ package cva6_config_pkg;
       PMPAddrRstVal: {64{64'h0}},
       PMPEntryReadOnly: 64'd0,
       PMPNapotEn: bit'(1),
-      NOCType: config_pkg::NOC_TYPE_AXI4_ATOP,
-      NrNonIdempotentRules: unsigned'(2),
-      NonIdempotentAddrBase: 1024'({64'b0, 64'b0}),
-      NonIdempotentLength: 1024'({64'b0, 64'b0}),
+      NrNonIdempotentRules: unsigned'(1),
+      NonIdempotentAddrBase: 1024'({64'b0}),
+      NonIdempotentLength: 1024'({64'h8000_0000}),
       NrExecuteRegionRules: unsigned'(3),
       ExecuteRegionAddrBase: 1024'({64'h8000_0000, 64'h1_0000, 64'h0}),
       ExecuteRegionLength: 1024'({64'h40000000, 64'h10000, 64'h1000}),
       NrCachedRegionRules: unsigned'(1),
       CachedRegionAddrBase: 1024'({64'h8000_0000}),
       CachedRegionLength: 1024'({64'h40000000}),
-      NrBufferableRegionRules: unsigned'(0),
-      BufferableRegionAddrBase: 1024'({64'b0}),
-      BufferableRegionLength: 1024'({64'b0}),
-      MaxOutstandingStores: unsigned'(4),
+      NrBufferableRegionRules:  unsigned'(0),
+      BufferableRegionAddrBase:  1024'({64'b0}),
+      BufferableRegionLength:  1024'({64'b0}),
+                  MaxOutstandingStores: unsigned'(4),
       DebugEn: bit'(1),
       AxiBurstWriteEn: bit'(0),
       IcacheByteSize: unsigned'(16384),
       IcacheSetAssoc: unsigned'(4),
       IcacheLineWidth: unsigned'(128),
       CacheWritePolicy: config_pkg::CACHE_WT,
-      DcacheByteSize: unsigned'(16384),
+          DcacheByteSize: unsigned'(16384),
       DcacheSetAssoc: unsigned'(4),
       DcacheLineWidth: unsigned'(128),
       DcacheFlushOnFence: bit'(0),
@@ -124,7 +127,9 @@ package cva6_config_pkg;
       DcacheEccEnable: bit'(0),
       DcacheEccScrubberEnable: bit'(0),
       DataUserEn: bit'(0),
-      WtDcacheWbufDepth: int'(8),
+      //  Seven entries: the depth of the write buffer of the high performance
+      //  data cache, which its memory identifiers must be able to encode
+      WtDcacheWbufDepth: int'(7),
       FetchUserWidth: unsigned'(64),
       FetchUserEn: bit'(0),
       InstrTlbEntries: int'(4),
@@ -135,12 +140,12 @@ package cva6_config_pkg;
       NrLoadPipeRegs: int'(1),
       NrStorePipeRegs: int'(0),
       DcacheIdWidth: int'(2),
-      MemSubsystem: config_pkg::MEM_AXI,
-      NrStoreInFlight: unsigned'(0),
-      DclsEn: bit'(0),
-      DclsDelay : unsigned'(1),
-      DclsCommonRegfile: bit'(0),
-      DclsCommonBHT: bit'(0)
+      MemSubsystem:  config_pkg::MEM_OBI,
+      NrStoreInFlight:  unsigned'(0),
+      DclsEn:  bit'(0),
+      DclsDelay:  unsigned'(1),
+      DclsCommonRegfile:  bit'(0),
+      DclsCommonBHT:  bit'(0)
   };
 
 endpackage

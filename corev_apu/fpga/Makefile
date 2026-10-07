@@ -16,7 +16,7 @@ ips := xlnx_axi_clock_converter.xci  \
 	   xlnx_dpti_clk.xci             \
        xlnx_mig_7_ddr3.xci
 
-bd_boards := zcu104 pynq_z2
+bd_boards := zcu104 pynq_z2 kr260
 
 ips := $(addprefix $(work-dir)/, $(ips))
 ips-target := $(join $(addsuffix /ip/, $(addprefix $(ip-dir)/, $(basename $(ips)))), $(ips))

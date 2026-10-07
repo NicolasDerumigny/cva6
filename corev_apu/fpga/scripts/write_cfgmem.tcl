@@ -40,6 +40,8 @@ if {$::env(BOARD) eq "genesys2"} {
     write_cfgmem -format mcs -interface SPIx1 -size 256  -loadbit "up 0x0 $bitfile" -file $mcsfile -force
 } elseif {$::env(BOARD) eq "pynq_z2"} {
     write_cfgmem -format mcs -interface SPIx1 -size 256  -loadbit "up 0x0 $bitfile" -file $mcsfile -force
+} elseif {$::env(BOARD) eq "kr260"} {
+    write_cfgmem -format mcs -interface SPIx1 -size 256  -loadbit "up 0x0 $bitfile" -file $mcsfile -force
 } else {
     exit 1
 }

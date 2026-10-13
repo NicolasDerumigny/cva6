@@ -27,12 +27,9 @@ set_property "steps.synth_design.args.global_retiming" "on" [get_runs synth_1]
 #set_property "steps.route_design.args.directive" "Explore" [get_runs impl_1]
 #set_property "steps.phys_opt_design.args.directive" "AlternateFlowWithRetiming" [get_runs impl_1]
 
-launch_runs [get_runs synth_1] -jobs $cores
-wait_on_runs [get_runs synth_1]
-
-# Launch synthesis
+reset_run synth_1
 launch_runs synth_1 -jobs $cores
-wait_on_run synth_1
+wait_on_runs synth_1
 open_run synth_1
 
 launch_runs impl_1

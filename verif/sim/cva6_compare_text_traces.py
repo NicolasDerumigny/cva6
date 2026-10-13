@@ -74,7 +74,7 @@ def compare_text_regexp(file, ref_file, name, log):
             regexp, ref_index = read_line(fd2, ref_index)
             if (line == "" and regexp == ""):
                 break
-            if re.match(regexp.strip(), line.strip()) is None:
+            if (re.match(regexp.strip(), line.strip()) is None) or regexp == "":
                 mismatch_cnt += 1
                 fd.write("\nMismatch[%s]:\n" % mismatch_cnt)
                 if (line == ""):
@@ -82,7 +82,7 @@ def compare_text_regexp(file, ref_file, name, log):
                 else:
                     fd.write("{}[{}] : {}\n".format(name, file_index, line.strip()))
                 if (regexp == ""):
-                    fd.write("%s : <EOF>\n" % name2)
+                    fd.write("%s : <EOF>\n" % ref_file)
                 else:
                     fd.write("Expected[{}] : {}\n".format(ref_index, regexp.strip()))
             else:

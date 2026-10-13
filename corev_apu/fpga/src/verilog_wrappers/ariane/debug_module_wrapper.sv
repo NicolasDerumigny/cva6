@@ -35,7 +35,9 @@ module debug_module_wrapper#(
 import ariane_axi::req_t;
 import ariane_axi::resp_t;
 
-localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(cva6_config_pkg::cva6_cfg);
+localparam config_pkg::cva6_cfg_t CVA6Cfg =  build_config_pkg::build_config(
+      cva6_config_pkg::cva6_cfg
+  );
 
 ariane_axi::req_t    dm_axi_m_req;
 ariane_axi::resp_t   dm_axi_m_resp;

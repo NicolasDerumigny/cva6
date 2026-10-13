@@ -6,8 +6,8 @@
 module axi_xbar_interface_wrapper #(
     parameter unsigned AXI_ADDR_WIDTH = 64,
     parameter unsigned AXI_DATA_WIDTH = 64,
-    parameter unsigned AXI_MST_ID_WIDTH = 4,
-    parameter unsigned AXI_SLV_ID_WIDTH = 6,
+    parameter unsigned AXI_MST_ID_WIDTH = 6,
+    parameter unsigned AXI_SLV_ID_WIDTH = 4,
     parameter unsigned AXI_USER_WIDTH = 1
 ) (
     input wire aclk,
@@ -31,19 +31,17 @@ module axi_xbar_interface_wrapper #(
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth, AXI_MST_ID_WIDTH),
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_eth_leds, AXI_MST_ID_WIDTH)
 );
-  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(
-      cva6_config_pkg::cva6_cfg
-  );
+  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_config_pkg::build_config(cva6_config_pkg::cva6_cfg);
   localparam NrSlave = 4;
   localparam NrMaster = 12;
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
       NoSlvPorts: NrSlave,
       NoMstPorts: NrMaster,
-      MaxMstTrans: 2,  // Probably requires update
-      MaxSlvTrans: 2,  // Probably requires update
+      MaxMstTrans: 64, // Safe bet
+      MaxSlvTrans: 64, // Idem
       FallThrough: 1'b0,
-      LatencyMode: axi_pkg::CUT_ALL_PORTS,
+      LatencyMode: axi_pkg::CUT_MST_PORTS,
       AxiIdWidthSlvPorts: AXI_SLV_ID_WIDTH,
       AxiIdUsedSlvPorts: AXI_SLV_ID_WIDTH,
       UniqueIds: 1'b0,
@@ -58,7 +56,7 @@ module axi_xbar_interface_wrapper #(
     '{
         idx: 0,
         start_addr: 'h8000_0000,
-        end_addr:   'hC000_0000
+        end_addr: 'h2_8000_0000
     },
     // UART
     '{

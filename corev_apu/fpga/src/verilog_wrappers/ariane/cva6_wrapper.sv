@@ -22,7 +22,7 @@ module cva6_wrapper #(
 
     `AXI_INTERFACE_MODULE_OUTPUT(m_axi_cpu, AXI_ID_WIDTH)
 );
-  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(
+  localparam config_pkg::cva6_cfg_t CVA6Cfg = build_config_pkg::build_config(
       cva6_config_pkg::cva6_cfg
   );
 

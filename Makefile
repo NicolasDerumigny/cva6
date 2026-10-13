@@ -93,15 +93,14 @@ else ifeq ($(BOARD), nexys_video)
 else ifeq ($(BOARD), zcu104)
 	XILINX_PART              := xczu7ev-ffvc1156-2-e
 	XILINX_BOARD             := xilinx.com:zcu104:part0:1.1
-	CLK_PERIOD_NS            := 20
 else ifeq ($(BOARD), pynq_z2)
 	XILINX_PART              := xc7z020clg400-1
 	XILINX_BOARD             := tul.com.tw:pynq-z2:part0:1.0
 	CLK_PERIOD_NS            := 40
 else ifeq ($(BOARD), kr260)
-	XILINX_PART		 := xck26-sfvc784-2LV-c
-	XILINX_BOARD		 := xilinx.com:kr260_som:part0:1.1
-	CLK_PERIOD_NS		 := 16
+	XILINX_PART		           := xck26-sfvc784-2LV-c
+	XILINX_BOARD		         := xilinx.com:kr260_som:part0:1.1
+	CLK_PERIOD_NS		         := 16
 else
 $(error Unknown board - please specify a supported FPGA board)
 endif
@@ -353,6 +352,8 @@ incdir := $(CVA6_REPO_DIR)/vendor/pulp-platform/common_cells/include/ $(CVA6_REP
           $(CVA6_REPO_DIR)/verif/core-v-verif/lib/uvm_agents/uvma_core_cntrl/ \
           $(CVA6_REPO_DIR)/verif/tb/core/ \
           $(CVA6_REPO_DIR)/core/include/ \
+          $(HPDCACHE_DIR)/rtl/include \
+          $(HPDCACHE_DIR)/rtl/src/utils/ecc \
           $(CVA6_REPO_DIR)/corev_apu/instr_tracing/ITI/include \
           $(SPIKE_INSTALL_DIR)/include/disasm/
 
@@ -551,6 +552,8 @@ XRUN_RUN_LOG       ?= xrun_run.log
 CVA6_HOME	   ?= $(realpath -s $(root-dir))
 
 XRUN_INCDIR :=+incdir+$(CVA6_HOME)/core/include 			\
+	+incdir+$(HPDCACHE_DIR)/rtl/include				\
+	+incdir+$(HPDCACHE_DIR)/rtl/src/utils/ecc			\
 	+incdir+$(CVA6_HOME)/vendor/pulp-platform/axi/include/		\
 	+incdir+$(CVA6_HOME)/corev_apu/register_interface/include
 
@@ -838,9 +841,14 @@ $(add_fpga_src): $(uart_src) $(ariane_pkg) $(filter-out $(fpga_filter), $(src_fl
 	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> $(add_fpga_src)
 	@echo read_verilog -sv {$(fpga_src)}   >> $(add_fpga_src)
 
-fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
+bitstream: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
 	@echo "[FPGA] Generate Bitstream"
 	$(MAKE) -C corev_apu/fpga BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) ADD_SRC=$(add_fpga_src)
+
+
+fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist) $(add_fpga_src)
+	@echo "[FPGA] Generate Vivado Project"
+	$(MAKE) -C corev_apu/fpga project BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) ADD_SRC=$(add_fpga_src)
 
 .PHONY: bootrom-fpga
 bootrom-fpga:

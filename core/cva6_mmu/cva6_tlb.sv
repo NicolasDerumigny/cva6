@@ -233,7 +233,7 @@ module cva6_tlb
             if (tags_q[i].is_page[0][0])
               lu_gpaddr_o[12+2*(CVA6Cfg.VpnLen/CVA6Cfg.PtLevels)-1:12] = lu_vaddr_i[12+2*(CVA6Cfg.VpnLen/CVA6Cfg.PtLevels)-1:12];
           end else begin
-            lu_gpaddr_o = CVA6Cfg.GPLEN'(lu_vaddr_i[(CVA6Cfg.XLEN == 32?CVA6Cfg.VLEN:CVA6Cfg.GPLEN)-1:0]);
+            lu_gpaddr_o = CVA6Cfg.GPLEN'(lu_vaddr_i[(CVA6Cfg.IS_XLEN32 ? CVA6Cfg.VLEN:CVA6Cfg.GPLEN)-1:0]);
           end
 
           // G-translation (if requested), depending on `content[i].gpte` page type

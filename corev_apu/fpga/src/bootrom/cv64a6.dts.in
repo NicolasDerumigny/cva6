@@ -18,7 +18,9 @@
       reg = <0>;
       status = "okay";
       compatible = "eth, ariane", "riscv";
-      riscv,isa = "rv64imafdch";
+      riscv,isa = "rv64imafdch_RISCV_EXT";
+      riscv,cbom-block-size = <64>;
+      riscv,cboz-block-size = <64>;
       mmu-type = "riscv,sv39";
       tlb-split;
       // HLIC - hart local interrupt controller
@@ -34,7 +36,9 @@
       reg = <1>;
       status = "okay";
       compatible = "eth, ariane", "riscv";
-      riscv,isa = "rv64imafdch";
+      riscv,isa = "rv64imafdch_RISCV_EXT";
+      riscv,cbom-block-size = <64>;
+      riscv,cboz-block-size = <64>;
       mmu-type = "riscv,sv39";
       tlb-split;
       // HLIC - hart local interrupt controller
@@ -47,7 +51,7 @@
   };
   memory@80000000 {
     device_type = "memory";
-    reg = <0x0 0x80000000 0x0 DRAM_SIZE_64>;
+    reg = <0x0 0x80000000 DRAM_SIZE_64_UP DRAM_SIZE_64>;
   };
   leds {
     compatible = "gpio-leds";

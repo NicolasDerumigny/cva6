@@ -51,7 +51,7 @@
   addi reg1, reg1, 4;                                                          \
   li reg2, CLINT_END_HART_IPI;                                                 \
   blt reg1, reg2, 41b;                                                         \
-  /* Non-SMP harts counts to MAX_HARTS * 50 to let hart 0 be the first to exit \
+  /* Non-SMP harts count  to MAX_HARTS * 50 to let hart 0 be the first to exit \
    */                                                                          \
   li reg2, 0x8;                                                                \
   csrw mie, reg2;                                                              \

@@ -14,5 +14,4 @@
 `define ZCU104
 
 `define ARIANE_DATA_WIDTH 64
-`define HAS4LEDS
 `define RAMB16

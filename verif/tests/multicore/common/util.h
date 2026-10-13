@@ -14,11 +14,17 @@ extern __attribute__((noreturn)) void exit(int);
   case !!(long)(cond):;                                                        \
   }
 
+extern __thread int hart_id;
 static unsigned long get_hart_id() {
-  register unsigned long ret asm("a0");
-  asm volatile("csrr    a0, mhartid" : "=r"(ret));
-  return ret;
+  if (hart_id == -1) {
+    register unsigned long ret asm("a0");
+    asm volatile("csrr    a0, mhartid" : "=r"(ret));
+    return ret;
+  }
+  return hart_id;
 }
+
+void init_hart_id();
 
 static int verify(int n, const volatile int *test, const int *verify) {
   int i;
@@ -108,7 +114,7 @@ static uintptr_t insn_len(uintptr_t pc) {
 
 #ifdef __riscv_atomic // __sync_* builtins require A extension
                       //
-static inline void lock(uint8_t* lock_addr) {
+static inline void lock(uint8_t *lock_addr) {
   uint8_t expected;
   do {
     expected = 0;

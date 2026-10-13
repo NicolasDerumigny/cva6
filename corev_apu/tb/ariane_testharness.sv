@@ -36,6 +36,8 @@ module ariane_testharness #(
     parameter int unsigned NUM_WORDS = 2 ** 25,  // memory size
     parameter bit StallRandomOutput = 1'b0,
     parameter bit StallRandomInput = 1'b0,
+    parameter int unsigned FixedDelayInput = 0,
+    parameter int unsigned FixedDelayOutput = 0,
     parameter int NR_CORES = 2
 ) (
     input  logic        clk_i,
@@ -135,7 +137,7 @@ module ariane_testharness #(
     if (!$value$plusargs("jtag_rbb_enable=%b", jtag_enable)) jtag_enable = 'h0;
     if ($test$plusargs("debug_disable")) debug_enable = 'h0;
     else debug_enable = 'h1;
-    if (CVA6Cfg.XLEN != 32 & CVA6Cfg.XLEN != 64) $error("CVA6Cfg.XLEN different from 32 and 64");
+    if (!CVA6Cfg.IS_XLEN32 & !CVA6Cfg.IS_XLEN64) $error("CVA6Cfg.XLEN different from 32 and 64");
   end
 
   // debug if MUX
@@ -448,8 +450,8 @@ module ariane_testharness #(
       .AXI_USER_WIDTH     (AXI_USER_WIDTH),
       .STALL_RANDOM_INPUT (StallRandomInput),
       .STALL_RANDOM_OUTPUT(StallRandomOutput),
-      .FIXED_DELAY_INPUT  (0),
-      .FIXED_DELAY_OUTPUT (0)
+      .FIXED_DELAY_INPUT  (FixedDelayInput),
+      .FIXED_DELAY_OUTPUT (FixedDelayOutput)
   ) i_axi_delayer (
       .clk_i (clk_i),
       .rst_ni(ndmreset_n),
@@ -623,7 +625,7 @@ module ariane_testharness #(
   // Peripherals
   // ---------------
   logic tx, rx;
-  logic [1:0] irqs;
+  logic [NR_CORES-1:0][1:0] irqs;
 
   ariane_peripherals #(
       .AxiAddrWidth(AXI_ADDRESS_WIDTH),
@@ -636,7 +638,8 @@ module ariane_testharness #(
       .InclUART    (1'b0),
 `endif
       .InclSPI     (1'b0),
-      .InclEthernet(1'b0)
+      .InclEthernet(1'b0),
+      .NR_CORES    (NR_CORES),
   ) i_ariane_peripherals (
       .clk_i    (clk_i),
       .rst_ni   (ndmreset_n),

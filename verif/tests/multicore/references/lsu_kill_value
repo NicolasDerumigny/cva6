@@ -1,0 +1,10 @@
+[01]: Phase 1 \(exception kill in SEND_TAG, no writeback\) OK \(bad=0\)
+[01]: Phase 1 \(exception kill in SEND_TAG, no writeback\) OK \(bad=0\)
+[01]: Phase 2 \(killed response vs reused slot\) OK \(bad=0\)
+[01]: Phase 2 \(killed response vs reused slot\) OK \(bad=0\)
+[01]: Phase 3 \(store then load another word, kill between\) OK \(bad=0\)
+[01]: Phase 3 \(store then load another word, kill between\) OK \(bad=0\)
+[01]: Phase 4 \(kill storm, both slots\) OK
+[01]: Phase 4 \(kill storm, both slots\) OK
+[01]: LSU kill value test PASSED \(bad=0 spurious=0\)
+[01]: LSU kill value test PASSED \(bad=0 spurious=0\)

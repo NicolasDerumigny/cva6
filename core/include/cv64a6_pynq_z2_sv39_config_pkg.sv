@@ -40,7 +40,7 @@ package cva6_config_pkg;
   localparam CVA6ConfigIcacheByteSize = 16384;
   localparam CVA6ConfigIcacheSetAssoc = 4;
   localparam CVA6ConfigIcacheLineWidth = 128;
-  localparam CVA6ConfigDcacheByteSize = 16384;;
+  localparam CVA6ConfigDcacheByteSize = 16384;
   localparam CVA6ConfigDcacheSetAssoc = 4;
   localparam CVA6ConfigDcacheLineWidth = 128;
 
@@ -78,7 +78,7 @@ package cva6_config_pkg;
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
       VLEN: unsigned'(64),
-      FpgaEn: bit'(0),  // for Xilinx and Altera
+      FpgaEn: bit'(1),  // for Xilinx and Altera
       FpgaAlteraEn: bit'(0),  // for Altera (only)
       TechnoCut: bit'(0),
       SuperscalarEn: bit'(0),
@@ -102,7 +102,6 @@ package cva6_config_pkg;
       RVC: bit'(CVA6ConfigCExtEn),
       RVH: bit'(CVA6ConfigHExtEn),
       RVZCB: bit'(CVA6ConfigZcbExtEn),
-      RVZCMP: bit'(CVA6ConfigZcmpExtEn),
       RVZCMT: bit'(0),
       RVZCMP: bit'(CVA6ConfigZcmpExtEn),
       XFVec: bit'(CVA6ConfigFVecEn),
@@ -134,9 +133,9 @@ package cva6_config_pkg;
       PMPEntryReadOnly: 64'd0,
       PMPNapotEn: bit'(1),
       NOCType: config_pkg::NOC_TYPE_AXI4_ATOP,
-      NrNonIdempotentRules: unsigned'(2),
-      NonIdempotentAddrBase: 1024'({64'b0, 64'b0}),
-      NonIdempotentLength: 1024'({64'b0, 64'b0}),
+      NrNonIdempotentRules: unsigned'(1),
+      NonIdempotentAddrBase: 1024'({64'b0}),
+      NonIdempotentLength: 1024'({64'h8000_0000}),
       NrExecuteRegionRules: unsigned'(3),
       ExecuteRegionAddrBase: 1024'({64'h8000_0000, 64'h1_0000, 64'h0}),
       ExecuteRegionLength: 1024'({64'h40000000, 64'h10000, 64'h1000}),
@@ -145,11 +144,21 @@ package cva6_config_pkg;
       CachedRegionLength: 1024'({64'h40000000}),
       MaxOutstandingStores: unsigned'(4),
       DebugEn: bit'(1),
-      SDTRIG: bit'(0),
-      Mcontrol6: bit'(0),
-      Icount: bit'(0),
-      Etrigger: bit'(0),
-      Itrigger: bit'(0),
+      Sdtrig: bit'(0),
+      SdtrigMcontrol6: bit'(0),
+      SdtrigMcontrol6ExecAddr: bit'(0),
+      SdtrigMcontrol6ExecData: bit'(0),
+      SdtrigMcontrol6Store: bit'(0),
+      SdtrigMcontrol6LoadAddr: bit'(0),
+      SdtrigMcontrol6LoadData: bit'(0),
+      SdtrigIcount: bit'(0),
+      SdtrigEtrigger: bit'(0),
+      SdtrigItrigger: bit'(0),
+      SdtrigNrTriggers: int'(4),
+      SdtrigTriggerChaining: bit'(0),
+      SdtrigSupportedActions: {2{2'b01}},
+      SdtrigSupportedMatch: {10{10'b00_0000_0001}},
+      SdtrigSupportTextra: bit'(0),
       AxiBurstWriteEn: bit'(0),
       IcacheByteSize: unsigned'(CVA6ConfigIcacheByteSize),
       IcacheSetAssoc: unsigned'(CVA6ConfigIcacheSetAssoc),
@@ -161,6 +170,8 @@ package cva6_config_pkg;
       DcacheFlushOnFence: unsigned'(CVA6ConfigDcacheFlushOnFence),
       DcacheFlushOnFenceI: unsigned'(CVA6ConfigDcacheFlushOnFenceI),
       DcacheInvalidateOnFlush: unsigned'(CVA6ConfigDcacheInvalidateOnFlush),
+      DcacheEccEnable: bit'(0),
+      DcacheEccScrubberEnable: bit'(0),
       DataUserEn: unsigned'(CVA6ConfigDataUserEn),
       WtDcacheWbufDepth: int'(CVA6ConfigWtDcacheWbufDepth),
       FetchUserWidth: unsigned'(CVA6ConfigFetchUserWidth),

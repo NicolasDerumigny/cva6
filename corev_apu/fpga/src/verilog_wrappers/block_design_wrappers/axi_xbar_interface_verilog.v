@@ -4,8 +4,8 @@ module axi_xbar_interface_verilog
 #(
     parameter AXI_ADDR_WIDTH = 64,
     parameter AXI_DATA_WIDTH = 64,
-    parameter AXI_MST_ID_WIDTH = 4,
-    parameter AXI_SLV_ID_WIDTH = 6,
+    parameter AXI_MST_ID_WIDTH = 6,
+    parameter AXI_SLV_ID_WIDTH = 4,
     parameter AXI_USER_WIDTH = 1
 ) (
     input wire aclk,
@@ -42,8 +42,8 @@ axi_xbar_interface_wrapper #(
 
     `AXI_INTERFACE_FORWARD(s_axi_cpu),
     `AXI_INTERFACE_FORWARD(s_axi_debug),
-    `AXI_INTERFACE_FORWARD(s_axi_eth_dma),
     `AXI_INTERFACE_FORWARD(s_axi_eth_dma_sg),
+    `AXI_INTERFACE_FORWARD(s_axi_eth_dma),
 
     `AXI_INTERFACE_FORWARD(m_axi_ram),
     `AXI_INTERFACE_FORWARD(m_axi_uart),

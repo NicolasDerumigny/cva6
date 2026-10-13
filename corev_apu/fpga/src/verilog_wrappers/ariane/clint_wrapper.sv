@@ -19,7 +19,7 @@ module clint_wrapper#(
     output logic [NR_CORES-1:0] timer_irq_o,
     output logic [NR_CORES-1:0] ipi_o
 );
-localparam config_pkg::cva6_cfg_t CVA6Cfg = build_fpga_config_pkg::build_fpga_config(cva6_config_pkg::cva6_cfg);
+localparam config_pkg::cva6_cfg_t CVA6Cfg = build_config_pkg::build_config(cva6_config_pkg::cva6_cfg);
 
 logic rtc;
 

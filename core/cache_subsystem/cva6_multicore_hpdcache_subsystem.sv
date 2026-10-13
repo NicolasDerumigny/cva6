@@ -404,9 +404,12 @@ module cva6_multicore_hpdcache_subsystem
     else $fatal(1, "HPDCACHE_REQ_SRC_ID_WIDTH is not wide enough");
     assert (CVA6Cfg.MEM_TID_WIDTH <= CVA6Cfg.AxiIdWidth)
     else $fatal(1, "MEM_TID_WIDTH shall be less or equal to the AxiIdWidth");
-    assert (CVA6Cfg.MEM_TID_WIDTH >= ($clog2(
-        HPDcacheCfg.u.mshrSets * HPDcacheCfg.u.mshrWays
-    ) + NrHarts))
+    // Check that there is enough space for:
+    //  - D$ refills (ids [0, mshrSets*mshrWays-1])
+    //  - I$ misses ([ICacheRdtxid, ICacheRdtxid+NrHarts-1])
+    //  - bypass
+    assert (((1 << CVA6Cfg.MEM_TID_WIDTH) - NrHarts - 1) >=
+            HPDcacheCfg.u.mshrSets * HPDcacheCfg.u.mshrWays)
     else $fatal(1, "MEM_TID_WIDTH shall allow to uniquely identify all D$ and I$ miss requests ");
     assert (CVA6Cfg.MEM_TID_WIDTH >= $clog2(HPDcacheCfg.u.wbufDirEntries))
     else $fatal(1, "MEM_TID_WIDTH shall allow to uniquely identify all D$ write requests ");

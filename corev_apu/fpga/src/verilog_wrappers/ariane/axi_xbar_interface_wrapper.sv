@@ -6,8 +6,8 @@
 module axi_xbar_interface_wrapper #(
     parameter unsigned AXI_ADDR_WIDTH = 64,
     parameter unsigned AXI_DATA_WIDTH = 64,
-    parameter unsigned AXI_MST_ID_WIDTH = 4,
-    parameter unsigned AXI_SLV_ID_WIDTH = 6,
+    parameter unsigned AXI_MST_ID_WIDTH = 6,
+    parameter unsigned AXI_SLV_ID_WIDTH = 4,
     parameter unsigned AXI_USER_WIDTH = 1
 ) (
     input wire aclk,

@@ -64,6 +64,16 @@ _Added in this repo_
     - SPI controler router to a PMODB header for SDCard support, requires a [PMOD-micoSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
     - GPIOs connected to LEDs
 
+- **KR260**
+    Initial support brought by PR #1.
+    The FPGA currently contains the following peripherals:
+    - Access to the board's upper 1 GiB of DRAM (if double-booting Linux on the Arm cores, limits
+      its usage to the 3 lower GiB with the kernel parameter `memory=3G`
+    - Bootrom containing zero stage bootloader
+    - UART routed through the PMOD1, requires a [PMOD-USB-UART adapter](https://digilent.com/reference/pmod/pmodusbuart/start)
+    - SPI controler router to a PMOD2 header for SDCard support, requires a [PMOD-micoSD adapter](https://digilent.com/reference/pmod/pmodmicrosd/start)
+
+
 _End of addition_
 ***
 

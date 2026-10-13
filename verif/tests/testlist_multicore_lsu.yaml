@@ -1,0 +1,72 @@
+# Copyright 2021 Thales DIS design services SAS
+# Inria 2026
+#
+# Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
+# You may obtain a copy of the License at https://solderpad.org/licenses/
+#
+# Original Author: Jean-Roch COULON - Thales
+# Modified by Nicolas Derumigny - Inria
+
+# ================================================================================
+#                  Regression test list format
+# --------------------------------------------------------------------------------
+# testlist        : Assembly test list
+# test            : Assembly test name
+# description     : Description of this test
+# gen_opts        : Instruction generator options
+# iterations      : Number of iterations of this test
+# no_iss          : Enable/disable ISS simulator (Optional)
+# gen_test        : Test name used by the instruction generator
+# asm_tests       : Path to directed, hand-coded assembly test file or directory
+# rtl_test        : RTL simulation test name
+# cmp_opts        : Compile options passed to the instruction generator
+# sim_opts        : Simulation options passed to the instruction generator
+# no_post_compare : Enable/disable comparison of trace log and ISS log (Optional)
+# compare_opts    : Options for the RTL & ISS trace comparison
+# gcc_opts        : gcc compile options
+# output_ref_file : File of regular expressions, one per line, the lines the
+#                   program is expected to print
+# sim_cycles      : Cycles the harness lets the run take before it calls it
+#                   timed out (default: the 2000000 of the harness itself)
+# --------------------------------------------------------------------------------
+#
+# The two tests of this list leave requests of one hart outstanding in the
+# memory system while the other harts have their line invalidated under them,
+# which only shows up when the memory answers late: they are run on a SoC
+# elaborated with two harts and a fixed delay on both ways of the harness
+# memory (the --nr-cores and --mem-*-delay of the flow, see verif/regress/
+# multicore-tests-fpga_linux_zcu104.sh), the 15 cycles the tests were written
+# against.
+#
+# They are built like the tests of testlist_multicore.yaml: for the extensions
+# they use, with the environment of verif/tests/multicore/common -- which they
+# also need for the virtual memory they run under, vm.c --, and with a
+# toolchain giving __thread a real TP-relative TLS block, not the emulated one
+# of libgcc, which the harts of the SoC would share.
+
+common_test_config: &common_test_config
+  path_var: TESTS_PATH
+  march: rv64gc_zba_zbb_zbs_zbc_zbkb_zbkx_zkne_zknd_zknh_zicbom
+  mabi: lp64d
+  gcc_opts: "-static -no-pie -fno-pic -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g -DNUM_HARTS=2 -T<path_var>/multicore/common/main.ld <path_var>/multicore/common/syscalls.c <path_var>/multicore/common/vm.c <path_var>/multicore/common/crt.S <path_var>/multicore/common/page_table.s -I<path_var>/multicore/env -I<path_var>/multicore/common -lgcc"
+
+testlist:
+  # The 15-cycle delay of the memory makes them slow: measured on two harts,
+  # the stall test takes five million cycles and the kill-value test three and
+  # a half, which is more than the two million a run gets by default.  The
+  # entries give them room for a machine which would answer slower still.
+  - test: multicore_lsu_stall
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/multicore/lsu_stall/lsu_stall.c
+    output_ref_file: <path_var>/multicore/references/lsu_stall
+    sim_cycles: 8000000
+
+  - test: multicore_lsu_kill_value
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/multicore/lsu_kill_value/lsu_kill_value.c
+    output_ref_file: <path_var>/multicore/references/lsu_kill_value
+    sim_cycles: 6000000

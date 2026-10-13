@@ -36,9 +36,10 @@
  *   nRequesters = 8, DcacheLineWidth = 128 (clWords = 2), MmuPresent = 1, SuperscalarEn = 0,
  *   NonIdemPotenceEn = 0, Sdtrig = 0, LDBUF_FALLTHROUGH = 0.
  *
- * The real request latency is set on the harness with -GFixedDelayOutput=N.  A memory response
- * delayed by N cycles keeps the killed request outstanding long enough for its slot to be reused,
- * which is what opens the window.  The reference stays valid for any N.
+ * The real request latency is set on the harness with --mem-output-delay=N, the flow of
+ * verif/regress/ delaying both ways.  A memory response delayed by N cycles keeps the
+ * killed request outstanding long enough for its slot to be reused, which is what
+ * opens the window.  The reference stays valid for any N.
  */
 #include <stdint.h>
 #include <stdio.h>

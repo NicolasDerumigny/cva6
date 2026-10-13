@@ -56,17 +56,19 @@
  *   3 cycles, so a uc_busy window is 3 cycles long and the LSU is never held more
  *   than one cycle (the WAIT_GNT transitions are arbitration losses, not stalls).
  *   The latency is therefore set on the harness, through the AXI delayer that is
- *   already in the testbench:
- *     make verilate target=cv64a6_imafdc_sv39 CVA6_NR_HARTS=2 \
- *       verilator="verilator --no-timing -GNR_CORES=2 -GFixedDelayOutput=12"
- *   Delaying the read-response channel by N cycles keeps uc_busy = 1 for N cycles,
- *   so every request presented during a window is held in WAIT_GNT, and the long
- *   memory latency also makes rtab_full reachable (4 shared entries with 2 harts
- *   keeping cold lines outstanding).  Measured on this test: mean WAIT_GNT dwell
- *   0 cycles at the default, mean 13 / max 358 at FixedDelayOutput = 12.
+ *   already in the testbench, which the flow reaches with:
+ *     ./cook.py verilator-testharness-comp -t cv64a6_imafdc_sv39 --nr-cores 2 \
+ *       --mem-input-delay 15 --mem-output-delay 15
+ *   Delaying the requests and the responses by N cycles keeps uc_busy = 1 for
+ *   2N + 3 cycles, so every request presented during a window is held in
+ *   WAIT_GNT, and the long memory latency also makes rtab_full reachable (4
+ *   shared entries with 2 harts keeping cold lines outstanding).
  *   stream_delay uses a 4-bit counter, so the usable range is 0..15.
  *   The reference stays valid for any latency: the ISS does not model it, so only
- *   the timing changes, not the architectural result.
+ *   the timing changes, not the architectural result.  The cycles a run is given,
+ *   on the other hand, have to follow the latency: at 15 cycles each way the
+ *   harts need a good deal more than the two million the harness allows by
+ *   default, which is what the sim_cycles of the testlist gives them.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -109,7 +111,7 @@
 #endif
 
 /* Request latency.  The real latency is set on the harness with
- * -GFixedDelayOutput=N (see the header): each memory response then comes back N
+ * --mem-output-delay=N (see the header): each memory response then comes back N
  * cycles late, so one uncached access keeps core_req_ready_o low for N + 3 cycles.
  * LATENCY_ROUNDS is how many back-to-back uncached accesses the blocking hart
  * issues per window, so the window is LATENCY_ROUNDS * (N + 3) cycles long and the

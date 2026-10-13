@@ -165,7 +165,7 @@ def parse_iss_yaml(iss, iss_yaml, isa, target, setting_dir, debug_cmd, priv, spi
   sys.exit(RET_FAIL)
 
 
-def get_iss_cmd(base_cmd, elf, target, log, nr_harts):
+def get_iss_cmd(base_cmd, elf, target, log, nr_harts, mem_input_delay, mem_output_delay):
   """Get the ISS simulation command
 
   Args:
@@ -173,6 +173,8 @@ def get_iss_cmd(base_cmd, elf, target, log, nr_harts):
     elf      : ELF file to run ISS simualtion
     log      : ISS simulation log name
     nr_harts : number of harts
+    mem_input_delay : Fixed AXI delay of the harness memory model, request channels, in cycles
+    mem_output_delay: Fixed AXI delay of the harness memory model, response channels, in cycles
 
   Returns:
     cmd      : Command for ISS simulation
@@ -181,6 +183,8 @@ def get_iss_cmd(base_cmd, elf, target, log, nr_harts):
   cmd = re.sub(r"\<target\>", target, cmd)
   cmd = re.sub(r"\<log\>", log, cmd)
   cmd += (" CVA6_NR_HARTS=%d" % nr_harts)
+  cmd += (" VERILATOR_FIXED_DELAY_INPUT=%d" % mem_input_delay)
+  cmd += (" VERILATOR_FIXED_DELAY_OUTPUT=%d" % mem_output_delay)
   cmd += (" STDOUT=%s.out 2> %s.iss" % (log, log))
   return cmd
 
@@ -467,7 +471,7 @@ def generate_yaml_report(yaml_path, target, isa, test, testlist, iss, initial_cr
 def run_test(test, iss_yaml, isa, target, mabi, gcc_opts, iss_opts, output_dir,
              setting_dir, debug_cmd, linker, priv, spike_params, test_name=None,
              iss_timeout=500, testlist="custom", nr_harts=1, compare_outputs=False,
-             output_ref_file="", exit_on_ecall=True):
+             output_ref_file="", exit_on_ecall=True, mem_input_delay=0, mem_output_delay=0):
   """Run a directed test with ISS
 
   Args:
@@ -488,10 +492,12 @@ def run_test(test, iss_yaml, isa, target, mabi, gcc_opts, iss_opts, output_dir,
     iss_timeout : Timeout for ISS simulation (default: 500)
     testlist    : Test list identifier (default: "custom")
 
-    nr_harts       : Number of harts to simulate
-    compare_outputs: Perform stdout comparison across simulators
-    output_ref_file: If set, check simulator output against reference file
-    exit_on_ecall  : Use ecalls as an exit marker
+    nr_harts          : Number of harts to simulate
+    compare_outputs   : Perform stdout comparison across simulators
+    output_ref_file   : If set, check simulator output against reference file
+    exit_on_ecall     : Use ecalls as an exit marker
+    mem_input_delay : Fixed AXI delay of the harness memory model, request channels, in cycles
+    mem_output_delay: Fixed AXI delay of the harness memory model, response channels, in cycles
   """
   if testlist != None:
     testlist = testlist.split('/')[-1].strip("testlist_").split('.')[0]
@@ -551,7 +557,7 @@ def run_test(test, iss_yaml, isa, target, mabi, gcc_opts, iss_opts, output_dir,
     yaml = ("%s/%s_sim/%s.%s.log.yaml" % (output_dir, iss, test_log_name, target))
     log_list.append(log)
     base_cmd = parse_iss_yaml(iss, iss_yaml, isa, target, setting_dir, debug_cmd, priv, spike_params)
-    cmd = get_iss_cmd(base_cmd, elf, target, log, nr_harts)
+    cmd = get_iss_cmd(base_cmd, elf, target, log, nr_harts, mem_input_delay, mem_output_delay)
     logging.info("[%0s] Running ISS simulation: %s" % (iss, cmd))
     if "spike" in iss: ratio = 10
     else: ratio = 1
@@ -574,7 +580,7 @@ def run_test(test, iss_yaml, isa, target, mabi, gcc_opts, iss_opts, output_dir,
 
 def iss_sim(test_list, output_dir, iss_list, iss_yaml, iss_opts,
             isa, target, setting_dir, timeout_s, debug_cmd, priv, spike_params,
-            nr_harts):
+            nr_harts, mem_input_delay=0, mem_output_delay=0):
   """Run ISS simulation with the generated test program
 
   Args:
@@ -587,6 +593,8 @@ def iss_sim(test_list, output_dir, iss_list, iss_yaml, iss_opts,
     setting_dir : Generator setting directory
     timeout_s   : Timeout limit in seconds
     debug_cmd   : Produce the debug cmd log without running
+    mem_input_delay  : Fixed AXI delay of the harness memory model, request channels, in cycles
+    mem_output_delay : Fixed AXI delay of the harness memory model, response channels, in cycles
   """
   for iss in iss_list.split(","):
     log_dir = ("%s/%s_sim" % (output_dir, iss))
@@ -602,7 +610,8 @@ def iss_sim(test_list, output_dir, iss_list, iss_yaml, iss_opts,
           prefix = ("%s/asm_tests/%s_%d" % (output_dir, test['test'], i))
           elf = prefix + ".o"
           log = ("%s/%s_%d.%s" % (log_dir, test['test'], i, target))
-          cmd = get_iss_cmd(base_cmd, elf, target, log,nr_harts)
+          cmd = get_iss_cmd(base_cmd, elf, target, log, nr_harts, mem_input_delay,
+                            mem_output_delay)
           yaml = ("%s/%s_%s.%s.log.yaml" % (log_dir, test['test'], i, target))
           if 'iss_opts' in test:
             cmd += ' '
@@ -852,6 +861,10 @@ def parse_args(cwd):
                       help="Choose additional z, s, x extensions")
   parser.add_argument("--spike_params", type=str, default="",
                       help="Spike command line parameters, run spike --help and spike --print-params to see more")
+  parser.add_argument("--mem_input_delay", type=int, default=0,
+                      help="Fixed load memory latency in cycles, range 0-15")
+  parser.add_argument("--mem_output_delay", type=int, default=0,
+                      help="Fixed store memory latency in cycles, range 0-15")
   parser.add_argument("--nr_harts", type=int, default=1,
                       help="Number of simulated harts")
   parser.add_argument("--compare_outputs", action="store_true",
@@ -959,7 +972,7 @@ def load_config(args, cwd):
     elif base in ("cv64a6_imafdc_sv39_wb",):
       args.mabi = "lp64d"
       args.isa  = "rv64gc_zba_zbb_zbs_zbc"
-    elif base in ("cv64a6_imafdc_sv39", "cv64a6_imafdc_sv39_hpdcache", "cv64a6_imafdc_sv39_hpdcache_wb"):
+    elif base in ("cv64a6_imafdc_sv39", "cv64a6_imafdc_sv39_hpdcache", "cv64a6_imafdc_sv39_hpdcache_wb", "cv64a6_zcu104_sv39"):
       args.mabi = "lp64d"
       args.isa  = "rv64gc_zba_zbb_zbs_zbc_zbkb_zbkx_zkne_zknd_zknh_zicbom"
     elif base == "cv32a60x":
@@ -1256,7 +1269,8 @@ def main():
                   args.iss, output_dir, args.core_setting_dir, args.debug, args.linker,
                   args.priv, args.spike_params, iss_timeout=args.iss_timeout,
                   nr_harts=args.nr_harts, compare_outputs=args.compare_outputs,
-                  output_ref_file=args.output_ref_file, exit_on_ecall=not args.no_ecall_exit)
+                  output_ref_file=args.output_ref_file, exit_on_ecall=not args.no_ecall_exit,
+                  mem_input_delay=args.mem_input_delay, mem_output_delay=args.mem_output_delay)
           else:
             logging.error('%s does not exist or is not a file' % full_path)
             sys.exit(RET_FAIL)
@@ -1335,7 +1349,8 @@ def main():
                              args.priv, args.spike_params, test_entry['test'], iss_timeout=args.iss_timeout,
                              testlist=args.testlist, nr_harts=args.nr_harts,
                              compare_outputs=args.compare_outputs, output_ref_file=args.output_ref_file,
-                             exit_on_ecall=not args.no_ecall_exit)
+                             exit_on_ecall=not args.no_ecall_exit,
+                             mem_input_delay=args.mem_input_delay, mem_output_delay=args.mem_output_delay)
               else:
                 if not args.debug:
                   logging.error('%s does not exist' % path_test)
@@ -1354,7 +1369,8 @@ def main():
         if args.steps == "all" or re.match(".*iss_sim.*", args.steps):
           iss_sim(matched_list, output_dir, args.iss, args.iss_yaml, args.iss_opts,
                   args.isa, args.target, args.core_setting_dir, args.iss_timeout, args.debug,
-                  args.priv, args.spike_params, args.nr_harts)
+                  args.priv, args.spike_params, args.nr_harts,
+                  args.mem_input_delay, args.mem_output_delay)
 
         # Compare ISS simulation result
         if args.steps == "all" or re.match(".*iss_cmp.*", args.steps):

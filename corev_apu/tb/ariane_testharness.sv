@@ -36,6 +36,8 @@ module ariane_testharness #(
     parameter int unsigned NUM_WORDS = 2 ** 25,  // memory size
     parameter bit StallRandomOutput = 1'b0,
     parameter bit StallRandomInput = 1'b0,
+    parameter int unsigned FixedDelayInput = 0,
+    parameter int unsigned FixedDelayOutput = 0,
     parameter int NR_CORES = 2
 ) (
     input  logic        clk_i,
@@ -448,8 +450,8 @@ module ariane_testharness #(
       .AXI_USER_WIDTH     (AXI_USER_WIDTH),
       .STALL_RANDOM_INPUT (StallRandomInput),
       .STALL_RANDOM_OUTPUT(StallRandomOutput),
-      .FIXED_DELAY_INPUT  (0),
-      .FIXED_DELAY_OUTPUT (0)
+      .FIXED_DELAY_INPUT  (FixedDelayInput),
+      .FIXED_DELAY_OUTPUT (FixedDelayOutput)
   ) i_axi_delayer (
       .clk_i (clk_i),
       .rst_ni(ndmreset_n),

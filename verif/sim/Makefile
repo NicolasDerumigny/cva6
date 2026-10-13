@@ -54,6 +54,12 @@ priv            ?=
 # Spike tandem mode: default to environment setting (DISABLED if envariable SPIKE_TANDEM is not set).
 export spike-tandem ?= $(SPIKE_TANDEM)
 
+export VERILATOR_FIXED_DELAY_INPUT  ?= 0
+export VERILATOR_FIXED_DELAY_OUTPUT ?= 0
+VERILATOR_PARAMS += -GNR_CORES=$(CVA6_NR_HARTS) \
+                    -GFixedDelayInput=$(VERILATOR_FIXED_DELAY_INPUT) \
+                    -GFixedDelayOutput=$(VERILATOR_FIXED_DELAY_OUTPUT)
+
 # Set Spike step count limit if the caller provided a step count value in variable 'steps'.
 ifneq ($(steps),)
   spike_stepout = --steps=$(steps)
@@ -423,7 +429,7 @@ vcs-testharness:
 veri-testharness-pk:
 	rm -rf $(path_var)/work-ver
 	@echo "Trace compact value $(TRACE_COMPACT)"
-	make -C $(path_var) verilate verilator="verilator --no-timing -GNR_CORES=$(CVA6_NR_HARTS)" target=$(target) defines=$(subst +define+,,$(isscomp_opts))
+	make -C $(path_var) verilate verilator="verilator --no-timing $(VERI_PARAMS) $(VERILATOR_EXTRA_ARGS)" target=$(target) defines=$(subst +define+,,$(isscomp_opts))
 	$(path_var)/work-ver/Variane_testharness $(if $(TRACE_COMPACT), -f verilator.fst) $(if $(TRACE_FAST), -v verilator.vcd) \
 		$(PK_INSTALL_DIR)/riscv-none-elf/bin/pk $(elf) \
 		+tohost_addr=$(shell $$RISCV/bin/$(CV_SW_PREFIX)nm -B $(PK_INSTALL_DIR)/riscv-none-elf/bin/pk | grep -w tohost | cut -d' ' -f1) \
@@ -438,7 +444,7 @@ veri-testharness-pk:
 	$(foreach h,$(HART_IDS),grep $(isspostrun_opts) ./trace_rvfi_hart_$(h).dasm &&) true
 
 veri-testharness:
-	make -C $(path_var) verilate verilator="verilator --no-timing -GNR_CORES=$(CVA6_NR_HARTS)" target=$(target) defines=$(subst +define+,,$(isscomp_opts))
+	make -C $(path_var) verilate verilator="verilator --no-timing $(VERI_PARAMS) $(VERILATOR_EXTRA_ARGS)" target=$(target) defines=$(subst +define+,,$(isscomp_opts))
 	$(path_var)/work-ver/Variane_testharness $(if $(TRACE_COMPACT), -f verilator.fst) $(if $(TRACE_FAST), -v verilator.vcd) $(elf) $(issrun_opts) \
 	  $(COMMON_PLUS_ARGS) 1>$(STDOUT)
 	# If present, move default waveform files to log directory.

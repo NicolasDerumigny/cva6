@@ -127,6 +127,10 @@ static inline void invalidate_cacheline(volatile void *addr) {
   __asm__ volatile("cbo.inval (%0)" ::"r"(addr) : "memory");
 }
 
+static inline void flush_cacheline(volatile void *addr) {
+  __asm__ volatile("cbo.flush (%0)" ::"r"(addr) : "memory");
+}
+
 #endif
 
 #endif //__UTIL_H

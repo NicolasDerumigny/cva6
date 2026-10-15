@@ -10,7 +10,7 @@ uint64_t stage = 0;
 
 int test_pinned_full() {
     int ret = 0;
-    // Defautl values
+    // Default values
     table_unpinned[0] = 0x42;
     for (int i = 0; i < 3 + (1 << HPDCACHE_WAY_WIDTH); i++) {
         table[i * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))] =
@@ -53,21 +53,26 @@ int test_pinned_full() {
     __sync_store(&stage, 1 + __sync_load(&stage));
 
     // Read req of pinned region with full pinned set. Hangs!
-    volatile int8_t val = (int8_t)
-        table[8 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
+    volatile int8_t val =
+        (int8_t)table[(1 << HPDCACHE_WAY_WIDTH) *
+                      (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
     printf("Core 0 pinned read req was unblocked (val 0x%x)\n", val);
 
     volatile uint8_t *ptr1 =
-        &table[9 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
+        &table[((1 << HPDCACHE_WAY_WIDTH) + 1) *
+               (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
     volatile uint8_t *ptr2 =
-        &table[10 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
-    invalidate_cacheline((void *)get_cl_addr(0, 0));
+        &table[((1 << HPDCACHE_WAY_WIDTH) + 2) *
+               (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))];
+    invalidate_cacheline(
+        (void *)get_cl_addr(0, 1)); // 0,0 was already freed by the other core
     *ptr1 = 0xff;
     *ptr2 = 0xff;
     printf("Core 0 double write req unblocked\n");
 
     // Hanging until unblocked by core 1 `flush`
-    table[11 * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))] = 0xa0;
+    table[((1 << HPDCACHE_WAY_WIDTH) + 3) *
+          (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))] = 0xa0;
     printf("Core 0 write req unblocked\n");
 
     reset_csr();
@@ -115,7 +120,7 @@ int unpin_core() {
     }
     wait();
     printf("Flushing one pinned cachelines to unblock core 0 (3/3)...\n");
-    invalidate_cacheline((void *)get_cl_addr(0, 0));
+    flush_cacheline((void *)get_cl_addr(0, 0));
 
     return ret;
 }

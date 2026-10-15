@@ -58,7 +58,7 @@ srcA=(
     ../tests/multicore/common/vm.c
 )
 
-./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS" "verif/tests/multicore/pinned"
+./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS -D__riscv_atomic" "verif/tests/multicore/pinned"
 
 cd verif/sim/
 

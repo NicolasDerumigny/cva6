@@ -12,6 +12,8 @@ int test_pinned_after_inval() {
     int ret = 0;
     flush_set(0);
     table[0] = 0xfa;
+    // Flush inited value to ensure coherency in WB mode
+    flush_cacheline(&table[0]);
     init_csr();
     table[0] = 0xbe;
 

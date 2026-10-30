@@ -7,11 +7,6 @@
 #define HPDCACHE_CSR_CL_ADDR (0x1 << 16)
 #define HPDCACHE_CSR_CL_PINNED_STATUS (0x2 << 16)
 
-#define HPDCACHE_CL_OFFSET_WIDTH (6)
-#define HPDCACHE_SET_WIDTH (6)
-#define HPDCACHE_TAG_WIDTH (44)
-#define HPDCACHE_WAY_WIDTH (3)
-
 #define HPDCACHE_CSR_CL_OFFSET_WAY                                             \
     (HPDCACHE_CL_OFFSET_WIDTH + HPDCACHE_SET_WIDTH)
 #define fence() asm volatile("fence" ::: "memory")

@@ -64,7 +64,7 @@ cd verif/sim/
 
 for src in "${srcs[@]}"; do
     ref_file=`basename ${src/.c//}`
-    python3 cva6.py --nr_harts 2 --c_tests $src  --output_ref_file=../tests/multicore/references/hpdcache_${ref_file} --iss_yaml cva6.yaml --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --gcc_opts="${srcA[*]} $CC_OPTS" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+    python3 cva6.py --nr_harts 2 --c_tests $src  --output_ref_file=../tests/multicore/references/hpdcache_${ref_file} --iss_yaml cva6.yaml --target cv64a6_zcu104_sv39 --iss=$DV_SIMULATORS --gcc_opts="${srcA[*]} $CC_OPTS" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
 done
 
 cd -

@@ -16,6 +16,12 @@ int test_pinned_full() {
         table[i * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))] =
             0x42;
     }
+    // Flush inited value to ensure coherency of WB mode
+    flush_cacheline(&table_unpinned[0]);
+    for (int i = 0; i < 3 + (1 << HPDCACHE_WAY_WIDTH); i++) {
+        flush_cacheline(
+            &table[i * (1 << (HPDCACHE_SET_WIDTH + HPDCACHE_CL_OFFSET_WIDTH))]);
+    }
     init_csr();
 
     // Fill the cache

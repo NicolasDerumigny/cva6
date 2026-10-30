@@ -35,11 +35,17 @@ CC_OPTS="-static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g 
 
 COMPILE_ARGS="-march=rv64gc_zba_zbb_zbs_zbc_zbkb_zbkx_zkne_zknd_zknh_zicbom -mabi=lp64d -DNUM_HARTS=2 --target=riscv64-none-elf"
 
+./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS $COMPILE_ARGS" "verif/tests/multicore/hello_world"
+./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS $COMPILE_ARGS" "verif/tests/multicore/lr_sc"
+./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS $COMPILE_ARGS" "verif/tests/multicore/clint"
 ./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS $COMPILE_ARGS" "verif/tests/multicore/lsu_stall"
 ./verif/regress/gen-compile-commands.sh "${srcA[*]} $CC_OPTS $COMPILE_ARGS" "verif/tests/multicore/lsu_kill_value"
 
 cd verif/sim/
 
+python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/hello_world/hello_world.c --output_ref_file=../tests/multicore/references/hello_world --iss_yaml cva6.yaml --target cv64a6_zcu104_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/lr_sc/lr_sc.c  --output_ref_file=../tests/multicore/references/lr_sc --iss_yaml cva6.yaml --target cv64a6_zcu104_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
+python3 cva6.py --nr_harts 2 --c_tests ../tests/multicore/clint/clint.c  --output_ref_file=../tests/multicore/references/clint --iss_yaml cva6.yaml --target cv64a6_zcu104_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
 # Warning: this only stresses the LSU, do not trigger the regression fixed in 17d4283a0
 python3 cva6.py --nr_harts 2 --mem_output_delay=15 --mem_input_delay=15 --c_tests ../tests/multicore/lsu_stall/lsu_stall.c --output_ref_file=../tests/multicore/references/lsu_stall --iss_yaml cva6.yaml --target cv64a6_zcu104_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3
 python3 cva6.py --nr_harts 2 --mem_output_delay=15 --mem_input_delay=15 --c_tests ../tests/multicore/lsu_kill_value/lsu_kill_value.c --output_ref_file=../tests/multicore/references/lsu_kill_value --iss_yaml cva6.yaml --target cv64a6_zcu104_sv39 --iss=$DV_SIMULATORS --gcc_opts="$CC_OPTS -nostdlib -lgcc" $DV_OPTS --linker=../tests/multicore/common/main.ld 3>&1 1>&2 2>&3 | colout -t cva6 3>&1 1>&2 2>&3

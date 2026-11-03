@@ -1,0 +1,11 @@
+Dirty hit test region: 0x[0-9a-f]+->0x[0-9a-f]+
+Core 0: buffer 0x[0-9a-f]+->0x[0-9a-f]+ dirtied, pinned, then stored into
+Core 1: HPDCACHE_WRITEBACK_STATUS is set \(after .* polls\)
+Core 1: [0-9]+ pinned stores wrote the old value back and stayed dirty and pinned
+Core 1: pinned region written back, cached and pinned again \([0-9]+ clean cachelines left pinned\)
+Switching to virtualized memory
+Core 0: buffer 0x[0-9a-f]+->0x[0-9a-f]+ dirtied, pinned, then stored into
+Core 1: HPDCACHE_WRITEBACK_STATUS is set \(after .* polls\)
+Core 1: [0-9]+ pinned stores wrote the old value back and stayed dirty and pinned
+Core 1: pinned region written back, cached and pinned again \([0-9]+ clean cachelines left pinned\)
+Pinned store on a dirty cacheline behavior correct

@@ -50,6 +50,8 @@ srcs=(
     ../tests/multicore/pinned/pinned_mem_coherency.c
     ../tests/multicore/pinned/pinned_after_inval.c
     ../tests/multicore/pinned/pinned_full.c
+    ../tests/multicore/pinned/pinned_writeback.c
+    ../tests/multicore/pinned/pinned_dirty_hit.c
 )
 
 srcA=(

@@ -1,0 +1,13 @@
+Writeback test region: 0x[0-9a-f]+->0x[0-9a-f]+
+Core 0: buffer 0x[0-9a-f]+->0x[0-9a-f]+ dirtied and pinned
+Core 1: HPDCACHE_WRITEBACK_STATUS is set \(after .* polls\)
+Core 1: no cacheline of the pinned region is cached
+Core 1: whole pinned region written back to memory
+Core 1: whole pinned region cached and pinned again
+Switching to virtualized memory
+Core 0: buffer 0x[0-9a-f]+->0x[0-9a-f]+ dirtied and pinned
+Core 1: HPDCACHE_WRITEBACK_STATUS is set \(after .* polls\)
+Core 1: no cacheline of the pinned region is cached
+Core 1: whole pinned region written back to memory
+Core 1: whole pinned region cached and pinned again
+Pinned region writeback behavior correct

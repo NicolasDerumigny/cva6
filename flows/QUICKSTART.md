@@ -177,6 +177,53 @@ The same on VCS is `vcs-testharness-comp`, then `vcs-testharness-run`
 or `--simulator vcs`. The Questa and Xcelium recipes exist but are not
 verified.
 
+### Several harts
+
+The multicore SoC is the same RTL: `--nr-cores` is what makes a build
+multicore. Its harts share their level 1 data cache and each has a hpicache
+instruction cache of its own, so the programs of `verif/tests/multicore` are
+built for as many harts as the design is elaborated with, and checked against
+the lines they print, not only against the exit code they write:
+
+```bash
+# 1. Compile the list: the toolchain must give __thread a real TP-relative
+#    TLS block, which is what keeps one hart_id per hart -- a glibc one, not a
+#    bare-metal newlib toolchain, which falls back to emutls and would have all
+#    the harts share the same hart_id
+./cook.py sw-compile-testlist -t cv64a6_imafdc_sv39 -c <toolchain> \
+  -l verif/tests/testlist_multicore.yaml
+
+# 2. Build the Verilator model with two harts
+./cook.py verilator-testharness-comp -t cv64a6_imafdc_sv39 --nr-cores 2
+
+# 3. Run them all
+./cook.py testharness-run-testlist --simulator verilator -t cv64a6_imafdc_sv39 \
+  -l verif/tests/testlist_multicore.yaml
+```
+
+`verif/regress/multicore-tests-cv64a6_imafdc_sv39.sh` is those steps for both
+lists, with the second elaboration the LSU list needs, and
+`verif/regress/multicore-tests-fpga_linux_{cv64a6,zcu104}.sh` the same on the
+board targets. The two tests which need a memory that answers late are a list
+of their own, `verif/tests/testlist_multicore_lsu.yaml`: elaborate their design
+with `--mem-input-delay 15 --mem-output-delay 15`, which the runners do. Since
+that memory is what makes them slow, the list also gives them more cycles than
+the two million a run gets by default (`sim_cycles`, or `--sim-cycles`). The
+hypervisor tests of `verif/tests/custom/rvh`, needing a target whose ISA carries
+H, come from `verif/regress/hypervisor-tests-*.sh` in the same shape.
+
+Status of the last check, on Verilator 5.050: the three tests of
+`testlist_multicore.yaml` and the two of `testlist_multicore_lsu.yaml` pass on
+two harts, the latter taking five million and three and a half million cycles
+once the memory answers fifteen cycles late on each way. The hypervisor list
+does not: `hypervisor_satp`, `hypervisor_vsatp` and `hypervisor_hgatp` fail on
+both H targets, at the check which expects a fetch from a page the page table
+does not make executable to fault, the hart having run to that point. The page
+table walker refuses a page without its execute bit when it fills the
+instruction lookaside buffer, so only a walk can raise that fault: either the
+entry for the page outlives the `sfence.vma` meant to drop it, or the store
+which lowered the bit never reached the cache the walk reads.
+
 ### Benchmarks
 
 ```bash

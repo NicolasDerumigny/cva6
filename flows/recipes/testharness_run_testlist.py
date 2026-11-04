@@ -14,6 +14,11 @@ Run a testlist on the TestHarness testbench.
 
 The counterpart of `uvm-run-testlist` for the harness: one elaboration,
 one run per test, and a single report carrying the verdict of each.
+
+A test may name the lines it is expected to print with `output_ref_file`, a
+file of regular expressions, one per line; Verilator matches them against the
+output of the program, which is how the tests of the multicore SoC tell two
+harts printing their identifier from one hart printing it twice.
 """
 
 from enum import Enum
@@ -33,6 +38,7 @@ from flows.utils.recipe_report import RecipeReport
 from flows.recipes.questa_testharness_run import questa_testharness_run
 from flows.recipes.vcs_testharness_run import vcs_testharness_run
 from flows.recipes.verilator_testharness_run import (
+    SIM_CYCLES,
     SIMULATION_TIMEOUT,
     verilator_testharness_run,
 )
@@ -82,6 +88,12 @@ def testharness_run_testlist(
     sim_timeout: int = typer.Option(
         SIMULATION_TIMEOUT, "--sim-timeout", help="Simulation timeout in seconds"
     ),
+    sim_cycles: int = typer.Option(
+        SIM_CYCLES,
+        "--sim-cycles",
+        help="Cycles a test runs before the harness gives it up as timed out; a"
+        " test of the list overrides it with its own sim_cycles",
+    ),
     uvm_verbosity: UvmVerbosity = typer.Option(
         # LOW rather than NONE: the harness reports its verdict with
         # `uvm_info(..., UVM_LOW)`, and NONE drops the line the recipes
@@ -111,6 +123,7 @@ def testharness_run_testlist(
             "testlist": testlist,
             "comp_mode": comp_mode.value,
             "trace_mode": trace_mode.value,
+            "sim_cycles": sim_cycles,
         },
         quiet=quiet,
     )
@@ -128,20 +141,41 @@ def testharness_run_testlist(
 
     # The compiled name of a test carries its iteration, the way
     # sw-compile-testlist named it: `iterations: 0` disables a test
-    # without removing it from the list.
+    # without removing it from the list. The output reference of a test, and
+    # the cycles it needs, travel with its name, the testlist being the only
+    # place naming them.
     names = []
     for entry in data["testlist"]:
         if not isinstance(entry, dict) or not isinstance(entry.get("test"), str):
             report.error_exit(
                 f"Each entry of {testlist_file} needs a string 'test'", env=True
             )
+        cycles = entry.get("sim_cycles", sim_cycles)
+        if not isinstance(cycles, int) or cycles <= 0:
+            report.error_exit(
+                f"sim_cycles of {entry['test']} is {cycles!r}, it needs a number"
+                " of cycles",
+                env=True,
+            )
+        reference = entry.get("output_ref_file")
+        if isinstance(reference, str) and "<path_var>" in reference:
+            # The same substitution sw-compile-testlist makes of the sources
+            # of a test, so the two sides name the same file.
+            if entry.get("path_var") == "TESTS_PATH":
+                reference = reference.replace("<path_var>", "verif/tests")
+            elif entry.get("path_var") == "TESTS_GEN_PATH":
+                reference = reference.replace(
+                    "<path_var>", f"build/{target}/dv_generated"
+                )
+            else:
+                report.warning(f"Check {entry.get('path_var')} is a valid path")
         for iteration in range(entry.get("iterations", 1)):
-            names.append(f"{entry['test']}_{iteration}")
+            names.append((f"{entry['test']}_{iteration}", reference, cycles))
     if not names:
         report.error_exit(f"No enabled test in {testlist_file}", env=True)
     report.success(f"{len(names)} test(s) to run")
 
-    for name in names:
+    for name, reference, cycles in names:
         report.step(f"Run {name}")
         run_dir = (
             build_root / "simulation" / f"sim_rtl_{simulator.value}_testharness" / name
@@ -162,7 +196,12 @@ def testharness_run_testlist(
         try:
             if simulator == Simulator.verilator:
                 # Only Verilator opens a waveform viewer of its own.
-                verilator_testharness_run(interactive_gui=False, **arguments)
+                verilator_testharness_run(
+                    interactive_gui=False,
+                    output_ref_file=reference,
+                    sim_cycles=cycles,
+                    **arguments,
+                )
             else:
                 # The event-driven simulators take the UVM verbosity, the
                 # harness reporting its verdict through uvm_info.

@@ -20,6 +20,7 @@ talks to the core over AXI, so only the AXI targets are wired for it.
 from pathlib import Path
 import shlex
 import shutil
+from typing import List
 
 import typer
 
@@ -37,12 +38,18 @@ app = typer.Typer()
 # C++ side of the harness: the driver, and the debug transport and JTAG
 # models it calls. elfloader.cc is not among them, the driver loading the
 # ELF through the Spike front-end server.
+#
+# syscalls.cc carries the implementation of the system calls the harness
+# emulates for the environment of the programs it runs: the per-hart RVFI
+# tracer of the multicore top asks for it over DPI, and the driver initializes
+# it with the memory of the simulated SoC.
 CXX_SOURCES = (
     "corev_apu/tb/ariane_tb.cpp",
     "corev_apu/tb/dpi/SimDTM.cc",
     "corev_apu/tb/dpi/SimJTAG.cc",
     "corev_apu/tb/dpi/remote_bitbang.cc",
     "corev_apu/tb/dpi/msim_helper.cc",
+    "corev_apu/tb/dpi/syscalls.cc",
 )
 
 
@@ -68,7 +75,30 @@ def verilator_testharness_comp(
         help="notrace, fast (VCD), or compact (FST); gui is unsupported",
     ),
     stats: bool = typer.Option(False, help="RTL perf tracer; currently unsupported"),
+    nr_cores: int = typer.Option(
+        1,
+        "--nr-cores",
+        help="Harts of the SoC under test; the multicore tests need two",
+    ),
+    mem_input_delay: int = typer.Option(
+        0,
+        "--mem-input-delay",
+        help="Fixed delay of the memory of the harness, request channels, in"
+        " cycles; the LSU tests of the multicore SoC need a late memory",
+    ),
+    mem_output_delay: int = typer.Option(
+        0,
+        "--mem-output-delay",
+        help="Fixed delay of the memory of the harness, response channels, in"
+        " cycles; the LSU tests of the multicore SoC need a late memory",
+    ),
     jobs: int = typer.Option(8, "--jobs", "-j", help="Verilator parallel jobs"),
+    verilator_args: List[str] = typer.Option(
+        [],
+        "--verilator-arg",
+        help="Extra argument to Verilator, repeated as needed. Recorded with the"
+        " build: an elaboration made with them is only reproducible with them.",
+    ),
     quiet: bool = typer.Option(
         False, "--quiet", "-q", help="Suppress output (errors only)"
     ),
@@ -84,7 +114,11 @@ def verilator_testharness_comp(
             "comp_mode": comp_mode,
             "trace_mode": trace_mode,
             "stats": stats,
+            "nr_cores": nr_cores,
+            "mem_input_delay": mem_input_delay,
+            "mem_output_delay": mem_output_delay,
             "jobs": jobs,
+            "verilator_args": verilator_args,
         },
         quiet=quiet,
     )
@@ -102,6 +136,10 @@ def verilator_testharness_comp(
     if stats:
         report.error_exit(
             "The RTL perf tracer is not wired to the TestHarness", env=True
+        )
+    if nr_cores < 1:
+        report.error_exit(
+            f"The SoC must have at least one hart, got --nr-cores {nr_cores}", env=True
         )
 
     # Test tools in path
@@ -198,6 +236,14 @@ def verilator_testharness_comp(
         "-f",
         str(repo_dir / "verif" / "tb" / "core" / "Flist.testharness"),
         "-DPRELOAD=1",
+        #  Harts of the SoC under test: the harness instantiates that many
+        #  cores, each with its own RVFI probes, tracer and tandem link.
+        f"-GNR_CORES={nr_cores}",
+        #  The memory of the harness answers after that many cycles, which is
+        #  how the tests of the LSU of the multicore SoC keep requests of one
+        #  hart outstanding while the others have their line invalidated.
+        f"-GFixedDelayInput={mem_input_delay}",
+        f"-GFixedDelayOutput={mem_output_delay}",
         "--unroll-count",
         "256",
         "-Wall",
@@ -213,6 +259,9 @@ def verilator_testharness_comp(
         "-Wno-UNOPTFLAT",
         "-Wno-BLKANDNBLK",
         "-Wno-style",
+        #  Flags the user asked for, ahead of the ones the recipe owns: the
+        #  recipe's last word on a flag always wins.
+        *verilator_args,
         "-LDFLAGS",
         shlex.join(ldflags),
         "-CFLAGS",
@@ -285,6 +334,8 @@ def verilator_testharness_comp(
             "comp_mode": comp_mode,
             "trace_mode": trace_mode,
             "stats": stats,
+            "nr_cores": nr_cores,
+            "verilator_args": verilator_args,
         },
         report=report,
     )

@@ -1,0 +1,73 @@
+# Copyright 2021 Thales DIS design services SAS
+# Inria 2026
+#
+# Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
+# You may obtain a copy of the License at https://solderpad.org/licenses/
+#
+# Original Author: Jean-Roch COULON - Thales
+# Modified by Nicolas Derumigny - Inria
+
+# ================================================================================
+#                  Regression test list format
+# --------------------------------------------------------------------------------
+# testlist        : Assembly test list
+# test            : Assembly test name
+# description     : Description of this test
+# gen_opts        : Instruction generator options
+# iterations      : Number of iterations of this test
+# no_iss          : Enable/disable ISS simulator (Optional)
+# gen_test        : Test name used by the instruction generator
+# asm_tests       : Path to directed, hand-coded assembly test file or directory
+# rtl_test        : RTL simulation test name
+# cmp_opts        : Compile options passed to the instruction generator
+# sim_opts        : Simulation options passed to the instruction generator
+# no_post_compare : Enable/disable comparison of trace log and ISS log (Optional)
+# compare_opts    : Options for the RTL & ISS trace comparison
+# gcc_opts        : gcc compile options
+# output_ref_file : File of regular expressions, one per line, the lines the
+#                   program is expected to print
+# --------------------------------------------------------------------------------
+#
+# The tests of this list exercise the harts of the multicore SoC against each
+# other, so the SoC is elaborated with two harts (the --nr-cores of the flow,
+# see verif/regress/multicore-tests-cv64a6_imafdc_sv39.sh) and they are built
+# with NUM_HARTS set to that number: the tests lay their data out per hart and
+# wait for the other harts to reach the same point.
+#
+# They are built for the extensions they use -- Zicbom above all, the cache
+# operations by which one hart gives the other a line it wrote --, and linked
+# with the script of verif/tests/multicore/common, which places the sections of
+# that environment. The sources of that environment go with it: crt.S gives each
+# hart its own stack and its own thread pointer, and vm.c defines the thread
+# locals the tests read, hart_id among them. A toolchain must therefore give
+# __thread a real TP-relative TLS block; one emulating it through libgcc would
+# make the harts of the SoC share those variables, and they would all report
+# the same hart. -no-pie and -fno-pic keep the program at the address the
+# linker script gives it, where crt.S waits for the other harts.
+
+common_test_config: &common_test_config
+  path_var: TESTS_PATH
+  march: rv64gc_zba_zbb_zbs_zbc_zbkb_zbkx_zkne_zknd_zknh_zicbom
+  mabi: lp64d
+  gcc_opts: "-static -no-pie -fno-pic -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g -DNUM_HARTS=2 -T<path_var>/multicore/common/main.ld <path_var>/multicore/common/syscalls.c <path_var>/multicore/common/vm.c <path_var>/multicore/common/crt.S <path_var>/multicore/common/page_table.s -I<path_var>/multicore/env -I<path_var>/multicore/common -lgcc"
+
+testlist:
+  - test: multicore_hello_world
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/multicore/hello_world/hello_world.c
+    output_ref_file: <path_var>/multicore/references/hello_world
+
+  - test: multicore_lr_sc
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/multicore/lr_sc/lr_sc.c
+    output_ref_file: <path_var>/multicore/references/lr_sc
+
+  - test: multicore_clint
+    iterations: 1
+    <<: *common_test_config
+    asm_tests: <path_var>/multicore/clint/clint.c
+    output_ref_file: <path_var>/multicore/references/clint

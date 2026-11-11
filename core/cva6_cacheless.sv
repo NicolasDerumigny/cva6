@@ -191,6 +191,21 @@ module cva6_cacheless
     // CVXIF response - SUBSYSTEM
     input cvxif_resp_t cvxif_resp_i,
 
+    // Shared FPU interface
+    output fu_data_t [CVA6Cfg.NrIssuePorts-1:0] fu_data_iss_2_fpu_o,
+    output logic flush_ctrl_fpu_o,
+    output logic [CVA6Cfg.NrIssuePorts-1:0] fpu_valid_o,
+    output logic [1:0] fpu_fmt_iss_fpu_o,
+    output logic [2:0] fpu_rm_iss_fpu_o,
+    output logic [2:0] frm_csr_acc_fpu_o,
+    output logic [6:0] fprec_csr_fpu_o,
+    input logic fpu_ready_ex_id_i,
+    input exception_t fpu_exception_ex_id_i,
+    input logic fpu_early_valid_i,
+    input logic fpu_valid_from_external_fpu,
+    input logic [CVA6Cfg.XLEN-1:0] fpu_result_from_external_fpu,
+    input logic [CVA6Cfg.TRANS_ID_BITS-1:0] fpu_trans_id_from_external_fpu,
+
     //   Cache signals
     //  I$
     // Instruction cache enable
@@ -560,6 +575,20 @@ module cva6_cacheless
   logic flush_commit;
   logic flush_acc;
 
+  assign fu_data_iss_2_fpu_o = fu_data_id_ex;
+  assign flush_ctrl_fpu_o = flush_ctrl_ex;
+  assign fpu_valid_o = fpu_valid_id_ex;
+  assign fpu_fmt_iss_fpu_o = fpu_fmt_id_ex;
+  assign fpu_rm_iss_fpu_o = fpu_rm_id_ex;
+  assign frm_csr_acc_fpu_o = frm_csr_id_issue_ex;
+  assign fprec_csr_fpu_o = fprec_csr_ex;
+  assign fpu_ready_ex_id = fpu_ready_ex_id_i;
+  assign fpu_exception_ex_id = fpu_exception_ex_id_i;
+  assign fpu_early_valid_ex_id = fpu_early_valid_i;
+  assign fpu_valid_ex_id = fpu_valid_from_external_fpu;
+  assign fpu_result_ex_id = fpu_result_from_external_fpu;
+  assign fpu_trans_id_ex_id = fpu_trans_id_from_external_fpu;
+
   logic sb_full;
 
   // ----------------
@@ -926,18 +955,6 @@ module cva6_cacheless
       .stall_st_pending_i           (stall_st_pending_ex),
       .shared_tlb_flush_busy_o      (shared_tlb_flush_busy_ex),
       .no_st_pending_o              (no_st_pending_ex),
-      // FPU
-      .fpu_ready_o                  (fpu_ready_ex_id),
-      .fpu_valid_i                  (fpu_valid_id_ex),
-      .fpu_fmt_i                    (fpu_fmt_id_ex),
-      .fpu_rm_i                     (fpu_rm_id_ex),
-      .fpu_frm_i                    (frm_csr_id_issue_ex),
-      .fpu_prec_i                   (fprec_csr_ex),
-      .fpu_trans_id_o               (fpu_trans_id_ex_id),
-      .fpu_result_o                 (fpu_result_ex_id),
-      .fpu_valid_o                  (fpu_valid_ex_id),
-      .fpu_exception_o              (fpu_exception_ex_id),
-      .fpu_early_valid_o            (fpu_early_valid_ex_id),
       // ALU2
       .alu2_valid_i                 (alu2_valid_id_ex),
       .amo_valid_commit_i           (amo_valid_commit),

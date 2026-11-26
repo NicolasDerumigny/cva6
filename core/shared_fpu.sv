@@ -341,6 +341,7 @@ module shared_fpu
     logic                           fpu_valid_mod;
     logic [CVA6Cfg.TRANS_ID_BITS:0] fpu_trans_id_mod;
     logic [       CVA6Cfg.XLEN-1:0] fpu_result_mod;
+    logic [CVA6Cfg.TRANS_ID_BITS:0] fpu_early_trans_id_mod;
 
     if (CVA6Cfg.FpPresent) begin : fpu_active_block
       fpu_multicore_wrap #(
@@ -362,7 +363,8 @@ module shared_fpu
           .result_o(fpu_result_mod),
           .fpu_valid_o(fpu_valid_mod),
           .fpu_exception_o(internal_fpu_exception_o),
-          .fpu_early_valid_o (internal_fpu_early_valid_o) // Ignored for routing, used internally if needed
+          .fpu_early_valid_o(internal_fpu_early_valid_o),
+          .fpu_early_trans_id_o(fpu_early_trans_id_mod)
       );
     end else begin : no_fpu_gen
       assign fpu_result_mod             = '0;
@@ -371,55 +373,33 @@ module shared_fpu
       assign internal_fpu_ready_o       = '0;
       assign internal_fpu_exception_o   = '0;
       assign internal_fpu_early_valid_o = '0;
+      assign fpu_early_trans_id_mod     = '0;
     end
 
     if (CVA6Cfg.FpPresent) begin
       assign internal_fpu_valid_o = fpu_valid_mod;
       assign internal_result_o    = fpu_result_mod;
-      // We do not assign trans_id_o here because we route it directly via the buffer
     end else begin
       assign internal_fpu_valid_o = '0;
       assign internal_result_o    = '0;
     end
 
     // ---------------------------------------------------------
-    // 1-Cycle Output Pipeline Buffer (FIXED FOR GHOST WRITES)
-    // ---------------------------------------------------------
-    logic                                   buf_valid;
-    logic       [CVA6Cfg.TRANS_ID_BITS-1:0] buf_trans_id;
-    logic                                   buf_trans_core;
-    logic       [         CVA6Cfg.XLEN-1:0] buf_result;
-    exception_t                             buf_exception;
-
-    // Extract core ID immediately from the FPU output
-    logic                                   current_trans_core;
-    assign current_trans_core = fpu_trans_id_mod[CVA6Cfg.TRANS_ID_BITS];
-
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (~rst_ni) begin
-        buf_valid      <= 1'b0;
-        buf_trans_id   <= '0;
-        buf_trans_core <= 1'b0;
-        buf_result     <= '0;
-        buf_exception  <= '0;
-      end else begin
-        if (internal_fpu_valid_o &&
-            ~flush_i[current_trans_core] &&
-            (payload_buffer[fpu_trans_id_mod].state == ISSUED)) begin
-          buf_valid      <= 1'b1;
-          buf_trans_id   <= fpu_trans_id_mod[CVA6Cfg.TRANS_ID_BITS-1:0];
-          buf_trans_core <= current_trans_core;
-          buf_result     <= internal_result_o;
-          buf_exception  <= internal_fpu_exception_o;
-        end else begin
-          buf_valid <= 1'b0;
-        end
-      end
-    end
-
-    // ---------------------------------------------------------
     // Output Routing Logic
     // ---------------------------------------------------------
+    logic current_trans_core;
+    logic early_trans_core;
+    assign current_trans_core = fpu_trans_id_mod[CVA6Cfg.TRANS_ID_BITS];
+    assign early_trans_core   = fpu_early_trans_id_mod[CVA6Cfg.TRANS_ID_BITS];
+
+    // Results of transactions killed by a flush are zombies: their buffer entry is no
+    // longer ISSUED, so they are neither announced nor written back to the core.
+    logic fpu_out_live;
+    logic fpu_early_live;
+    assign fpu_out_live = internal_fpu_valid_o & (payload_buffer[fpu_trans_id_mod].state == ISSUED);
+    assign fpu_early_live = internal_fpu_early_valid_o &
+                            (payload_buffer[fpu_early_trans_id_mod].state == ISSUED);
+
     always_comb begin
       // 1. Default assignments to prevent latches
       fpu_early_valid_o = '0;
@@ -432,25 +412,26 @@ module shared_fpu
       fpu_ready_o[0]    = internal_fpu_ready_o;
       fpu_ready_o[1]    = internal_fpu_ready_o;
 
-      // 3. Cycle T Routing: Early Valid
-      // Triggered by the internal FPU's actual valid signal
-      if (internal_fpu_valid_o && (payload_buffer[fpu_trans_id_mod].state == ISSUED)) begin
-        if (~current_trans_core) fpu_early_valid_o[0] = 1'b1;
+      // 3. Cycle T-1 Routing: Early Valid
+      // Triggered by the internal FPU's early valid: it tells the core which write-back
+      // port will be taken by the result arriving in the next cycle.
+      if (fpu_early_live) begin
+        if (~early_trans_core) fpu_early_valid_o[0] = 1'b1;
         else fpu_early_valid_o[1] = 1'b1;
       end
-      // 4. Cycle T+1 Routing: Payload and Valid
-      // Triggered by the pipeline buffer
-      if (buf_valid) begin
-        if (~buf_trans_core) begin
+      // 4. Cycle T Routing: Payload and Valid
+      // Taken straight out of the FPU, one cycle after the early valid above
+      if (fpu_out_live) begin
+        if (~current_trans_core) begin
           fpu_valid_o[0]     = 1'b1 & ~flush_i[0];
-          fpu_trans_id_o[0]  = buf_trans_id;
-          result_o[0]        = buf_result;
-          fpu_exception_o[0] = buf_exception;
+          fpu_trans_id_o[0]  = fpu_trans_id_mod[CVA6Cfg.TRANS_ID_BITS-1:0];
+          result_o[0]        = internal_result_o;
+          fpu_exception_o[0] = internal_fpu_exception_o;
         end else begin
           fpu_valid_o[1]     = 1'b1 & ~flush_i[1];
-          fpu_trans_id_o[1]  = buf_trans_id;
-          result_o[1]        = buf_result;
-          fpu_exception_o[1] = buf_exception;
+          fpu_trans_id_o[1]  = fpu_trans_id_mod[CVA6Cfg.TRANS_ID_BITS-1:0];
+          result_o[1]        = internal_result_o;
+          fpu_exception_o[1] = internal_fpu_exception_o;
         end
       end
     end

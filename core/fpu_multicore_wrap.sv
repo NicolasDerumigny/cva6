@@ -35,7 +35,9 @@ module fpu_multicore_wrap
     output logic       [       CVA6Cfg.FLen-1:0] result_o,
     output logic                                 fpu_valid_o,
     output exception_t                           fpu_exception_o,
-    output logic                                 fpu_early_valid_o
+    output logic                                 fpu_early_valid_o,
+    output logic       [CVA6Cfg.TRANS_ID_BITS:0] fpu_early_trans_id_o
+
 );
 
   // this is a workaround
@@ -560,7 +562,8 @@ module fpu_multicore_wrap
         .out_valid_o   (fpu_out_valid),
         .out_ready_i   (fpu_out_ready),
         .busy_o        (  /* unused */),
-        .early_valid_o (fpu_early_valid_o)
+        .early_valid_o (fpu_early_valid_o),
+        .early_tag_o   (fpu_early_trans_id_o)
     );
 
     // Pack status flag into exception cause, tval ignored in wb, exception is always invalid
